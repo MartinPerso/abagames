@@ -11,6 +11,8 @@ type HomeText = {
   title: string
   availableGames: string
   settingsLabel: string
+  aboutTitle: string
+  aboutText: string
 }
 
 export const homeTextByLanguage: Record<Language, HomeText> = {
@@ -18,11 +20,17 @@ export const homeTextByLanguage: Record<Language, HomeText> = {
     title: 'Jeux ABA',
     availableGames: 'Jeux disponibles',
     settingsLabel: 'Reglages',
+    aboutTitle: 'Avertissement',
+    aboutText:
+      "Ce site a ete cree par le parent d'un enfant avec un trouble du spectre autistique, a partir de sa propre comprehension de l'ABA, avec des jeux concus pour son enfant. Si cela peut servir a d'autres familles, l'auteur s'en rejouit. Ce contenu ne remplace pas un accompagnement professionnel et n'a pas ete realise avec des professionnels.",
   },
   en: {
     title: 'ABA Games',
     availableGames: 'Available games',
     settingsLabel: 'Settings',
+    aboutTitle: 'Disclaimer',
+    aboutText:
+      "This site was created by the parent of an autistic child, based on their own understanding of ABA, with games made for their child. If it helps other families, the author is glad. It does not replace professional support and was not created with professionals.",
   },
 }
 

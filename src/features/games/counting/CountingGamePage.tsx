@@ -242,6 +242,15 @@ export function CountingGamePage() {
   }
 
   const finished = roundIndex >= TOTAL_ROUNDS
+  const resultTitle = language === 'fr' ? 'Partie terminee !' : 'Game complete!'
+  const resultMessage =
+    score === TOTAL_ROUNDS
+      ? language === 'fr'
+        ? 'Sans faute, bravo !'
+        : 'Perfect run, amazing!'
+      : language === 'fr'
+        ? 'Bravo, on continue !'
+        : 'Great effort, let us play again!'
   const itemPositions = useMemo(
     () => createItemPositions(round.count),
     [round.count],
@@ -265,16 +274,33 @@ export function CountingGamePage() {
       </header>
 
       {finished ? (
-        <section className="result-card" aria-live="polite">
-          <h2>🎉</h2>
-          <p>
-            {score}/{TOTAL_ROUNDS}
+        <section
+          className={`result-card ${score === TOTAL_ROUNDS ? 'is-perfect' : ''}`}
+          aria-live="polite"
+        >
+          <p className="result-emoji" aria-hidden="true">
+            🎉
           </p>
+          <h2 className="result-title">{resultTitle}</h2>
+          <p className="result-score" aria-label={`${score} sur ${TOTAL_ROUNDS}`}>
+            <span>{score}</span>
+            <span>/{TOTAL_ROUNDS}</span>
+          </p>
+          <p className="result-message">{resultMessage}</p>
           <div className="result-actions">
-            <button type="button" className="answer-button" onClick={restartGame}>
+            <button
+              type="button"
+              className="answer-button"
+              onClick={restartGame}
+              aria-label={language === 'fr' ? 'Rejouer' : 'Play again'}
+            >
               ↺
             </button>
-            <Link to={`/?lang=${language}`} className="secondary-link">
+            <Link
+              to={`/?lang=${language}`}
+              className="secondary-link"
+              aria-label={language === 'fr' ? 'Retour accueil' : 'Back to home'}
+            >
               ⌂
             </Link>
           </div>

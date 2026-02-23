@@ -92,9 +92,12 @@ export function HomePage() {
             </p>
           </div>
           <div className="game-card-body">
-            <div className="home-listen-badge" aria-hidden="true">
-              ▶
-            </div>
+            <img
+              src={`${assetsBaseUrl}/earListening.svg`}
+              alt=""
+              className="home-illustration"
+              aria-hidden="true"
+            />
             <Link
               to={`/games/letter-listening?lang=${language}`}
               className="primary-button"
@@ -105,6 +108,10 @@ export function HomePage() {
           </div>
         </article>
       </section>
+
+      <footer className="home-footer" aria-label={text.aboutTitle}>
+        <p className="home-disclaimer">{text.aboutText}</p>
+      </footer>
     </main>
   )
 }
