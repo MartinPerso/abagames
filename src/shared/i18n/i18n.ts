@@ -36,6 +36,11 @@ export const inverseCountingGameNameByLanguage: Record<Language, string> = {
   en: 'Quantity Game',
 }
 
+export const letterListeningGameNameByLanguage: Record<Language, string> = {
+  fr: 'Jeu des Lettres',
+  en: 'Letter Game',
+}
+
 type CountingGameText = {
   answerLabel: string
   soundOn: string
@@ -70,6 +75,28 @@ export const inverseCountingGameTextByLanguage: Record<Language, InverseCounting
   },
   en: {
     answerLabel: 'Find the matching group',
+    bravoAlert: 'Great',
+  },
+}
+
+type LetterListeningGameText = {
+  instructionLabel: string
+  replayLabel: string
+  answerLabel: string
+  bravoAlert: string
+}
+
+export const letterListeningGameTextByLanguage: Record<Language, LetterListeningGameText> = {
+  fr: {
+    instructionLabel: 'Ecoute la lettre',
+    replayLabel: 'Reecouter la lettre',
+    answerLabel: 'Choisis la bonne lettre',
+    bravoAlert: 'Bravo',
+  },
+  en: {
+    instructionLabel: 'Listen to the letter',
+    replayLabel: 'Play letter again',
+    answerLabel: 'Choose the correct letter',
     bravoAlert: 'Great',
   },
 }

@@ -4,6 +4,7 @@ import {
   countingGameNameByLanguage,
   homeTextByLanguage,
   inverseCountingGameNameByLanguage,
+  letterListeningGameNameByLanguage,
   parseLanguageParam,
   setStoredLanguage,
 } from '../../shared/i18n/i18n'
@@ -77,6 +78,27 @@ export function HomePage() {
               to={`/games/reverse-counting?lang=${language}`}
               className="primary-button"
               aria-label={inverseCountingGameNameByLanguage[language]}
+            >
+              <span aria-hidden="true">▶</span>
+            </Link>
+          </div>
+        </article>
+
+        <article className="game-card game-card-letter">
+          <div className="game-card-head">
+            <h2 className="game-title">{letterListeningGameNameByLanguage[language]}</h2>
+            <p className="game-pictogram" aria-hidden="true">
+              A B C
+            </p>
+          </div>
+          <div className="game-card-body">
+            <div className="home-listen-badge" aria-hidden="true">
+              ▶
+            </div>
+            <Link
+              to={`/games/letter-listening?lang=${language}`}
+              className="primary-button"
+              aria-label={letterListeningGameNameByLanguage[language]}
             >
               <span aria-hidden="true">▶</span>
             </Link>
