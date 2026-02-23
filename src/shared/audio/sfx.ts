@@ -13,6 +13,7 @@ const sfxByItem: Record<CountingItem, string> = {
 const audioByPath = new Map<string, HTMLAudioElement>()
 let stopTimer: number | null = null
 let currentAudio: HTMLAudioElement | null = null
+export const REWARD_SFX_DURATION_MS = 5000
 
 export function playRewardSfx(item: CountingItem): void {
   if (typeof window === 'undefined') {
@@ -34,9 +35,11 @@ export function playRewardSfx(item: CountingItem): void {
   if (currentAudio && currentAudio !== audio) {
     currentAudio.pause()
     currentAudio.currentTime = 0
+    currentAudio.loop = false
   }
 
   audio.currentTime = 0
+  audio.loop = true
   currentAudio = audio
   void audio.play()
 
@@ -44,7 +47,8 @@ export function playRewardSfx(item: CountingItem): void {
     if (currentAudio) {
       currentAudio.pause()
       currentAudio.currentTime = 0
+      currentAudio.loop = false
     }
     stopTimer = null
-  }, 3000)
+  }, REWARD_SFX_DURATION_MS)
 }

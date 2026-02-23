@@ -1,12 +1,12 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   countingGameNameByLanguage,
   countingGameTextByLanguage,
   itemLabelByLanguage,
   parseLanguageParam,
 } from '../../../shared/i18n/i18n'
-import { playRewardSfx } from '../../../shared/audio/sfx'
+import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
 import {
   type CountingItem,
   TOTAL_ROUNDS,
@@ -20,12 +20,12 @@ import './CountingGamePage.css'
 type FeedbackState = 'idle' | 'correct' | 'wrong'
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
-const cardClassByItem: Record<CountingItem, string> = {
-  fireTruck: 'item-card item-fire',
-  policeCar: 'item-card item-police',
-  ambulance: 'item-card item-ambulance',
-  boat: 'item-card item-boat',
-  plane: 'item-card item-plane',
+const sceneClassByItem: Record<CountingItem, string> = {
+  fireTruck: 'item-scene item-fire',
+  policeCar: 'item-scene item-police',
+  ambulance: 'item-scene item-ambulance',
+  boat: 'item-scene item-boat',
+  plane: 'item-scene item-plane',
 }
 
 const imageByItem: Record<CountingItem, string> = {
@@ -34,6 +34,68 @@ const imageByItem: Record<CountingItem, string> = {
   ambulance: `${assetsBaseUrl}/ambulance.svg`,
   boat: `${assetsBaseUrl}/boat.svg`,
   plane: `${assetsBaseUrl}/plane.svg`,
+}
+
+type ItemPosition = {
+  left: number
+  top: number
+  size: number
+}
+
+function createItemPositions(count: number): ItemPosition[] {
+  const baseSize = Math.max(14, Math.min(30, 78 / Math.sqrt(count)))
+  const minSize = 10
+  const sizeReductionFactor = 0.92
+  const placementGap = 0.8
+  const maxAttemptsPerItem = 400
+  const maxConsecutiveOverlaps = 5
+
+  let currentSize = baseSize
+  let consecutiveOverlaps = 0
+  const positions: ItemPosition[] = []
+
+  function overlapsAny(next: ItemPosition): boolean {
+    return positions.some((position) => {
+      const minDistance = (position.size + next.size) / 2 + placementGap
+      const dx = position.left - next.left
+      const dy = position.top - next.top
+      return dx * dx + dy * dy < minDistance * minDistance
+    })
+  }
+
+  for (let index = 0; index < count; index += 1) {
+    let placed = false
+    let attempts = 0
+
+    while (!placed && attempts < maxAttemptsPerItem) {
+      attempts += 1
+      const halfSize = currentSize / 2
+      const left = halfSize + Math.random() * (100 - currentSize)
+      const top = halfSize + Math.random() * (100 - currentSize)
+      const candidate: ItemPosition = { left, top, size: currentSize }
+
+      if (!overlapsAny(candidate)) {
+        positions.push(candidate)
+        consecutiveOverlaps = 0
+        placed = true
+        continue
+      }
+
+      // On rejette ce dispatch et on retente ailleurs.
+      consecutiveOverlaps += 1
+      if (consecutiveOverlaps >= maxConsecutiveOverlaps) {
+        currentSize = Math.max(minSize, currentSize * sizeReductionFactor)
+        consecutiveOverlaps = 0
+      }
+    }
+
+    if (!placed) {
+      currentSize = Math.max(minSize, currentSize * sizeReductionFactor)
+      index -= 1
+    }
+  }
+
+  return positions
 }
 
 export function CountingGamePage() {
@@ -49,7 +111,6 @@ export function CountingGamePage() {
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useState(true)
   const timerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
@@ -89,13 +150,11 @@ export function CountingGamePage() {
       setScore((current) => current + 1)
       setIsLocked(true)
       clearActiveTimer()
-      if (soundEnabled) {
-        playRewardSfx(round.item)
-      }
+      playRewardSfx(round.item)
 
       timerRef.current = window.setTimeout(() => {
         moveToNextRound()
-      }, 3000)
+      }, REWARD_SFX_DURATION_MS)
       return
     }
 
@@ -117,29 +176,16 @@ export function CountingGamePage() {
   }
 
   const finished = roundIndex >= TOTAL_ROUNDS
-  const cards = Array.from({ length: round.count }, (_, index) => (
-    <div
-      key={`${round.roundIndex}-${round.item}-${index}`}
-      className={`${cardClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-      aria-label={itemLabels[round.item]}
-    >
-      <img src={imageByItem[round.item]} alt="" className="item-image" />
-    </div>
-  ))
+  const itemPositions = useMemo(
+    () => createItemPositions(round.count),
+    [round.roundIndex, round.item, round.count],
+  )
 
   return (
     <main className="app-shell counting-page">
       <header className="counting-header">
         <h1>{countingGameNameByLanguage[language]}</h1>
         <div className="header-actions">
-          <button
-            type="button"
-            className="secondary-action"
-            onClick={() => setSoundEnabled((current) => !current)}
-            aria-label={soundEnabled ? text.soundOn : text.soundOff}
-          >
-            {soundEnabled ? '🔊' : '🔇'}
-          </button>
           <Link to={`/?lang=${language}`} className="secondary-link">
             ⌂
           </Link>
@@ -164,25 +210,40 @@ export function CountingGamePage() {
       ) : (
         <>
           <div className="question-content">
-            <section className="status-row" aria-live="polite">
-              <p>{`${roundIndex + 1}/${TOTAL_ROUNDS}`}</p>
-              <p>⭐ {score}</p>
-            </section>
-
             <section className="counting-stage" aria-label={itemLabels[round.item]}>
-              <div className="item-grid">{cards}</div>
+              <div className={sceneClassByItem[round.item]}>
+                {itemPositions.map((position, index) => (
+                  <div
+                    key={`${round.roundIndex}-${round.item}-${index}`}
+                    className={`item-sprite ${feedback === 'correct' ? 'is-celebrating' : ''}`}
+                    style={{
+                      left: `${position.left}%`,
+                      top: `${position.top}%`,
+                      width: `${position.size}%`,
+                      height: `${position.size}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                    aria-hidden="true"
+                  >
+                    <img src={imageByItem[round.item]} alt="" className="item-image" />
+                  </div>
+                ))}
+              </div>
             </section>
 
-            <p className={`feedback ${feedback}`}>{feedback === 'wrong' ? '❌' : ''}</p>
+            <p className={`feedback ${feedback}`} />
           </div>
 
-          <section className="answers" aria-label={text.answerLabel}>
+          <section
+            className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
+            aria-label={text.answerLabel}
+          >
             <div className="answer-grid">
               {answerOptions.map((value) => (
                 <button
                   key={value}
                   type="button"
-                  className="answer-button"
+                  className={`answer-button ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''}`}
                   onClick={() => handleAnswer(value)}
                   disabled={isLocked}
                 >
