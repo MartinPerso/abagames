@@ -1,17 +1,26 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   type Language,
-  getStoredLanguage,
   homeTextByLanguage,
   languageLabels,
+  parseLanguageParam,
   setStoredLanguage,
 } from '../../shared/i18n/i18n'
 import './HomePage.css'
 
 export function HomePage() {
-  const [language, setLanguage] = useState<Language>(getStoredLanguage)
+  const [searchParams] = useSearchParams()
+  const [language, setLanguage] = useState<Language>(() =>
+    parseLanguageParam(searchParams.get('lang')),
+  )
   const text = homeTextByLanguage[language]
+
+  useEffect(() => {
+    const fromQuery = parseLanguageParam(searchParams.get('lang'))
+    setLanguage(fromQuery)
+    setStoredLanguage(fromQuery)
+  }, [searchParams])
 
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage)

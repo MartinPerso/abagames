@@ -54,6 +54,8 @@ type CountingGameText = {
   finishSummary: (score: number, total: number) => string
   replay: string
   backHome: string
+  soundOn: string
+  soundOff: string
 }
 
 export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
@@ -69,6 +71,8 @@ export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
     finishSummary: (score, total) => `Tu as trouve ${score} bonne${score > 1 ? 's' : ''} reponse${score > 1 ? 's' : ''} sur ${total}.`,
     replay: 'Rejouer',
     backHome: "Retour a l'accueil",
+    soundOn: 'Son active',
+    soundOff: 'Son coupe',
   },
   en: {
     title: 'How many are there?',
@@ -82,6 +86,8 @@ export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
     finishSummary: (score, total) => `You got ${score} correct answer${score > 1 ? 's' : ''} out of ${total}.`,
     replay: 'Play again',
     backHome: 'Back to home',
+    soundOn: 'Sound on',
+    soundOff: 'Sound off',
   },
 }
 

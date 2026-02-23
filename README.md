@@ -217,3 +217,24 @@ All games should remain short, simple, and restartable.
 4. Implement iPad-first UI kit (buttons, cards, feedback components).
 5. Pilot with caregivers/therapists and iterate.
 
+---
+
+## Current v1 Implementation (in repo)
+
+- React + TypeScript webapp scaffolded with Vite.
+- Home page with FR/EN language switch and entry to the first game.
+- First game implemented: count items from 1 to 5 (fire truck, police car, ambulance, boat, plane).
+- Immediate reinforcement on correct answers: short animation + characteristic synthesized sound.
+- Stateless behavior: leaving a game and returning starts a fresh session.
+
+---
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Then open the local URL in a browser (for iPad testing, use Safari/WebKit).
+

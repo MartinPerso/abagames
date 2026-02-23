@@ -36,13 +36,19 @@ export function CountingGamePage() {
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const timerRef = useRef<number | null>(null)
+
+  function clearActiveTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }
 
   useEffect(() => {
     return () => {
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current)
-      }
+      clearActiveTimer()
     }
   }, [])
 
@@ -69,7 +75,10 @@ export function CountingGamePage() {
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
-      playRewardSfx(round.item)
+      clearActiveTimer()
+      if (soundEnabled) {
+        playRewardSfx(round.item)
+      }
 
       timerRef.current = window.setTimeout(() => {
         moveToNextRound()
@@ -78,15 +87,14 @@ export function CountingGamePage() {
     }
 
     setFeedback('wrong')
+    clearActiveTimer()
     timerRef.current = window.setTimeout(() => {
       setFeedback('idle')
     }, 700)
   }
 
   function restartGame() {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current)
-    }
+    clearActiveTimer()
 
     setRoundIndex(0)
     setRound(createRound(0))
@@ -113,9 +121,18 @@ export function CountingGamePage() {
           <h1>{text.title}</h1>
           <p>{text.instruction}</p>
         </div>
-        <Link to="/" className="secondary-link">
-          {text.backHome}
-        </Link>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="secondary-action"
+            onClick={() => setSoundEnabled((current) => !current)}
+          >
+            {soundEnabled ? text.soundOn : text.soundOff}
+          </button>
+          <Link to={`/?lang=${language}`} className="secondary-link">
+            {text.backHome}
+          </Link>
+        </div>
       </header>
 
       {finished ? (
@@ -126,7 +143,7 @@ export function CountingGamePage() {
             <button type="button" className="answer-button" onClick={restartGame}>
               {text.replay}
             </button>
-            <Link to="/" className="secondary-link">
+            <Link to={`/?lang=${language}`} className="secondary-link">
               {text.backHome}
             </Link>
           </div>
@@ -155,6 +172,7 @@ export function CountingGamePage() {
                   type="button"
                   className="answer-button"
                   onClick={() => handleAnswer(value)}
+                  disabled={isLocked}
                 >
                   {value}
                 </button>
