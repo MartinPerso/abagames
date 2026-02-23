@@ -1,11 +1,13 @@
 import type { CountingItem } from '../../features/games/counting/gameLogic'
 
+const sfxBaseUrl = `${import.meta.env.BASE_URL}assets/sfx`
+
 const sfxByItem: Record<CountingItem, string> = {
-  fireTruck: '/assets/sfx/fireTruck.mp3',
-  policeCar: '/assets/sfx/policeCar.mp3',
-  ambulance: '/assets/sfx/ambulance.mp3',
-  boat: '/assets/sfx/boat.mp3',
-  plane: '/assets/sfx/plane.mp3',
+  fireTruck: `${sfxBaseUrl}/fireTruck.mp3`,
+  policeCar: `${sfxBaseUrl}/policeCar.mp3`,
+  ambulance: `${sfxBaseUrl}/ambulance.mp3`,
+  boat: `${sfxBaseUrl}/boat.mp3`,
+  plane: `${sfxBaseUrl}/plane.mp3`,
 }
 
 const audioByPath = new Map<string, HTMLAudioElement>()

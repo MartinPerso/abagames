@@ -8,6 +8,8 @@ import {
 } from '../../shared/i18n/i18n'
 import './HomePage.css'
 
+const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
+
 export function HomePage() {
   const [searchParams] = useSearchParams()
   const language = parseLanguageParam(searchParams.get('lang'))
@@ -35,9 +37,9 @@ export function HomePage() {
         <article className="game-card">
           <h2>{countingGameNameByLanguage[language]}</h2>
           <div className="home-illustrations" aria-hidden="true">
-            <img src="/assets/illustrations/fireTruck.svg" alt="" />
-            <img src="/assets/illustrations/boat.svg" alt="" />
-            <img src="/assets/illustrations/plane.svg" alt="" />
+            <img src={`${assetsBaseUrl}/fireTruck.svg`} alt="" />
+            <img src={`${assetsBaseUrl}/boat.svg`} alt="" />
+            <img src={`${assetsBaseUrl}/plane.svg`} alt="" />
           </div>
           <Link to={`/games/counting?lang=${language}`} className="primary-button">
             ▶

@@ -18,6 +18,7 @@ import { getStoredCountingMaxObjects } from '../../../shared/settings/gameSettin
 import './CountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
+const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 const cardClassByItem: Record<CountingItem, string> = {
   fireTruck: 'item-card item-fire',
@@ -28,11 +29,11 @@ const cardClassByItem: Record<CountingItem, string> = {
 }
 
 const imageByItem: Record<CountingItem, string> = {
-  fireTruck: '/assets/illustrations/fireTruck.svg',
-  policeCar: '/assets/illustrations/policeCar.svg',
-  ambulance: '/assets/illustrations/ambulance.svg',
-  boat: '/assets/illustrations/boat.svg',
-  plane: '/assets/illustrations/plane.svg',
+  fireTruck: `${assetsBaseUrl}/fireTruck.svg`,
+  policeCar: `${assetsBaseUrl}/policeCar.svg`,
+  ambulance: `${assetsBaseUrl}/ambulance.svg`,
+  boat: `${assetsBaseUrl}/boat.svg`,
+  plane: `${assetsBaseUrl}/plane.svg`,
 }
 
 export function CountingGamePage() {
