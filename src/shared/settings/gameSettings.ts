@@ -14,6 +14,9 @@ export function getStoredCountingMaxObjects(): number {
   }
 
   const raw = window.localStorage.getItem(COUNTING_MAX_OBJECTS_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_COUNTING_MAX_OBJECTS
+  }
   const parsed = Number(raw)
 
   if (!Number.isFinite(parsed)) {
