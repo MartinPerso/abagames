@@ -42,6 +42,23 @@ type ItemPosition = {
   size: number
 }
 
+type CelebrationMotion = {
+  '--travel-x-mid': string
+  '--travel-y-mid': string
+  '--travel-x-end': string
+  '--travel-y-end': string
+  '--travel-x-late': string
+  '--travel-y-late': string
+  '--rotation-mid': string
+  '--rotation-end': string
+  '--rotation-late': string
+  '--scale-mid': string
+  '--scale-late': string
+  '--scale-end': string
+  animationName: 'reward-voyage-arc' | 'reward-voyage-zigzag' | 'reward-voyage-spiral'
+  animationTimingFunction: string
+}
+
 function createItemPositions(count: number): ItemPosition[] {
   const baseSize = Math.max(14, Math.min(30, 78 / Math.sqrt(count)))
   const minSize = 10
@@ -96,6 +113,55 @@ function createItemPositions(count: number): ItemPosition[] {
   }
 
   return positions
+}
+
+function createCelebrationMotions(count: number): CelebrationMotion[] {
+  const animationNames: CelebrationMotion['animationName'][] = [
+    'reward-voyage-arc',
+    'reward-voyage-zigzag',
+    'reward-voyage-spiral',
+  ]
+  const easingFunctions = [
+    'cubic-bezier(0.22, 0.75, 0.22, 1)',
+    'cubic-bezier(0.2, 0.95, 0.3, 1)',
+    'cubic-bezier(0.32, 0.72, 0.16, 1)',
+  ]
+
+  return Array.from({ length: count }, () => {
+    const randomSign = () => (Math.random() < 0.5 ? -1 : 1)
+    const travelMidX = `${Math.round((20 + Math.random() * 20) * randomSign())}vw`
+    const travelMidY = `${Math.round((-22 - Math.random() * 18) * (0.5 + Math.random()))}vh`
+    const travelLateX = `${Math.round((28 + Math.random() * 24) * randomSign())}vw`
+    const travelLateY = `${Math.round((-30 - Math.random() * 24) * (0.55 + Math.random() * 0.6))}vh`
+    const travelEndX = `${Math.round((34 + Math.random() * 28) * randomSign())}vw`
+    const travelEndY = `${Math.round((-34 - Math.random() * 26) * (0.65 + Math.random() * 0.5))}vh`
+    const rotationMid = `${Math.round((18 + Math.random() * 28) * randomSign())}deg`
+    const rotationLate = `${Math.round((35 + Math.random() * 45) * randomSign())}deg`
+    const rotationEnd = `${Math.round((58 + Math.random() * 82) * randomSign())}deg`
+    const scaleMid = (0.9 + Math.random() * 0.45).toFixed(2)
+    const scaleLate = (0.68 + Math.random() * 0.44).toFixed(2)
+    const scaleEnd = (0.35 + Math.random() * 0.45).toFixed(2)
+    const animationName = animationNames[Math.floor(Math.random() * animationNames.length)]
+    const animationTimingFunction =
+      easingFunctions[Math.floor(Math.random() * easingFunctions.length)]
+
+    return {
+      '--travel-x-mid': travelMidX,
+      '--travel-y-mid': travelMidY,
+      '--travel-x-late': travelLateX,
+      '--travel-y-late': travelLateY,
+      '--travel-x-end': travelEndX,
+      '--travel-y-end': travelEndY,
+      '--rotation-mid': rotationMid,
+      '--rotation-late': rotationLate,
+      '--rotation-end': rotationEnd,
+      '--scale-mid': scaleMid,
+      '--scale-late': scaleLate,
+      '--scale-end': scaleEnd,
+      animationName,
+      animationTimingFunction,
+    }
+  })
 }
 
 export function CountingGamePage() {
@@ -178,8 +244,14 @@ export function CountingGamePage() {
   const finished = roundIndex >= TOTAL_ROUNDS
   const itemPositions = useMemo(
     () => createItemPositions(round.count),
-    [round.roundIndex, round.item, round.count],
+    [round.count],
   )
+  const celebrationMotions = useMemo(() => {
+    if (feedback !== 'correct') {
+      return []
+    }
+    return createCelebrationMotions(round.count)
+  }, [feedback, round.count])
 
   return (
     <main className="app-shell counting-page">
@@ -211,7 +283,9 @@ export function CountingGamePage() {
         <>
           <div className="question-content">
             <section className="counting-stage" aria-label={itemLabels[round.item]}>
-              <div className={sceneClassByItem[round.item]}>
+              <div
+                className={`${sceneClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
+              >
                 {itemPositions.map((position, index) => (
                   <div
                     key={`${round.roundIndex}-${round.item}-${index}`}
@@ -221,7 +295,8 @@ export function CountingGamePage() {
                       top: `${position.top}%`,
                       width: `${position.size}%`,
                       height: `${position.size}%`,
-                      transform: 'translate(-50%, -50%)',
+                      animationDuration: feedback === 'correct' ? `${REWARD_SFX_DURATION_MS}ms` : undefined,
+                      ...(feedback === 'correct' ? celebrationMotions[index] : {}),
                     }}
                     aria-hidden="true"
                   >
