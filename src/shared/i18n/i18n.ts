@@ -42,6 +42,66 @@ export const homeTextByLanguage: Record<Language, HomeText> = {
   },
 }
 
+type CountingGameText = {
+  title: string
+  instruction: string
+  progressLabel: string
+  scoreLabel: string
+  answerLabel: string
+  correctFeedback: string
+  wrongFeedback: string
+  finishTitle: string
+  finishSummary: (score: number, total: number) => string
+  replay: string
+  backHome: string
+}
+
+export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
+  fr: {
+    title: 'Combien y en a-t-il ?',
+    instruction: 'Compte les objets puis touche le bon chiffre.',
+    progressLabel: 'Essai',
+    scoreLabel: 'Score',
+    answerLabel: 'Choisis un chiffre de 1 a 5',
+    correctFeedback: 'Bravo !',
+    wrongFeedback: 'Presque. Reessaie calmement.',
+    finishTitle: 'Session terminee',
+    finishSummary: (score, total) => `Tu as trouve ${score} bonne${score > 1 ? 's' : ''} reponse${score > 1 ? 's' : ''} sur ${total}.`,
+    replay: 'Rejouer',
+    backHome: "Retour a l'accueil",
+  },
+  en: {
+    title: 'How many are there?',
+    instruction: 'Count the items and tap the correct number.',
+    progressLabel: 'Trial',
+    scoreLabel: 'Score',
+    answerLabel: 'Choose a number from 1 to 5',
+    correctFeedback: 'Great job!',
+    wrongFeedback: 'Almost. Try again calmly.',
+    finishTitle: 'Session complete',
+    finishSummary: (score, total) => `You got ${score} correct answer${score > 1 ? 's' : ''} out of ${total}.`,
+    replay: 'Play again',
+    backHome: 'Back to home',
+  },
+}
+
+export const itemLabelByLanguage: Record<Language, Record<string, string>> = {
+  fr: {
+    fireTruck: 'Voiture de pompier',
+    policeCar: 'Voiture de police',
+    ambulance: 'Ambulance',
+    boat: 'Bateau',
+    plane: 'Avion',
+  },
+  en: {
+    fireTruck: 'Fire truck',
+    policeCar: 'Police car',
+    ambulance: 'Ambulance',
+    boat: 'Boat',
+    plane: 'Plane',
+  },
+}
+
 function languageFromNavigator(): Language {
   if (typeof navigator === 'undefined') {
     return 'fr'

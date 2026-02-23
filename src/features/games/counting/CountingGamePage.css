@@ -1,0 +1,177 @@
+.counting-page {
+  display: grid;
+  gap: 18px;
+}
+
+.counting-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.counting-header h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+}
+
+.counting-header p {
+  margin: 8px 0 0;
+  font-size: 1.06rem;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 16px;
+  padding: 10px 14px;
+  background: #e7efff;
+  font-size: 1rem;
+}
+
+.status-row p {
+  margin: 0;
+}
+
+.counting-stage {
+  border-radius: 20px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgba(18, 38, 58, 0.08);
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.item-card {
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.item-fire {
+  background: #ffe5dc;
+  color: #8b2c0f;
+}
+
+.item-police {
+  background: #dce8ff;
+  color: #1e3f72;
+}
+
+.item-ambulance {
+  background: #ffeef0;
+  color: #7f1d35;
+}
+
+.item-boat {
+  background: #d9f6ff;
+  color: #0d4561;
+}
+
+.item-plane {
+  background: #ece9ff;
+  color: #3f3376;
+}
+
+.answers {
+  border-radius: 20px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgba(18, 38, 58, 0.08);
+}
+
+.answers p {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.answer-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(56px, 1fr));
+  gap: 10px;
+}
+
+.answer-button {
+  min-height: 56px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #12263a;
+  background: #dce8ff;
+}
+
+.result-card {
+  border-radius: 20px;
+  padding: 22px;
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgba(18, 38, 58, 0.08);
+}
+
+.result-card h2 {
+  margin: 0 0 8px;
+}
+
+.result-card p {
+  margin: 0 0 14px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.feedback {
+  min-height: 24px;
+  margin: 0;
+  font-size: 1.04rem;
+  font-weight: 700;
+}
+
+.feedback.correct {
+  color: #147a30;
+}
+
+.feedback.wrong {
+  color: #a34a00;
+}
+
+.is-celebrating {
+  animation: reward-pop 0.6s ease-in-out;
+}
+
+@keyframes reward-pop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.08) rotate(-1deg);
+  }
+  60% {
+    transform: scale(0.98) rotate(1deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .counting-header {
+    flex-direction: column;
+  }
+
+  .answer-grid {
+    grid-template-columns: repeat(3, minmax(56px, 1fr));
+  }
+}
