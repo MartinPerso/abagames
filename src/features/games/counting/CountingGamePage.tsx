@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import {
+  countingGameNameByLanguage,
   countingGameTextByLanguage,
   itemLabelByLanguage,
   parseLanguageParam,
@@ -8,11 +9,12 @@ import {
 import { playRewardSfx } from '../../../shared/audio/sfx'
 import {
   type CountingItem,
-  ANSWER_OPTIONS,
   TOTAL_ROUNDS,
   createRound,
+  getAnswerOptions,
   isCorrectAnswer,
 } from './gameLogic'
+import { getStoredCountingMaxObjects } from '../../../shared/settings/gameSettings'
 import './CountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -36,11 +38,13 @@ const imageByItem: Record<CountingItem, string> = {
 export function CountingGamePage() {
   const [searchParams] = useSearchParams()
   const language = parseLanguageParam(searchParams.get('lang'))
+  const maxObjects = getStoredCountingMaxObjects()
+  const answerOptions = getAnswerOptions(maxObjects)
   const text = countingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
-  const [round, setRound] = useState(() => createRound(0))
+  const [round, setRound] = useState(() => createRound(0, maxObjects))
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
@@ -69,7 +73,7 @@ export function CountingGamePage() {
 
     const nextIndex = roundIndex + 1
     setRoundIndex(nextIndex)
-    setRound(createRound(nextIndex))
+    setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
     setIsLocked(false)
   }
@@ -105,7 +109,7 @@ export function CountingGamePage() {
     clearActiveTimer()
 
     setRoundIndex(0)
-    setRound(createRound(0))
+    setRound(createRound(0, maxObjects))
     setScore(0)
     setFeedback('idle')
     setIsLocked(false)
@@ -125,7 +129,7 @@ export function CountingGamePage() {
   return (
     <main className="app-shell counting-page">
       <header className="counting-header">
-        <h1>{text.title}</h1>
+        <h1>{countingGameNameByLanguage[language]}</h1>
         <div className="header-actions">
           <button
             type="button"
@@ -173,7 +177,7 @@ export function CountingGamePage() {
 
           <section className="answers" aria-label={text.answerLabel}>
             <div className="answer-grid">
-              {ANSWER_OPTIONS.map((value) => (
+              {answerOptions.map((value) => (
                 <button
                   key={value}
                   type="button"

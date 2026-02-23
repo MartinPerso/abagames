@@ -1,4 +1,3 @@
-export const ANSWER_OPTIONS = [1, 2, 3, 4, 5] as const
 export const TOTAL_ROUNDS = 8
 
 export type CountingItem = 'fireTruck' | 'policeCar' | 'ambulance' | 'boat' | 'plane'
@@ -19,14 +18,18 @@ function randomItem(): CountingItem {
   return ITEMS[randomIntInclusive(0, ITEMS.length - 1)]
 }
 
-export function createRound(roundIndex: number): CountingRound {
+export function createRound(roundIndex: number, maxObjects: number): CountingRound {
   return {
     roundIndex,
     item: randomItem(),
-    count: randomIntInclusive(1, 5),
+    count: randomIntInclusive(1, maxObjects),
   }
 }
 
 export function isCorrectAnswer(round: CountingRound, answer: number): boolean {
   return round.count === answer
+}
+
+export function getAnswerOptions(maxObjects: number): number[] {
+  return Array.from({ length: maxObjects }, (_, index) => index + 1)
 }

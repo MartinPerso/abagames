@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { HomePage } from '../features/home/HomePage'
 import { CountingGamePage } from '../features/games/counting/CountingGamePage'
+import { SettingsPage } from '../features/settings/SettingsPage'
 
 export const router = createBrowserRouter([
   {
@@ -10,5 +11,9 @@ export const router = createBrowserRouter([
   {
     path: '/games/counting',
     element: <CountingGamePage />,
+  },
+  {
+    path: '/settings',
+    element: <SettingsPage />,
   },
 ])

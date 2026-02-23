@@ -10,24 +10,28 @@ export const languageLabels: Record<Language, string> = {
 type HomeText = {
   title: string
   availableGames: string
-  languageAriaLabel: string
+  settingsLabel: string
 }
 
 export const homeTextByLanguage: Record<Language, HomeText> = {
   fr: {
     title: 'Jeux ABA',
     availableGames: 'Jeux disponibles',
-    languageAriaLabel: 'Choix de langue',
+    settingsLabel: 'Reglages',
   },
   en: {
     title: 'ABA Games',
     availableGames: 'Available games',
-    languageAriaLabel: 'Language picker',
+    settingsLabel: 'Settings',
   },
 }
 
+export const countingGameNameByLanguage: Record<Language, string> = {
+  fr: 'Dénombrement',
+  en: 'Counting',
+}
+
 type CountingGameText = {
-  title: string
   answerLabel: string
   soundOn: string
   soundOff: string
@@ -36,18 +40,38 @@ type CountingGameText = {
 
 export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
   fr: {
-    title: 'Combien ?',
-    answerLabel: 'Choisis un chiffre de 1 a 5',
+    answerLabel: 'Choisis un chiffre',
     soundOn: 'Son active',
     soundOff: 'Son coupe',
     bravoAlert: 'Bravo',
   },
   en: {
-    title: 'How many?',
-    answerLabel: 'Choose a number from 1 to 5',
+    answerLabel: 'Choose a number',
     soundOn: 'Sound on',
     soundOff: 'Sound off',
     bravoAlert: 'Great',
+  },
+}
+
+type SettingsText = {
+  title: string
+  languageTitle: string
+  countingMaxObjectsLabel: string
+  backHomeLabel: string
+}
+
+export const settingsTextByLanguage: Record<Language, SettingsText> = {
+  fr: {
+    title: 'Reglages',
+    languageTitle: 'Langue',
+    countingMaxObjectsLabel: "Nombre d'objets maximum",
+    backHomeLabel: 'Retour accueil',
+  },
+  en: {
+    title: 'Settings',
+    languageTitle: 'Language',
+    countingMaxObjectsLabel: 'Maximum number of objects',
+    backHomeLabel: 'Back home',
   },
 }
 
