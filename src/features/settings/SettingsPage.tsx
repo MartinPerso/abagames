@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   countingGameNameByLanguage,
+  inverseCountingGameNameByLanguage,
   type Language,
   languageLabels,
   parseLanguageParam,
@@ -11,7 +12,10 @@ import {
 import {
   countingSettingsRange,
   getStoredCountingMaxObjects,
+  getStoredReverseCountingMaxObjects,
+  reverseCountingSettingsRange,
   setStoredCountingMaxObjects,
+  setStoredReverseCountingMaxObjects,
 } from '../../shared/settings/gameSettings'
 import './SettingsPage.css'
 
@@ -22,6 +26,9 @@ export function SettingsPage() {
   )
   const [countingMaxObjects, setCountingMaxObjects] = useState<number>(() =>
     getStoredCountingMaxObjects(),
+  )
+  const [reverseCountingMaxObjects, setReverseCountingMaxObjects] = useState<number>(() =>
+    getStoredReverseCountingMaxObjects(),
   )
   const text = settingsTextByLanguage[language]
 
@@ -38,6 +45,11 @@ export function SettingsPage() {
   function handleCountingMaxObjectsChange(nextValue: number) {
     setCountingMaxObjects(nextValue)
     setStoredCountingMaxObjects(nextValue)
+  }
+
+  function handleReverseCountingMaxObjectsChange(nextValue: number) {
+    setReverseCountingMaxObjects(nextValue)
+    setStoredReverseCountingMaxObjects(nextValue)
   }
 
   return (
@@ -83,6 +95,24 @@ export function SettingsPage() {
             onChange={(event) => handleCountingMaxObjectsChange(Number(event.target.value))}
           />
           <output htmlFor="counting-max-objects">{countingMaxObjects}</output>
+        </div>
+      </section>
+
+      <section className="settings-card">
+        <h2>{inverseCountingGameNameByLanguage[language]}</h2>
+        <label className="field-label" htmlFor="reverse-counting-max-objects">
+          {text.reverseCountingMaxObjectsLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="reverse-counting-max-objects"
+            type="range"
+            min={reverseCountingSettingsRange.min}
+            max={reverseCountingSettingsRange.max}
+            value={reverseCountingMaxObjects}
+            onChange={(event) => handleReverseCountingMaxObjectsChange(Number(event.target.value))}
+          />
+          <output htmlFor="reverse-counting-max-objects">{reverseCountingMaxObjects}</output>
         </div>
       </section>
     </main>

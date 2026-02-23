@@ -1,6 +1,6 @@
 .home-page {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .home-header {
@@ -15,7 +15,7 @@
   margin: 0;
   width: 100%;
   text-align: center;
-  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  font-size: clamp(1.7rem, 4.6vw, 2.3rem);
 }
 
 .settings-link {
@@ -38,49 +38,112 @@
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .game-card {
   display: grid;
-  gap: 18px;
-  border-radius: 20px;
-  padding: 20px;
-  background: #ffffff;
-  box-shadow: 0 8px 28px rgba(18, 38, 58, 0.08);
+  gap: 10px;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 0 10px 26px rgba(18, 38, 58, 0.12);
+}
+
+.game-card-number {
+  background: #e5efff;
+}
+
+.game-card-quantity {
+  background: #dff7f6;
+}
+
+.game-title {
+  margin: 0;
+  text-align: left;
+  font-size: clamp(1.2rem, 3.6vw, 1.55rem);
+}
+
+.game-pictogram {
+  margin: 0;
+  font-family: 'Avenir Next Rounded', 'Arial Rounded MT Bold', 'Avenir Next', 'Inter',
+    sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-size: clamp(1.2rem, 3.2vw, 1.8rem);
+  color: #1f4fb5;
+}
+
+.game-card-quantity .game-pictogram {
+  color: #0f6f72;
+}
+
+.game-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.game-card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.home-illustration {
+  width: clamp(105px, 11vw, 140px);
+  height: clamp(105px, 11vw, 140px);
+  object-fit: contain;
 }
 
 .primary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 64px;
-  min-width: 88px;
-  margin-top: 6px;
-  padding: 14px;
-  border-radius: 16px;
+  min-height: 74px;
+  min-width: 74px;
+  flex-shrink: 0;
+  padding: 10px;
+  border-radius: 50%;
   text-decoration: none;
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.3rem;
+  font-weight: 900;
   color: #ffffff;
   background: #2f72f7;
+  box-shadow: 0 8px 18px rgba(31, 79, 181, 0.28);
 }
 
-.home-illustrations {
-  display: flex;
-  justify-content: space-around;
-  gap: 12px;
-}
-
-.home-illustrations img {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
+.game-card-quantity .primary-button {
+  background: #0f6f72;
+  box-shadow: 0 8px 18px rgba(15, 111, 114, 0.28);
 }
 
 @media (max-width: 720px) {
   .home-header {
     min-height: 52px;
+  }
+
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-title {
+    text-align: center;
+  }
+
+  .game-card-head {
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .game-card-body {
+    justify-content: center;
+  }
+
+  .home-illustration {
+    width: clamp(120px, 36vw, 160px);
+    height: clamp(120px, 36vw, 160px);
   }
 }

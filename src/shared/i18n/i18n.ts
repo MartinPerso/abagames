@@ -27,8 +27,13 @@ export const homeTextByLanguage: Record<Language, HomeText> = {
 }
 
 export const countingGameNameByLanguage: Record<Language, string> = {
-  fr: 'Dénombrement',
-  en: 'Counting',
+  fr: 'Jeu du Nombre',
+  en: 'Number Game',
+}
+
+export const inverseCountingGameNameByLanguage: Record<Language, string> = {
+  fr: 'Jeu de la Quantité',
+  en: 'Quantity Game',
 }
 
 type CountingGameText = {
@@ -53,10 +58,27 @@ export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
   },
 }
 
+type InverseCountingGameText = {
+  answerLabel: string
+  bravoAlert: string
+}
+
+export const inverseCountingGameTextByLanguage: Record<Language, InverseCountingGameText> = {
+  fr: {
+    answerLabel: 'Trouve le bon groupe',
+    bravoAlert: 'Bravo',
+  },
+  en: {
+    answerLabel: 'Find the matching group',
+    bravoAlert: 'Great',
+  },
+}
+
 type SettingsText = {
   title: string
   languageTitle: string
   countingMaxObjectsLabel: string
+  reverseCountingMaxObjectsLabel: string
   backHomeLabel: string
 }
 
@@ -65,12 +87,14 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     title: 'Reglages',
     languageTitle: 'Langue',
     countingMaxObjectsLabel: "Nombre d'objets maximum",
+    reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     backHomeLabel: 'Retour accueil',
   },
   en: {
     title: 'Settings',
     languageTitle: 'Language',
     countingMaxObjectsLabel: 'Maximum number of objects',
+    reverseCountingMaxObjectsLabel: 'Maximum number of objects',
     backHomeLabel: 'Back home',
   },
 }

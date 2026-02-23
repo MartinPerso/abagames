@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import {
   countingGameNameByLanguage,
   homeTextByLanguage,
+  inverseCountingGameNameByLanguage,
   parseLanguageParam,
   setStoredLanguage,
 } from '../../shared/i18n/i18n'
@@ -34,16 +35,52 @@ export function HomePage() {
       </header>
 
       <section className="game-grid" aria-label={text.availableGames}>
-        <article className="game-card">
-          <h2>{countingGameNameByLanguage[language]}</h2>
-          <div className="home-illustrations" aria-hidden="true">
-            <img src={`${assetsBaseUrl}/fireTruck.svg`} alt="" />
-            <img src={`${assetsBaseUrl}/boat.svg`} alt="" />
-            <img src={`${assetsBaseUrl}/plane.svg`} alt="" />
+        <article className="game-card game-card-number">
+          <div className="game-card-head">
+            <h2 className="game-title">{countingGameNameByLanguage[language]}</h2>
+            <p className="game-pictogram" aria-hidden="true">
+              123
+            </p>
           </div>
-          <Link to={`/games/counting?lang=${language}`} className="primary-button">
-            ▶
-          </Link>
+          <div className="game-card-body">
+            <img
+              src={`${assetsBaseUrl}/plane.svg`}
+              alt=""
+              className="home-illustration"
+              aria-hidden="true"
+            />
+            <Link
+              to={`/games/counting?lang=${language}`}
+              className="primary-button"
+              aria-label={countingGameNameByLanguage[language]}
+            >
+              <span aria-hidden="true">▶</span>
+            </Link>
+          </div>
+        </article>
+
+        <article className="game-card game-card-quantity">
+          <div className="game-card-head">
+            <h2 className="game-title">{inverseCountingGameNameByLanguage[language]}</h2>
+            <p className="game-pictogram" aria-hidden="true">
+              ●●●
+            </p>
+          </div>
+          <div className="game-card-body">
+            <img
+              src={`${assetsBaseUrl}/ambulance.svg`}
+              alt=""
+              className="home-illustration"
+              aria-hidden="true"
+            />
+            <Link
+              to={`/games/reverse-counting?lang=${language}`}
+              className="primary-button"
+              aria-label={inverseCountingGameNameByLanguage[language]}
+            >
+              <span aria-hidden="true">▶</span>
+            </Link>
+          </div>
         </article>
       </section>
     </main>
