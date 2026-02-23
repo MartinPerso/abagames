@@ -1,91 +1,48 @@
 import type { CountingItem } from '../../features/games/counting/gameLogic'
 
-let audioContext: AudioContext | null = null
-
-function getContext(): AudioContext | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  if (!audioContext) {
-    audioContext = new window.AudioContext()
-  }
-
-  return audioContext
+const sfxByItem: Record<CountingItem, string> = {
+  fireTruck: '/assets/sfx/fireTruck.mp3',
+  policeCar: '/assets/sfx/policeCar.mp3',
+  ambulance: '/assets/sfx/ambulance.mp3',
+  boat: '/assets/sfx/boat.mp3',
+  plane: '/assets/sfx/plane.mp3',
 }
 
-function playTone(
-  context: AudioContext,
-  frequency: number,
-  startAt: number,
-  duration: number,
-  type: OscillatorType,
-  gainValue: number,
-): void {
-  const oscillator = context.createOscillator()
-  const gain = context.createGain()
-  oscillator.type = type
-  oscillator.frequency.setValueAtTime(frequency, startAt)
-  gain.gain.setValueAtTime(gainValue, startAt)
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
-  oscillator.connect(gain)
-  gain.connect(context.destination)
-  oscillator.start(startAt)
-  oscillator.stop(startAt + duration)
-}
-
-function playVehicleSiren(context: AudioContext, now: number): void {
-  const oscillator = context.createOscillator()
-  const gain = context.createGain()
-  oscillator.type = 'sine'
-  oscillator.frequency.setValueAtTime(520, now)
-  oscillator.frequency.linearRampToValueAtTime(830, now + 0.16)
-  oscillator.frequency.linearRampToValueAtTime(480, now + 0.32)
-  oscillator.frequency.linearRampToValueAtTime(860, now + 0.48)
-  gain.gain.setValueAtTime(0.06, now)
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.52)
-  oscillator.connect(gain)
-  gain.connect(context.destination)
-  oscillator.start(now)
-  oscillator.stop(now + 0.52)
-}
-
-function playBoatHorn(context: AudioContext, now: number): void {
-  playTone(context, 140, now, 0.32, 'triangle', 0.08)
-  playTone(context, 190, now + 0.18, 0.28, 'triangle', 0.06)
-}
-
-function playPlaneSound(context: AudioContext, now: number): void {
-  const oscillator = context.createOscillator()
-  const gain = context.createGain()
-  oscillator.type = 'sawtooth'
-  oscillator.frequency.setValueAtTime(200, now)
-  oscillator.frequency.linearRampToValueAtTime(460, now + 0.45)
-  gain.gain.setValueAtTime(0.04, now)
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5)
-  oscillator.connect(gain)
-  gain.connect(context.destination)
-  oscillator.start(now)
-  oscillator.stop(now + 0.5)
-}
+const audioByPath = new Map<string, HTMLAudioElement>()
+let stopTimer: number | null = null
+let currentAudio: HTMLAudioElement | null = null
 
 export function playRewardSfx(item: CountingItem): void {
-  const context = getContext()
-  if (!context) {
+  if (typeof window === 'undefined') {
     return
   }
 
-  const now = context.currentTime + 0.02
-
-  if (item === 'boat') {
-    playBoatHorn(context, now)
-    return
+  const path = sfxByItem[item]
+  let audio = audioByPath.get(path)
+  if (!audio) {
+    audio = new window.Audio(path)
+    audio.preload = 'auto'
+    audioByPath.set(path, audio)
   }
 
-  if (item === 'plane') {
-    playPlaneSound(context, now)
-    return
+  if (stopTimer !== null) {
+    window.clearTimeout(stopTimer)
   }
 
-  playVehicleSiren(context, now)
+  if (currentAudio && currentAudio !== audio) {
+    currentAudio.pause()
+    currentAudio.currentTime = 0
+  }
+
+  audio.currentTime = 0
+  currentAudio = audio
+  void audio.play()
+
+  stopTimer = window.setTimeout(() => {
+    if (currentAudio) {
+      currentAudio.pause()
+      currentAudio.currentTime = 0
+    }
+    stopTimer = null
+  }, 3000)
 }

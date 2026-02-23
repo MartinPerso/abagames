@@ -25,6 +25,7 @@ Create a playful, structured, and predictable learning environment that:
 - **Low-friction navigation** from Home -> Game -> Home.
 - **Stateless games** for reliability and simplicity.
 - **Bilingual experience**: all content available in English and French.
+- **Minimal on-screen text** so a non-reader child can play as autonomously as possible.
 - **Adult-readable feedback** (simple score and success indicators, no clinical diagnosis claims).
 
 ---
@@ -224,8 +225,15 @@ All games should remain short, simple, and restartable.
 - React + TypeScript webapp scaffolded with Vite.
 - Home page with FR/EN language switch and entry to the first game.
 - First game implemented: count items from 1 to 5 (fire truck, police car, ambulance, boat, plane).
-- Immediate reinforcement on correct answers: short animation + characteristic synthesized sound.
+- Immediate reinforcement on correct answers: short animation + characteristic reward sounds.
 - Stateless behavior: leaving a game and returning starts a fresh session.
+- French is the default language when no language has been selected yet.
+
+## Assets used
+
+- Illustrations: OpenMoji SVGs (CC BY-SA 4.0), stored in `public/assets/illustrations/`.
+- Reward sounds: MP3 files from https://www.sound-fishing.net/, stored in `public/assets/sfx/`.
+- Attribution details: `public/assets/ATTRIBUTION.md`.
 
 ---
 

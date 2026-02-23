@@ -30,10 +30,7 @@ export function HomePage() {
   return (
     <main className="app-shell home-page">
       <header className="home-header">
-        <div>
-          <h1>{text.title}</h1>
-          <p>{text.subtitle}</p>
-        </div>
+        <h1>{text.title}</h1>
         <div className="language-switcher" role="group" aria-label={text.languageAriaLabel}>
           {(['fr', 'en'] as const).map((lang) => {
             const active = language === lang
@@ -53,11 +50,13 @@ export function HomePage() {
 
       <section className="game-grid" aria-label={text.availableGames}>
         <article className="game-card">
-          <span className="badge">{text.levelBadge}</span>
-          <h2>{text.countingCardTitle}</h2>
-          <p>{text.countingCardDescription}</p>
+          <div className="home-illustrations" aria-hidden="true">
+            <img src="/assets/illustrations/fireTruck.svg" alt="" />
+            <img src="/assets/illustrations/boat.svg" alt="" />
+            <img src="/assets/illustrations/plane.svg" alt="" />
+          </div>
           <Link to={`/games/counting?lang=${language}`} className="primary-button">
-            {text.play}
+            ▶
           </Link>
         </article>
       </section>

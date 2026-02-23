@@ -25,6 +25,14 @@ const cardClassByItem: Record<CountingItem, string> = {
   plane: 'item-card item-plane',
 }
 
+const imageByItem: Record<CountingItem, string> = {
+  fireTruck: '/assets/illustrations/fireTruck.svg',
+  policeCar: '/assets/illustrations/policeCar.svg',
+  ambulance: '/assets/illustrations/ambulance.svg',
+  boat: '/assets/illustrations/boat.svg',
+  plane: '/assets/illustrations/plane.svg',
+}
+
 export function CountingGamePage() {
   const [searchParams] = useSearchParams()
   const language = parseLanguageParam(searchParams.get('lang'))
@@ -82,7 +90,7 @@ export function CountingGamePage() {
 
       timerRef.current = window.setTimeout(() => {
         moveToNextRound()
-      }, 1100)
+      }, 3000)
       return
     }
 
@@ -108,63 +116,62 @@ export function CountingGamePage() {
     <div
       key={`${round.roundIndex}-${round.item}-${index}`}
       className={`${cardClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-      aria-hidden="true"
+      aria-label={itemLabels[round.item]}
     >
-      {itemLabels[round.item]}
+      <img src={imageByItem[round.item]} alt="" className="item-image" />
     </div>
   ))
 
   return (
     <main className="app-shell counting-page">
       <header className="counting-header">
-        <div>
-          <h1>{text.title}</h1>
-          <p>{text.instruction}</p>
-        </div>
+        <h1>{text.title}</h1>
         <div className="header-actions">
           <button
             type="button"
             className="secondary-action"
             onClick={() => setSoundEnabled((current) => !current)}
+            aria-label={soundEnabled ? text.soundOn : text.soundOff}
           >
-            {soundEnabled ? text.soundOn : text.soundOff}
+            {soundEnabled ? '🔊' : '🔇'}
           </button>
           <Link to={`/?lang=${language}`} className="secondary-link">
-            {text.backHome}
+            ⌂
           </Link>
         </div>
       </header>
 
       {finished ? (
         <section className="result-card" aria-live="polite">
-          <h2>{text.finishTitle}</h2>
-          <p>{text.finishSummary(score, TOTAL_ROUNDS)}</p>
+          <h2>🎉</h2>
+          <p>
+            {score}/{TOTAL_ROUNDS}
+          </p>
           <div className="result-actions">
             <button type="button" className="answer-button" onClick={restartGame}>
-              {text.replay}
+              ↺
             </button>
             <Link to={`/?lang=${language}`} className="secondary-link">
-              {text.backHome}
+              ⌂
             </Link>
           </div>
         </section>
       ) : (
         <>
-          <section className="status-row" aria-live="polite">
-            <p>
-              {text.progressLabel} {roundIndex + 1} / {TOTAL_ROUNDS}
-            </p>
-            <p>
-              {text.scoreLabel}: {score}
-            </p>
-          </section>
+          <div className="question-content">
+            <section className="status-row" aria-live="polite">
+              <p>{`${roundIndex + 1}/${TOTAL_ROUNDS}`}</p>
+              <p>⭐ {score}</p>
+            </section>
 
-          <section className="counting-stage" aria-label={itemLabels[round.item]}>
-            <div className="item-grid">{cards}</div>
-          </section>
+            <section className="counting-stage" aria-label={itemLabels[round.item]}>
+              <div className="item-grid">{cards}</div>
+            </section>
+
+            <p className={`feedback ${feedback}`}>{feedback === 'wrong' ? '❌' : ''}</p>
+          </div>
 
           <section className="answers" aria-label={text.answerLabel}>
-            <p>{text.answerLabel}</p>
             <div className="answer-grid">
               {ANSWER_OPTIONS.map((value) => (
                 <button
@@ -179,8 +186,16 @@ export function CountingGamePage() {
               ))}
             </div>
           </section>
-          <p className={`feedback ${feedback}`}>{feedback === 'correct' ? text.correctFeedback : ''}</p>
-          <p className={`feedback ${feedback}`}>{feedback === 'wrong' ? text.wrongFeedback : ''}</p>
+          {feedback === 'correct' ? (
+            <div className="success-overlay" role="alert" aria-live="assertive">
+              <div className="success-alert">
+                <span>{text.bravoAlert}</span>
+                <span className="emoji-burst" aria-hidden="true">
+                  🎉 ✨ 🎉
+                </span>
+              </div>
+            </div>
+          ) : null}
         </>
       )}
     </main>

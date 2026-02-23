@@ -9,85 +9,45 @@ export const languageLabels: Record<Language, string> = {
 
 type HomeText = {
   title: string
-  subtitle: string
   availableGames: string
-  countingCardTitle: string
-  countingCardDescription: string
-  levelBadge: string
-  play: string
   languageAriaLabel: string
 }
 
 export const homeTextByLanguage: Record<Language, HomeText> = {
   fr: {
-    title: 'ABA Games',
-    subtitle: 'Jeux courts et ludiques pour apprendre en douceur.',
+    title: 'Jeux ABA',
     availableGames: 'Jeux disponibles',
-    countingCardTitle: 'Compter les vehicules',
-    countingCardDescription:
-      "Observe les elements a l'ecran, puis touche le bon chiffre entre 1 et 5.",
-    levelBadge: 'Niveau 1',
-    play: 'Jouer',
     languageAriaLabel: 'Choix de langue',
   },
   en: {
     title: 'ABA Games',
-    subtitle: 'Short, playful games for early learning.',
     availableGames: 'Available games',
-    countingCardTitle: 'Count the vehicles',
-    countingCardDescription: 'Look at the items, then tap the correct number from 1 to 5.',
-    levelBadge: 'Level 1',
-    play: 'Play',
     languageAriaLabel: 'Language picker',
   },
 }
 
 type CountingGameText = {
   title: string
-  instruction: string
-  progressLabel: string
-  scoreLabel: string
   answerLabel: string
-  correctFeedback: string
-  wrongFeedback: string
-  finishTitle: string
-  finishSummary: (score: number, total: number) => string
-  replay: string
-  backHome: string
   soundOn: string
   soundOff: string
+  bravoAlert: string
 }
 
 export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
   fr: {
-    title: 'Combien y en a-t-il ?',
-    instruction: 'Compte les objets puis touche le bon chiffre.',
-    progressLabel: 'Essai',
-    scoreLabel: 'Score',
+    title: 'Combien ?',
     answerLabel: 'Choisis un chiffre de 1 a 5',
-    correctFeedback: 'Bravo !',
-    wrongFeedback: 'Presque. Reessaie calmement.',
-    finishTitle: 'Session terminee',
-    finishSummary: (score, total) => `Tu as trouve ${score} bonne${score > 1 ? 's' : ''} reponse${score > 1 ? 's' : ''} sur ${total}.`,
-    replay: 'Rejouer',
-    backHome: "Retour a l'accueil",
     soundOn: 'Son active',
     soundOff: 'Son coupe',
+    bravoAlert: 'Bravo',
   },
   en: {
-    title: 'How many are there?',
-    instruction: 'Count the items and tap the correct number.',
-    progressLabel: 'Trial',
-    scoreLabel: 'Score',
+    title: 'How many?',
     answerLabel: 'Choose a number from 1 to 5',
-    correctFeedback: 'Great job!',
-    wrongFeedback: 'Almost. Try again calmly.',
-    finishTitle: 'Session complete',
-    finishSummary: (score, total) => `You got ${score} correct answer${score > 1 ? 's' : ''} out of ${total}.`,
-    replay: 'Play again',
-    backHome: 'Back to home',
     soundOn: 'Sound on',
     soundOff: 'Sound off',
+    bravoAlert: 'Great',
   },
 }
 
@@ -108,14 +68,6 @@ export const itemLabelByLanguage: Record<Language, Record<string, string>> = {
   },
 }
 
-function languageFromNavigator(): Language {
-  if (typeof navigator === 'undefined') {
-    return 'fr'
-  }
-
-  return navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en'
-}
-
 export function getStoredLanguage(): Language {
   if (typeof window === 'undefined') {
     return 'fr'
@@ -126,7 +78,7 @@ export function getStoredLanguage(): Language {
     return stored
   }
 
-  return languageFromNavigator()
+  return 'fr'
 }
 
 export function setStoredLanguage(language: Language): void {
