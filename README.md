@@ -246,3 +246,25 @@ npm run dev
 
 Then open the local URL in a browser (for iPad testing, use Safari/WebKit).
 
+## Deploy to GitHub Pages
+
+This project is configured for a GitHub Project Page at:
+`https://martinperso.github.io/abagames/`
+
+### One-time setup
+
+1. Create the GitHub repository `MartinPerso/abagames`.
+2. Push your main branch to GitHub.
+3. In GitHub, open **Settings -> Pages** and set:
+   - **Source**: `Deploy from a branch`
+   - **Branch**: `gh-pages` / `/ (root)`
+
+### Publish
+
+```bash
+npm install
+npm run deploy
+```
+
+The deploy script builds the app and publishes `dist/` to the `gh-pages` branch.
+
