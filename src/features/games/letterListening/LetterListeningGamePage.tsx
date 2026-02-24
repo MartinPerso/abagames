@@ -22,8 +22,12 @@ type ConfettiParticle = {
   rotation: string
 }
 
-const NEXT_ROUND_DELAY_MS = 1200
+const NEXT_ROUND_DELAY_MS = 1700
 const CONFETTI_COLORS = ['#ff6f91', '#ffd166', '#7ed957', '#66d9ff', '#c084ff']
+const CONFETTI_DURATION_SECONDS = 5
+const BASE_CONFETTI_DURATION_SECONDS = 0.8
+const CONFETTI_TRAVEL_MULTIPLIER =
+  CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const LETTER_PROMPT_TONES = [
   { start: '#ffe8ef', middle: '#fff4d9', end: '#dff7f6' },
   { start: '#fff0df', middle: '#fff8d6', end: '#e8f8db' },
@@ -40,14 +44,23 @@ function randomIntInclusive(min: number, max: number): number {
 function createConfettiParticles(count: number): ConfettiParticle[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `confetti-${index}-${Date.now()}`,
-    left: `${randomIntInclusive(12, 88)}%`,
-    top: `${randomIntInclusive(38, 64)}%`,
+    left: `${randomIntInclusive(2, 98)}%`,
+    top: `${randomIntInclusive(4, 96)}%`,
     color: CONFETTI_COLORS[randomIntInclusive(0, CONFETTI_COLORS.length - 1)],
     size: `${randomIntInclusive(8, 14)}px`,
-    delay: `${(Math.random() * 0.18).toFixed(2)}s`,
-    dx: `${randomIntInclusive(-90, 90)}px`,
-    dy: `${randomIntInclusive(-145, -78)}px`,
-    rotation: `${randomIntInclusive(-300, 300)}deg`,
+    delay: `${(Math.random() * 0.32).toFixed(2)}s`,
+    dx: `${randomIntInclusive(
+      Math.round(-90 * CONFETTI_TRAVEL_MULTIPLIER),
+      Math.round(90 * CONFETTI_TRAVEL_MULTIPLIER),
+    )}px`,
+    dy: `${randomIntInclusive(
+      Math.round(-145 * CONFETTI_TRAVEL_MULTIPLIER),
+      Math.round(-78 * CONFETTI_TRAVEL_MULTIPLIER),
+    )}px`,
+    rotation: `${randomIntInclusive(
+      Math.round(-300 * CONFETTI_TRAVEL_MULTIPLIER),
+      Math.round(300 * CONFETTI_TRAVEL_MULTIPLIER),
+    )}deg`,
   }))
 }
 
@@ -140,7 +153,7 @@ export function LetterListeningGamePage() {
     }
 
     if (isCorrectAnswer(round, letter)) {
-      setConfettiParticles(createConfettiParticles(16))
+      setConfettiParticles(createConfettiParticles(400))
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)

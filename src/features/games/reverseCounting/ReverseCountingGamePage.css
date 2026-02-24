@@ -73,10 +73,13 @@
 }
 
 .choice-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 18px;
 }
 
 .choice-grid.is-wrong {
@@ -248,7 +251,7 @@
 }
 
 .micro-confetti {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 12;
   pointer-events: none;
@@ -257,7 +260,7 @@
 .confetti-piece {
   position: absolute;
   border-radius: 2px;
-  animation: confetti-burst 0.8s ease-out forwards;
+  animation: confetti-burst 5s ease-out forwards;
 }
 
 @keyframes confetti-burst {

@@ -30,6 +30,10 @@ type ConfettiParticle = {
 }
 
 const CONFETTI_COLORS = ['#ff6f91', '#ffd166', '#7ed957', '#66d9ff', '#c084ff']
+const CONFETTI_DURATION_SECONDS = 5
+const BASE_CONFETTI_DURATION_SECONDS = 0.8
+const CONFETTI_TRAVEL_MULTIPLIER =
+  CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -39,14 +43,23 @@ function randomIntInclusive(min: number, max: number): number {
 function createConfettiParticles(count: number): ConfettiParticle[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `confetti-${index}-${Date.now()}`,
-    left: `${randomIntInclusive(12, 88)}%`,
-    top: `${randomIntInclusive(38, 64)}%`,
+    left: `${randomIntInclusive(2, 98)}%`,
+    top: `${randomIntInclusive(4, 96)}%`,
     color: CONFETTI_COLORS[randomIntInclusive(0, CONFETTI_COLORS.length - 1)],
     size: `${randomIntInclusive(8, 14)}px`,
-    delay: `${(Math.random() * 0.18).toFixed(2)}s`,
-    dx: `${randomIntInclusive(-90, 90)}px`,
-    dy: `${randomIntInclusive(-145, -78)}px`,
-    rotation: `${randomIntInclusive(-300, 300)}deg`,
+    delay: `${(Math.random() * 0.32).toFixed(2)}s`,
+    dx: `${randomIntInclusive(
+      Math.round(-90 * CONFETTI_TRAVEL_MULTIPLIER),
+      Math.round(90 * CONFETTI_TRAVEL_MULTIPLIER),
+    )}px`,
+    dy: `${randomIntInclusive(
+      Math.round(-145 * CONFETTI_TRAVEL_MULTIPLIER),
+      Math.round(-78 * CONFETTI_TRAVEL_MULTIPLIER),
+    )}px`,
+    rotation: `${randomIntInclusive(
+      Math.round(-300 * CONFETTI_TRAVEL_MULTIPLIER),
+      Math.round(300 * CONFETTI_TRAVEL_MULTIPLIER),
+    )}deg`,
   }))
 }
 
@@ -232,7 +245,7 @@ export function ReverseCountingGamePage() {
     }
 
     if (isCorrectAnswer(round, choiceId)) {
-      setConfettiParticles(createConfettiParticles(16))
+      setConfettiParticles(createConfettiParticles(400))
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
@@ -395,26 +408,25 @@ export function ReverseCountingGamePage() {
                 </button>
               )
             })}
+            {feedback === 'correct' && confettiParticles.length > 0 ? (
+              <div className="micro-confetti" aria-hidden="true">
+                {confettiParticles.map((particle) => {
+                  const style = {
+                    left: particle.left,
+                    top: particle.top,
+                    width: particle.size,
+                    height: `calc(${particle.size} * 0.52)`,
+                    backgroundColor: particle.color,
+                    animationDelay: particle.delay,
+                    '--confetti-dx': particle.dx,
+                    '--confetti-dy': particle.dy,
+                    '--confetti-rotation': particle.rotation,
+                  } as CSSProperties
+                  return <span key={particle.id} className="confetti-piece" style={style} />
+                })}
+              </div>
+            ) : null}
           </section>
-
-          {feedback === 'correct' && confettiParticles.length > 0 ? (
-            <div className="micro-confetti" aria-hidden="true">
-              {confettiParticles.map((particle) => {
-                const style = {
-                  left: particle.left,
-                  top: particle.top,
-                  width: particle.size,
-                  height: `calc(${particle.size} * 0.52)`,
-                  backgroundColor: particle.color,
-                  animationDelay: particle.delay,
-                  '--confetti-dx': particle.dx,
-                  '--confetti-dy': particle.dy,
-                  '--confetti-rotation': particle.rotation,
-                } as CSSProperties
-                return <span key={particle.id} className="confetti-piece" style={style} />
-              })}
-            </div>
-          ) : null}
         </>
       )}
     </main>
