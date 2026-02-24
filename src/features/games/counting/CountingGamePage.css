@@ -6,7 +6,7 @@
   height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .question-content {
@@ -50,7 +50,7 @@
   padding: 18px;
   background: #ffffff;
   box-shadow: 0 8px 28px rgba(18, 38, 58, 0.08);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .item-scene {
@@ -146,9 +146,6 @@
   font-weight: 900;
   letter-spacing: 0.015em;
   line-height: 1;
-  text-shadow:
-    0 2px 0 rgba(255, 255, 255, 0.6),
-    0 6px 8px rgba(18, 38, 58, 0.18);
   border: 2px solid transparent;
   border-radius: 18px;
   color: var(--answer-color-dark);
@@ -156,11 +153,23 @@
   box-shadow:
     0 7px 18px rgba(18, 38, 58, 0.13),
     inset 0 -2px 0 rgba(255, 255, 255, 0.45);
-  transform: rotate(var(--tilt));
+  transform: translateZ(0) rotate(var(--tilt));
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   transition:
     transform 0.12s ease,
     box-shadow 0.18s ease,
     filter 0.18s ease;
+}
+
+.counting-page .answer-grid .answer-button .answer-value {
+  display: inline-block;
+  line-height: 1;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.6);
+  filter: drop-shadow(0 5px 7px rgba(18, 38, 58, 0.18));
 }
 
 .counting-page .answer-grid .answer-button:nth-child(odd) {
@@ -177,7 +186,7 @@
 }
 
 .counting-page .answer-grid .answer-button:enabled:hover {
-  transform: translateY(-2px) scale(1.04) rotate(var(--tilt));
+  transform: translate3d(0, -2px, 0) scale(1.04) rotate(var(--tilt));
   filter: saturate(1.08);
   box-shadow:
     0 12px 20px rgba(18, 38, 58, 0.18),
@@ -185,7 +194,16 @@
 }
 
 .counting-page .answer-grid .answer-button:enabled:active {
-  transform: translateY(0) scale(0.98) rotate(var(--tilt));
+  transform: translate3d(0, 0, 0) scale(0.98) rotate(var(--tilt));
+}
+
+@supports (-webkit-touch-callout: none) {
+  .counting-page .answer-grid .answer-button .answer-value {
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55),
+      0 3px 0 rgba(255, 255, 255, 0.18);
+    filter: drop-shadow(0 4px 5px rgba(18, 38, 58, 0.14));
+  }
 }
 
 .answers.is-wrong .answer-grid {
@@ -225,6 +243,11 @@
   animation:
     answer-pointer-arrive 0.48s cubic-bezier(0.18, 0.88, 0.32, 1) both,
     answer-pointer-bob 0.72s ease-in-out 0.48s infinite alternate;
+}
+
+.answer-grid .answer-button:first-child .answer-pointer {
+  left: 6px;
+  transform: translate(-35%, -50%) rotate(-4deg);
 }
 
 .answer-grid .answer-button:nth-child(8n + 1) {
@@ -411,7 +434,7 @@
     transform: translate(-50%, -50%) rotate(0deg) scale(1);
     opacity: 1;
   }
-  28% {
+  34% {
     transform: translate(
         calc(-50% + var(--travel-x-mid, 0vw)),
         calc(-50% + var(--travel-y-mid, -24vh))
@@ -420,7 +443,7 @@
       scale(var(--scale-mid, 1.05));
     opacity: 1;
   }
-  62% {
+  70% {
     transform: translate(
         calc(-50% + var(--travel-x-late, 24vw)),
         calc(-50% + var(--travel-y-late, -34vh))
@@ -460,7 +483,7 @@
     transform: translate(-50%, -50%) rotate(0deg) scale(1);
     opacity: 1;
   }
-  24% {
+  30% {
     transform: translate(
         calc(-50% + var(--travel-x-mid, 16vw)),
         calc(-50% + var(--travel-y-mid, -22vh))
@@ -469,7 +492,7 @@
       scale(var(--scale-mid, 1.08));
     opacity: 1;
   }
-  52% {
+  60% {
     transform: translate(
         calc(-50% - var(--travel-x-mid, 16vw)),
         calc(-50% + calc(var(--travel-y-mid, -22vh) * 1.15))
@@ -478,7 +501,7 @@
       scale(var(--scale-late, 0.86));
     opacity: 0.95;
   }
-  76% {
+  84% {
     transform: translate(
         calc(-50% + var(--travel-x-late, 26vw)),
         calc(-50% + var(--travel-y-late, -34vh))
@@ -503,7 +526,7 @@
     transform: translate(-50%, -50%) rotate(0deg) scale(1);
     opacity: 1;
   }
-  18% {
+  24% {
     transform: translate(
         calc(-50% + calc(var(--travel-x-mid, 16vw) * 0.45)),
         calc(-50% + calc(var(--travel-y-mid, -22vh) * 0.4))
@@ -512,7 +535,7 @@
       scale(var(--scale-mid, 1.1));
     opacity: 1;
   }
-  44% {
+  54% {
     transform: translate(
         calc(-50% - calc(var(--travel-x-mid, 16vw) * 0.55)),
         calc(-50% + calc(var(--travel-y-mid, -22vh) * 0.85))
@@ -521,7 +544,7 @@
       scale(var(--scale-late, 0.93));
     opacity: 0.95;
   }
-  70% {
+  80% {
     transform: translate(
         calc(-50% + var(--travel-x-late, 24vw)),
         calc(-50% + var(--travel-y-late, -34vh))

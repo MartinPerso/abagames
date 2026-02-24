@@ -212,9 +212,6 @@
   font-weight: 900;
   letter-spacing: 0.015em;
   line-height: 1;
-  text-shadow:
-    0 2px 0 rgba(255, 255, 255, 0.6),
-    0 6px 8px rgba(18, 38, 58, 0.18);
   border: 2px solid transparent;
   border-radius: 18px;
   color: var(--answer-color-dark);
@@ -222,11 +219,23 @@
   box-shadow:
     0 7px 18px rgba(18, 38, 58, 0.13),
     inset 0 -2px 0 rgba(255, 255, 255, 0.45);
-  transform: rotate(var(--tilt));
+  transform: translateZ(0) rotate(var(--tilt));
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   transition:
     transform 0.12s ease,
     box-shadow 0.18s ease,
     filter 0.18s ease;
+}
+
+.letter-listening-page .answer-grid .answer-button .answer-letter {
+  display: inline-block;
+  line-height: 1;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.6);
+  filter: drop-shadow(0 5px 7px rgba(18, 38, 58, 0.18));
 }
 
 .letter-listening-page .answer-grid .answer-button:nth-child(odd) {
@@ -243,7 +252,7 @@
 }
 
 .letter-listening-page .answer-grid .answer-button:enabled:hover {
-  transform: translateY(-2px) scale(1.04) rotate(var(--tilt));
+  transform: translate3d(0, -2px, 0) scale(1.04) rotate(var(--tilt));
   filter: saturate(1.08);
   box-shadow:
     0 12px 20px rgba(18, 38, 58, 0.18),
@@ -251,7 +260,16 @@
 }
 
 .letter-listening-page .answer-grid .answer-button:enabled:active {
-  transform: translateY(0) scale(0.98) rotate(var(--tilt));
+  transform: translate3d(0, 0, 0) scale(0.98) rotate(var(--tilt));
+}
+
+@supports (-webkit-touch-callout: none) {
+  .letter-listening-page .answer-grid .answer-button .answer-letter {
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55),
+      0 3px 0 rgba(255, 255, 255, 0.18);
+    filter: drop-shadow(0 4px 5px rgba(18, 38, 58, 0.14));
+  }
 }
 
 .answers.is-wrong .answer-grid {
