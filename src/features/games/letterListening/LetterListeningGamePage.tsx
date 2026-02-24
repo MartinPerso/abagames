@@ -5,6 +5,7 @@ import {
   letterListeningGameTextByLanguage,
   parseLanguageParam,
 } from '../../../shared/i18n/i18n'
+import { getStoredLetterListeningAllowedLetters } from '../../../shared/settings/gameSettings'
 import { TOTAL_ROUNDS, createRound, isCorrectAnswer } from './gameLogic'
 import './LetterListeningGamePage.css'
 
@@ -56,7 +57,9 @@ export function LetterListeningGamePage() {
   const text = letterListeningGameTextByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
-  const [round, setRound] = useState(() => createRound(0))
+  const [round, setRound] = useState(() =>
+    createRound(0, getStoredLetterListeningAllowedLetters()),
+  )
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
@@ -126,7 +129,7 @@ export function LetterListeningGamePage() {
 
     const nextIndex = roundIndex + 1
     setRoundIndex(nextIndex)
-    setRound(createRound(nextIndex))
+    setRound(createRound(nextIndex, getStoredLetterListeningAllowedLetters()))
     setFeedback('idle')
     setIsLocked(false)
   }
@@ -162,7 +165,7 @@ export function LetterListeningGamePage() {
     clearActiveTimer()
     stopSpeech()
     setRoundIndex(0)
-    setRound(createRound(0))
+    setRound(createRound(0, getStoredLetterListeningAllowedLetters()))
     setScore(0)
     setFeedback('idle')
     setIsLocked(false)

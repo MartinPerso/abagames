@@ -17,7 +17,38 @@ import {
 import './ReverseCountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
+type ConfettiParticle = {
+  id: string
+  left: string
+  top: string
+  color: string
+  size: string
+  delay: string
+  dx: string
+  dy: string
+  rotation: string
+}
+
+const CONFETTI_COLORS = ['#ff6f91', '#ffd166', '#7ed957', '#66d9ff', '#c084ff']
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
+
+function randomIntInclusive(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+function createConfettiParticles(count: number): ConfettiParticle[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `confetti-${index}-${Date.now()}`,
+    left: `${randomIntInclusive(12, 88)}%`,
+    top: `${randomIntInclusive(38, 64)}%`,
+    color: CONFETTI_COLORS[randomIntInclusive(0, CONFETTI_COLORS.length - 1)],
+    size: `${randomIntInclusive(8, 14)}px`,
+    delay: `${(Math.random() * 0.18).toFixed(2)}s`,
+    dx: `${randomIntInclusive(-90, 90)}px`,
+    dy: `${randomIntInclusive(-145, -78)}px`,
+    rotation: `${randomIntInclusive(-300, 300)}deg`,
+  }))
+}
 
 const imageByItem: Record<CountingItem, string> = {
   fireTruck: `${assetsBaseUrl}/fireTruck.svg`,
@@ -165,6 +196,7 @@ export function ReverseCountingGamePage() {
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
+  const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const timerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
@@ -200,6 +232,7 @@ export function ReverseCountingGamePage() {
     }
 
     if (isCorrectAnswer(round, choiceId)) {
+      setConfettiParticles(createConfettiParticles(16))
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
@@ -225,6 +258,7 @@ export function ReverseCountingGamePage() {
 
   function restartGame() {
     clearActiveTimer()
+    setConfettiParticles([])
     setRoundIndex(0)
     setRound(createRound(0, maxObjects))
     setScore(0)
@@ -363,14 +397,22 @@ export function ReverseCountingGamePage() {
             })}
           </section>
 
-          {feedback === 'correct' ? (
-            <div className="success-overlay" role="alert" aria-live="assertive">
-              <div className="success-alert">
-                <span>{text.bravoAlert}</span>
-                <span className="emoji-burst" aria-hidden="true">
-                  🎉 ✨ 🎉
-                </span>
-              </div>
+          {feedback === 'correct' && confettiParticles.length > 0 ? (
+            <div className="micro-confetti" aria-hidden="true">
+              {confettiParticles.map((particle) => {
+                const style = {
+                  left: particle.left,
+                  top: particle.top,
+                  width: particle.size,
+                  height: `calc(${particle.size} * 0.52)`,
+                  backgroundColor: particle.color,
+                  animationDelay: particle.delay,
+                  '--confetti-dx': particle.dx,
+                  '--confetti-dy': particle.dy,
+                  '--confetti-rotation': particle.rotation,
+                } as CSSProperties
+                return <span key={particle.id} className="confetti-piece" style={style} />
+              })}
             </div>
           ) : null}
         </>
