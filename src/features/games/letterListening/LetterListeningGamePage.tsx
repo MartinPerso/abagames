@@ -78,7 +78,6 @@ const REWARD_BRUSH_RADIUS = 9.4
 const REWARD_FILL_THRESHOLD = 0.9
 const REWARD_COMPLETE_DELAY_MS = 500
 const REWARD_RESULT_VISIBLE_MS = 5000
-const ANSWER_POINTER_VISIBLE_MS = 4000
 const LETTER_SPEECH_DELAY_MS = 500
 const REWARD_FONT_WEIGHT = 700
 const REWARD_LETTER_FILL_COLOR = '#f8d67b'
@@ -540,7 +539,6 @@ export function LetterListeningGamePage() {
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
-  const answerPointerHideTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
@@ -554,10 +552,6 @@ export function LetterListeningGamePage() {
     if (answerPointerTimerRef.current !== null) {
       window.clearTimeout(answerPointerTimerRef.current)
       answerPointerTimerRef.current = null
-    }
-    if (answerPointerHideTimerRef.current !== null) {
-      window.clearTimeout(answerPointerHideTimerRef.current)
-      answerPointerHideTimerRef.current = null
     }
   }
 
@@ -640,9 +634,6 @@ export function LetterListeningGamePage() {
     setShowAnswerPointer(false)
     answerPointerTimerRef.current = window.setTimeout(() => {
       setShowAnswerPointer(true)
-      answerPointerHideTimerRef.current = window.setTimeout(() => {
-        setShowAnswerPointer(false)
-      }, ANSWER_POINTER_VISIBLE_MS)
     }, answerPointerDelayMs)
 
     return () => {

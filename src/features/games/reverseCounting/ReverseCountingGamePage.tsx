@@ -41,7 +41,6 @@ const CONFETTI_DURATION_SECONDS = 5
 const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
-const ANSWER_POINTER_VISIBLE_MS = 4000
 const TARGET_SPEECH_DELAY_MS = 1000
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
@@ -225,7 +224,6 @@ export function ReverseCountingGamePage() {
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
-  const answerPointerHideTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
@@ -239,10 +237,6 @@ export function ReverseCountingGamePage() {
     if (answerPointerTimerRef.current !== null) {
       window.clearTimeout(answerPointerTimerRef.current)
       answerPointerTimerRef.current = null
-    }
-    if (answerPointerHideTimerRef.current !== null) {
-      window.clearTimeout(answerPointerHideTimerRef.current)
-      answerPointerHideTimerRef.current = null
     }
   }
 
@@ -325,9 +319,6 @@ export function ReverseCountingGamePage() {
     setShowAnswerPointer(false)
     answerPointerTimerRef.current = window.setTimeout(() => {
       setShowAnswerPointer(true)
-      answerPointerHideTimerRef.current = window.setTimeout(() => {
-        setShowAnswerPointer(false)
-      }, ANSWER_POINTER_VISIBLE_MS)
     }, answerPointerDelayMs)
 
     return () => {

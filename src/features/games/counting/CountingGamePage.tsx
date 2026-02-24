@@ -46,7 +46,6 @@ const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const HINT_COUNT_STEP_MS = 900
-const ANSWER_POINTER_VISIBLE_MS = 4000
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -248,7 +247,6 @@ export function CountingGamePage() {
   const hintStepTimerRef = useRef<number | null>(null)
   const hintRepeatTimerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
-  const answerPointerHideTimerRef = useRef<number | null>(null)
 
   const itemPositions = useMemo(
     () => createItemPositions(round.count),
@@ -280,10 +278,6 @@ export function CountingGamePage() {
     if (answerPointerTimerRef.current !== null) {
       window.clearTimeout(answerPointerTimerRef.current)
       answerPointerTimerRef.current = null
-    }
-    if (answerPointerHideTimerRef.current !== null) {
-      window.clearTimeout(answerPointerHideTimerRef.current)
-      answerPointerHideTimerRef.current = null
     }
   }
 
@@ -404,9 +398,6 @@ export function CountingGamePage() {
     setShowAnswerPointer(false)
     answerPointerTimerRef.current = window.setTimeout(() => {
       setShowAnswerPointer(true)
-      answerPointerHideTimerRef.current = window.setTimeout(() => {
-        setShowAnswerPointer(false)
-      }, ANSWER_POINTER_VISIBLE_MS)
     }, answerPointerDelayMs)
 
     return () => {
