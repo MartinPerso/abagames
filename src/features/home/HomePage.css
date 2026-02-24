@@ -13,6 +13,12 @@
   align-items: center;
   justify-content: center;
   min-height: 56px;
+  padding: 6px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(31, 79, 181, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 20px rgba(18, 38, 58, 0.08);
+  backdrop-filter: blur(8px);
 }
 
 .home-header h1 {
@@ -25,7 +31,7 @@
 .settings-link {
   position: absolute;
   top: 50%;
-  right: 0;
+  right: 6px;
   transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
@@ -33,11 +39,12 @@
   min-height: 52px;
   min-width: 52px;
   border-radius: 14px;
+  border: 1px solid rgba(47, 114, 247, 0.18);
   font-size: 1.5rem;
   text-decoration: none;
   color: #2f72f7;
-  background: #e7efff;
-  box-shadow: 0 3px 8px rgba(47, 114, 247, 0.2);
+  background: linear-gradient(180deg, #edf3ff 0%, #dfeaff 100%);
+  box-shadow: 0 6px 14px rgba(47, 114, 247, 0.22);
 }
 
 .game-grid {
@@ -51,7 +58,8 @@
   gap: 10px;
   border-radius: 24px;
   padding: 16px;
-  box-shadow: 0 10px 26px rgba(18, 38, 58, 0.12);
+  border: 1px solid rgba(18, 38, 58, 0.08);
+  box-shadow: 0 12px 26px rgba(18, 38, 58, 0.12);
 }
 
 .game-card-number {
@@ -125,6 +133,11 @@
   color: #ffffff;
   background: #2f72f7;
   box-shadow: 0 8px 18px rgba(31, 79, 181, 0.28);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.06);
 }
 
 .game-card-quantity .primary-button {

@@ -1,9 +1,18 @@
 :root {
+  --text-primary: #12263a;
+  --text-secondary: #4f6075;
+  --surface-strong: #ffffff;
+  --surface-soft: rgba(255, 255, 255, 0.9);
+  --border-soft: rgba(31, 79, 181, 0.12);
+  --accent: #2f72f7;
+  --accent-pressed: #245dd0;
+  --shadow-soft: 0 10px 28px rgba(18, 38, 58, 0.1);
+
   font-family: 'Avenir Next', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
   line-height: 1.4;
   font-weight: 500;
-  color: #12263a;
+  color: var(--text-primary);
   background: #f5f8ff;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -28,11 +37,52 @@ body {
   -webkit-touch-callout: none;
   user-select: none;
   touch-action: manipulation;
+  background:
+    radial-gradient(circle at 12% 8%, #f0f7ff 0%, transparent 34%),
+    radial-gradient(circle at 88% 12%, #e8eeff 0%, transparent 30%),
+    linear-gradient(180deg, #f8fbff 0%, #eef3ff 58%, #e9f0ff 100%);
+  background-attachment: fixed;
 }
 
 #root {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+button,
+a,
+select,
+input {
+  font: inherit;
+}
+
+button,
+.primary-button,
+.secondary-link,
+.settings-link,
+.language-chip,
+.letter-chip,
+.answer-button {
+  transition:
+    transform 0.13s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease,
+    background-color 0.18s ease;
+}
+
+button:active,
+.primary-button:active,
+.secondary-link:active,
+.settings-link:active,
+.language-chip:active,
+.letter-chip:active,
+.answer-button:active {
+  transform: scale(0.97);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(47, 114, 247, 0.3);
+  outline-offset: 2px;
 }
 
 /* Allow selection in settings (inputs, labels, etc.) */
@@ -54,7 +104,15 @@ body {
   min-height: 48px;
   padding: 10px 16px;
   border-radius: 12px;
+  border: 1px solid var(--border-soft);
   font-weight: 700;
-  color: #2f72f7;
+  color: var(--accent);
   text-decoration: none;
+  background: var(--surface-soft);
+  box-shadow: 0 4px 14px rgba(31, 79, 181, 0.14);
+  backdrop-filter: blur(6px);
+}
+
+.secondary-link:active {
+  color: var(--accent-pressed);
 }
