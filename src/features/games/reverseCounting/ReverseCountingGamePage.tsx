@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   commonGameTextByLanguage,
   getGameScoreAriaLabel,
@@ -13,6 +13,7 @@ import {
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingMaxObjects,
+  getStoredSpeechVoiceUri,
 } from '../../../shared/settings/gameSettings'
 import {
   type CountingItem,
@@ -41,6 +42,7 @@ const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const ANSWER_POINTER_VISIBLE_MS = 4000
+const TARGET_SPEECH_DELAY_MS = 1000
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -224,6 +226,7 @@ export function ReverseCountingGamePage() {
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const answerPointerHideTimerRef = useRef<number | null>(null)
+  const speechTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -243,12 +246,75 @@ export function ReverseCountingGamePage() {
     }
   }
 
+  function clearSpeechTimer() {
+    if (speechTimerRef.current !== null) {
+      window.clearTimeout(speechTimerRef.current)
+      speechTimerRef.current = null
+    }
+  }
+
+  const stopSpeech = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    window.speechSynthesis?.cancel()
+  }, [])
+
+  const speakTargetCount = useCallback(
+    (targetCount: number) => {
+      if (typeof window === 'undefined') {
+        return
+      }
+
+      const synth = window.speechSynthesis
+      if (!synth) {
+        return
+      }
+
+      stopSpeech()
+      const utterance = new SpeechSynthesisUtterance(`${text.speechPrefix}${targetCount}`)
+      const selectedVoiceUri = getStoredSpeechVoiceUri()
+      const selectedVoice = selectedVoiceUri
+        ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+        : undefined
+      const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+      if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+        utterance.voice = selectedVoice
+        utterance.lang = selectedVoice.lang
+      } else {
+        utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+      }
+      utterance.rate = 0.76
+      utterance.pitch = 1
+      synth.speak(utterance)
+    },
+    [language, stopSpeech, text.speechPrefix],
+  )
+
   useEffect(() => {
     return () => {
       clearActiveTimer()
       clearAnswerPointerTimer()
+      clearSpeechTimer()
+      stopSpeech()
     }
-  }, [])
+  }, [stopSpeech])
+
+  useEffect(() => {
+    if (roundIndex >= TOTAL_ROUNDS || isLocked || feedback === 'correct') {
+      return
+    }
+
+    clearSpeechTimer()
+    speechTimerRef.current = window.setTimeout(() => {
+      speakTargetCount(round.targetCount)
+    }, TARGET_SPEECH_DELAY_MS)
+
+    return () => {
+      clearSpeechTimer()
+      stopSpeech()
+    }
+  }, [feedback, isLocked, round.roundIndex, round.targetCount, roundIndex, speakTargetCount, stopSpeech])
 
   useEffect(() => {
     if (roundIndex >= TOTAL_ROUNDS || !answerPointerEnabled || isLocked || feedback === 'correct') {
@@ -297,6 +363,8 @@ export function ReverseCountingGamePage() {
       setShowAnswerPointer(false)
       clearActiveTimer()
       clearAnswerPointerTimer()
+      clearSpeechTimer()
+      stopSpeech()
 
       const correctChoice = round.choices.find((choice) => choice.id === round.correctChoiceId)
       if (correctChoice) {
@@ -319,6 +387,8 @@ export function ReverseCountingGamePage() {
   function restartGame() {
     clearActiveTimer()
     clearAnswerPointerTimer()
+    clearSpeechTimer()
+    stopSpeech()
     setConfettiParticles([])
     setRoundIndex(0)
     setRound(createRound(0, maxObjects))

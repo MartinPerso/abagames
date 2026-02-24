@@ -20,6 +20,7 @@ import {
   getStoredLetterListeningAllowedLetters,
   getStoredLetterListeningAnswerPointerDelaySeconds,
   getStoredLetterListeningAnswerPointerEnabled,
+  getStoredSpeechVoiceUri,
 } from '../../../shared/settings/gameSettings'
 import { TOTAL_ROUNDS, createRound, isCorrectAnswer } from './gameLogic'
 import './LetterListeningGamePage.css'
@@ -76,6 +77,7 @@ const REWARD_FILL_THRESHOLD = 0.9
 const REWARD_COMPLETE_DELAY_MS = 500
 const REWARD_RESULT_VISIBLE_MS = 5000
 const ANSWER_POINTER_VISIBLE_MS = 4000
+const LETTER_SPEECH_DELAY_MS = 500
 const REWARD_FONT_FAMILY =
   '"Avenir Next Rounded", "Arial Rounded MT Bold", "Avenir Next", "Inter", sans-serif'
 
@@ -467,6 +469,7 @@ export function LetterListeningGamePage() {
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const answerPointerHideTimerRef = useRef<number | null>(null)
+  const speechTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -483,6 +486,13 @@ export function LetterListeningGamePage() {
     if (answerPointerHideTimerRef.current !== null) {
       window.clearTimeout(answerPointerHideTimerRef.current)
       answerPointerHideTimerRef.current = null
+    }
+  }
+
+  function clearSpeechTimer() {
+    if (speechTimerRef.current !== null) {
+      window.clearTimeout(speechTimerRef.current)
+      speechTimerRef.current = null
     }
   }
 
@@ -508,7 +518,17 @@ export function LetterListeningGamePage() {
 
       stopSpeech()
       const utterance = new SpeechSynthesisUtterance(spokenText)
-      utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+      const selectedVoiceUri = getStoredSpeechVoiceUri()
+      const selectedVoice = selectedVoiceUri
+        ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+        : undefined
+      const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+      if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+        utterance.voice = selectedVoice
+        utterance.lang = selectedVoice.lang
+      } else {
+        utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+      }
       utterance.rate = 0.75
       utterance.pitch = 1.05
       synth.speak(utterance)
@@ -517,8 +537,13 @@ export function LetterListeningGamePage() {
   )
 
   useEffect(() => {
-    speakLetter(round.targetLetter)
+    clearSpeechTimer()
+    speechTimerRef.current = window.setTimeout(() => {
+      speakLetter(round.targetLetter)
+    }, LETTER_SPEECH_DELAY_MS)
+
     return () => {
+      clearSpeechTimer()
       stopSpeech()
     }
   }, [round.targetLetter, speakLetter, stopSpeech])
@@ -529,6 +554,7 @@ export function LetterListeningGamePage() {
         window.clearTimeout(timerRef.current)
       }
       clearAnswerPointerTimer()
+      clearSpeechTimer()
       stopSpeech()
     }
   }, [stopSpeech])
