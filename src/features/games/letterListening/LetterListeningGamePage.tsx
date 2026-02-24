@@ -73,7 +73,8 @@ const REWARD_VIEWBOX_SIZE = 100
 const REWARD_MASK_SIZE = 170
 const REWARD_BRUSH_RADIUS = 9.4
 const REWARD_FILL_THRESHOLD = 0.9
-const REWARD_COMPLETE_DELAY_MS = 1000
+const REWARD_COMPLETE_DELAY_MS = 500
+const REWARD_RESULT_VISIBLE_MS = 5000
 const ANSWER_POINTER_VISIBLE_MS = 4000
 const REWARD_FONT_FAMILY =
   '"Avenir Next Rounded", "Arial Rounded MT Bold", "Avenir Next", "Inter", sans-serif'
@@ -575,15 +576,12 @@ export function LetterListeningGamePage() {
     }
 
     if (isCorrectAnswer(round, letter)) {
-      setConfettiParticles(createConfettiParticles(400))
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
       clearAnswerPointerTimer()
-      playSuccessJingle()
-      triggerLightVibration()
       return
     }
 
@@ -597,7 +595,13 @@ export function LetterListeningGamePage() {
 
   function handleColoringCompleted() {
     clearActiveTimer()
-    moveToNextRound()
+    setConfettiParticles(createConfettiParticles(400))
+    playSuccessJingle()
+    triggerLightVibration()
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
+      moveToNextRound()
+    }, REWARD_RESULT_VISIBLE_MS)
   }
 
   function restartGame() {
