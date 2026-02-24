@@ -16,6 +16,7 @@ const REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
   'abagames-reverse-counting-answer-pointer-delay-seconds'
 const LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
   'abagames-letter-listening-answer-pointer-delay-seconds'
+const SPEECH_VOICE_URI_STORAGE_KEY = 'abagames-speech-voice-uri'
 
 export const ALL_ALPHABET_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
@@ -359,4 +360,21 @@ export function setStoredLetterListeningAllowedLetters(letters: string[]): void 
     LETTER_LISTENING_ALLOWED_LETTERS_STORAGE_KEY,
     JSON.stringify(unique),
   )
+}
+
+export function getStoredSpeechVoiceUri(): string {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  const raw = window.localStorage.getItem(SPEECH_VOICE_URI_STORAGE_KEY)
+  return raw ?? ''
+}
+
+export function setStoredSpeechVoiceUri(voiceUri: string): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(SPEECH_VOICE_URI_STORAGE_KEY, voiceUri)
 }

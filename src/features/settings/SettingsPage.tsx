@@ -28,6 +28,7 @@ import {
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingMaxObjects,
+  getStoredSpeechVoiceUri,
   reverseCountingSettingsRange,
   setStoredCountingAnswerPointerDelaySeconds,
   setStoredCountingAnswerPointerEnabled,
@@ -40,6 +41,7 @@ import {
   setStoredReverseCountingAnswerPointerDelaySeconds,
   setStoredReverseCountingAnswerPointerEnabled,
   setStoredReverseCountingMaxObjects,
+  setStoredSpeechVoiceUri,
 } from '../../shared/settings/gameSettings'
 import './SettingsPage.css'
 
@@ -80,18 +82,77 @@ export function SettingsPage() {
   const [letterListeningLetters, setLetterListeningLetters] = useState<Set<string>>(
     () => new Set(getStoredLetterListeningAllowedLettersForSettings()),
   )
+  const [speechVoiceUri, setSpeechVoiceUri] = useState<string>(() => getStoredSpeechVoiceUri())
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([])
   const text = settingsTextByLanguage[language]
   const isCountingHintDisabled =
     countingHintFirstDelaySeconds === COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS
+  const compatibleVoices = availableVoices.filter((voice) =>
+    voice.lang.toLowerCase().startsWith(language === 'fr' ? 'fr' : 'en'),
+  )
+  const selectedCompatibleVoiceUri = compatibleVoices.some((voice) => voice.voiceURI === speechVoiceUri)
+    ? speechVoiceUri
+    : ''
 
   useEffect(() => {
     const fromQuery = parseLanguageParam(searchParams.get('lang'))
     setLanguage(fromQuery)
   }, [searchParams])
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      return
+    }
+
+    const synth = window.speechSynthesis
+    const updateVoices = () => {
+      const voices = synth
+        .getVoices()
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+      setAvailableVoices(voices)
+    }
+
+    updateVoices()
+    const delayedUpdateTimer = window.setTimeout(updateVoices, 350)
+    synth.addEventListener('voiceschanged', updateVoices)
+
+    return () => {
+      window.clearTimeout(delayedUpdateTimer)
+      synth.removeEventListener('voiceschanged', updateVoices)
+    }
+  }, [])
+
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage)
     setStoredLanguage(nextLanguage)
+  }
+
+  function handleSpeechVoiceChange(nextVoiceUri: string) {
+    setSpeechVoiceUri(nextVoiceUri)
+    setStoredSpeechVoiceUri(nextVoiceUri)
+
+    if (typeof window === 'undefined') {
+      return
+    }
+    const synth = window.speechSynthesis
+    if (!synth) {
+      return
+    }
+
+    synth.cancel()
+    const utterance = new SpeechSynthesisUtterance(text.speechVoiceLabel)
+    const selectedVoice = nextVoiceUri
+      ? compatibleVoices.find((voice) => voice.voiceURI === nextVoiceUri)
+      : undefined
+    if (selectedVoice) {
+      utterance.voice = selectedVoice
+      utterance.lang = selectedVoice.lang
+    } else {
+      utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    }
+    utterance.rate = 0.95
+    synth.speak(utterance)
   }
 
   function handleCountingMaxObjectsChange(nextValue: number) {
@@ -191,6 +252,25 @@ export function SettingsPage() {
             )
           })}
         </div>
+        <label className="field-label" htmlFor="speech-voice-select">
+          {text.speechVoiceLabel}
+        </label>
+        <select
+          id="speech-voice-select"
+          className="settings-select"
+          value={selectedCompatibleVoiceUri}
+          onChange={(event) => handleSpeechVoiceChange(event.target.value)}
+        >
+          <option value="">{text.speechVoiceDefaultOption}</option>
+          {compatibleVoices.map((voice) => (
+            <option key={voice.voiceURI} value={voice.voiceURI}>
+              {`${voice.name} (${voice.lang})`}
+            </option>
+          ))}
+        </select>
+        {compatibleVoices.length === 0 ? (
+          <p className="settings-hint">{text.speechVoiceUnavailableHint}</p>
+        ) : null}
       </section>
 
       <section className="settings-card">

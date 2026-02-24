@@ -58,6 +58,17 @@
   box-shadow: 0 2px 10px rgba(18, 38, 58, 0.16);
 }
 
+.settings-select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #c5d4eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  color: #244372;
+  background: #f5f9ff;
+}
+
 .field-label {
   font-weight: 700;
 }

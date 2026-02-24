@@ -157,6 +157,9 @@ export const letterListeningGameTextByLanguage: Record<Language, LetterListening
 type SettingsText = {
   title: string
   languageTitle: string
+  speechVoiceLabel: string
+  speechVoiceDefaultOption: string
+  speechVoiceUnavailableHint: string
   countingMaxObjectsLabel: string
   countingHintFirstDelayLabel: string
   countingHintNeverLabel: string
@@ -175,6 +178,9 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
   fr: {
     title: 'Réglages',
     languageTitle: 'Langue',
+    speechVoiceLabel: 'Voix de lecture',
+    speechVoiceDefaultOption: 'Voix par défaut du navigateur',
+    speechVoiceUnavailableHint: 'Aucune voix détectée sur cet appareil.',
     countingMaxObjectsLabel: "Nombre d'objets maximum",
     countingHintFirstDelayLabel: 'Premier indice après (secondes)',
     countingHintNeverLabel: 'Jamais',
@@ -191,6 +197,9 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
   en: {
     title: 'Settings',
     languageTitle: 'Language',
+    speechVoiceLabel: 'Speech voice',
+    speechVoiceDefaultOption: 'Browser default voice',
+    speechVoiceUnavailableHint: 'No speech voices detected on this device.',
     countingMaxObjectsLabel: 'Maximum number of objects',
     countingHintFirstDelayLabel: 'First hint after (seconds)',
     countingHintNeverLabel: 'Never',

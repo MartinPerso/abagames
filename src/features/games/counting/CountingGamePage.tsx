@@ -23,6 +23,7 @@ import {
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
   getStoredCountingMaxObjects,
+  getStoredSpeechVoiceUri,
 } from '../../../shared/settings/gameSettings'
 import './CountingGamePage.css'
 
@@ -320,7 +321,17 @@ export function CountingGamePage() {
 
     stopSpeech()
     const utterance = new SpeechSynthesisUtterance(String(value))
-    utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    const selectedVoiceUri = getStoredSpeechVoiceUri()
+    const selectedVoice = selectedVoiceUri
+      ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+      : undefined
+    const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+    if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+      utterance.voice = selectedVoice
+      utterance.lang = selectedVoice.lang
+    } else {
+      utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    }
     utterance.rate = 0.78
     utterance.pitch = 1
     synth.speak(utterance)
