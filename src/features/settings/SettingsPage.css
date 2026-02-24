@@ -68,8 +68,16 @@
   gap: 12px;
 }
 
+.range-row.is-disabled {
+  opacity: 0.5;
+}
+
 .range-row input {
   flex: 1;
+}
+
+.range-row input:disabled {
+  cursor: not-allowed;
 }
 
 .range-row output {

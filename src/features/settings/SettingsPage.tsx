@@ -12,11 +12,18 @@ import {
 } from '../../shared/i18n/i18n'
 import {
   ALL_ALPHABET_LETTERS,
+  COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  countingHintFirstDelaySettingsRange,
+  countingHintRepeatDelaySettingsRange,
   countingSettingsRange,
+  getStoredCountingHintFirstDelaySeconds,
+  getStoredCountingHintRepeatDelaySeconds,
   getStoredCountingMaxObjects,
   getStoredLetterListeningAllowedLettersForSettings,
   getStoredReverseCountingMaxObjects,
   reverseCountingSettingsRange,
+  setStoredCountingHintFirstDelaySeconds,
+  setStoredCountingHintRepeatDelaySeconds,
   setStoredCountingMaxObjects,
   setStoredLetterListeningAllowedLetters,
   setStoredReverseCountingMaxObjects,
@@ -31,6 +38,12 @@ export function SettingsPage() {
   const [countingMaxObjects, setCountingMaxObjects] = useState<number>(() =>
     getStoredCountingMaxObjects(),
   )
+  const [countingHintFirstDelaySeconds, setCountingHintFirstDelaySeconds] = useState<number>(() =>
+    getStoredCountingHintFirstDelaySeconds(),
+  )
+  const [countingHintRepeatDelaySeconds, setCountingHintRepeatDelaySeconds] = useState<number>(() =>
+    getStoredCountingHintRepeatDelaySeconds(),
+  )
   const [reverseCountingMaxObjects, setReverseCountingMaxObjects] = useState<number>(() =>
     getStoredReverseCountingMaxObjects(),
   )
@@ -38,6 +51,8 @@ export function SettingsPage() {
     () => new Set(getStoredLetterListeningAllowedLettersForSettings()),
   )
   const text = settingsTextByLanguage[language]
+  const isCountingHintDisabled =
+    countingHintFirstDelaySeconds === COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS
 
   useEffect(() => {
     const fromQuery = parseLanguageParam(searchParams.get('lang'))
@@ -52,6 +67,16 @@ export function SettingsPage() {
   function handleCountingMaxObjectsChange(nextValue: number) {
     setCountingMaxObjects(nextValue)
     setStoredCountingMaxObjects(nextValue)
+  }
+
+  function handleCountingHintFirstDelayChange(nextValue: number) {
+    setCountingHintFirstDelaySeconds(nextValue)
+    setStoredCountingHintFirstDelaySeconds(nextValue)
+  }
+
+  function handleCountingHintRepeatDelayChange(nextValue: number) {
+    setCountingHintRepeatDelaySeconds(nextValue)
+    setStoredCountingHintRepeatDelaySeconds(nextValue)
   }
 
   function handleReverseCountingMaxObjectsChange(nextValue: number) {
@@ -123,6 +148,41 @@ export function SettingsPage() {
             onChange={(event) => handleCountingMaxObjectsChange(Number(event.target.value))}
           />
           <output htmlFor="counting-max-objects">{countingMaxObjects}</output>
+        </div>
+
+        <label className="field-label" htmlFor="counting-hint-first-delay">
+          {text.countingHintFirstDelayLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="counting-hint-first-delay"
+            type="range"
+            min={countingHintFirstDelaySettingsRange.min}
+            max={countingHintFirstDelaySettingsRange.max}
+            value={countingHintFirstDelaySeconds}
+            onChange={(event) => handleCountingHintFirstDelayChange(Number(event.target.value))}
+          />
+          <output htmlFor="counting-hint-first-delay">
+            {isCountingHintDisabled
+              ? text.countingHintNeverLabel
+              : `${countingHintFirstDelaySeconds}s`}
+          </output>
+        </div>
+
+        <label className="field-label" htmlFor="counting-hint-repeat-delay">
+          {text.countingHintRepeatDelayLabel}
+        </label>
+        <div className={`range-row ${isCountingHintDisabled ? 'is-disabled' : ''}`}>
+          <input
+            id="counting-hint-repeat-delay"
+            type="range"
+            min={countingHintRepeatDelaySettingsRange.min}
+            max={countingHintRepeatDelaySettingsRange.max}
+            value={countingHintRepeatDelaySeconds}
+            onChange={(event) => handleCountingHintRepeatDelayChange(Number(event.target.value))}
+            disabled={isCountingHintDisabled}
+          />
+          <output htmlFor="counting-hint-repeat-delay">{countingHintRepeatDelaySeconds}s</output>
         </div>
       </section>
 

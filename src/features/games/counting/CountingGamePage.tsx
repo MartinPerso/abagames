@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   commonGameTextByLanguage,
   countingGameNameByLanguage,
@@ -16,7 +16,12 @@ import {
   getAnswerOptions,
   isCorrectAnswer,
 } from './gameLogic'
-import { getStoredCountingMaxObjects } from '../../../shared/settings/gameSettings'
+import {
+  COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  getStoredCountingHintFirstDelaySeconds,
+  getStoredCountingHintRepeatDelaySeconds,
+  getStoredCountingMaxObjects,
+} from '../../../shared/settings/gameSettings'
 import './CountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -37,6 +42,7 @@ const CONFETTI_DURATION_SECONDS = 5
 const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
+const HINT_COUNT_STEP_MS = 900
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -214,6 +220,10 @@ export function CountingGamePage() {
   const [searchParams] = useSearchParams()
   const language = parseLanguageParam(searchParams.get('lang'))
   const maxObjects = getStoredCountingMaxObjects()
+  const hintFirstDelaySeconds = getStoredCountingHintFirstDelaySeconds()
+  const hintsDisabled = hintFirstDelaySeconds === COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS
+  const hintFirstDelayMs = hintFirstDelaySeconds * 1000
+  const hintRepeatDelayMs = getStoredCountingHintRepeatDelaySeconds() * 1000
   const answerOptions = getAnswerOptions(maxObjects)
   const commonText = commonGameTextByLanguage[language]
   const text = countingGameTextByLanguage[language]
@@ -225,20 +235,135 @@ export function CountingGamePage() {
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
-  const timerRef = useRef<number | null>(null)
+  const [activeHintSpriteIndex, setActiveHintSpriteIndex] = useState<number | null>(null)
+  const answerTimerRef = useRef<number | null>(null)
+  const hintStartTimerRef = useRef<number | null>(null)
+  const hintStepTimerRef = useRef<number | null>(null)
+  const hintRepeatTimerRef = useRef<number | null>(null)
 
-  function clearActiveTimer() {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current)
-      timerRef.current = null
+  const itemPositions = useMemo(
+    () => createItemPositions(round.count),
+    [round.count],
+  )
+  const hintOrder = useMemo(() => {
+    return itemPositions
+      .map((position, index) => ({
+        index,
+        left: position.left,
+        top: position.top,
+      }))
+      .sort((a, b) => {
+        if (a.top !== b.top) {
+          return a.top - b.top
+        }
+        return a.left - b.left
+      })
+      .map((position) => position.index)
+  }, [itemPositions])
+
+  function clearAnswerTimer() {
+    if (answerTimerRef.current !== null) {
+      window.clearTimeout(answerTimerRef.current)
+      answerTimerRef.current = null
     }
+  }
+
+  function clearHintTimers() {
+    if (hintStartTimerRef.current !== null) {
+      window.clearTimeout(hintStartTimerRef.current)
+      hintStartTimerRef.current = null
+    }
+    if (hintStepTimerRef.current !== null) {
+      window.clearTimeout(hintStepTimerRef.current)
+      hintStepTimerRef.current = null
+    }
+    if (hintRepeatTimerRef.current !== null) {
+      window.clearTimeout(hintRepeatTimerRef.current)
+      hintRepeatTimerRef.current = null
+    }
+  }
+
+  const stopSpeech = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    window.speechSynthesis?.cancel()
+  }, [])
+
+  const speakHintCount = useCallback((value: number) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const synth = window.speechSynthesis
+    if (!synth) {
+      return
+    }
+
+    stopSpeech()
+    const utterance = new SpeechSynthesisUtterance(String(value))
+    utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    utterance.rate = 0.78
+    utterance.pitch = 1
+    synth.speak(utterance)
+  }, [language, stopSpeech])
+
+  function stopHintSequence() {
+    clearHintTimers()
+    setActiveHintSpriteIndex(null)
+    stopSpeech()
   }
 
   useEffect(() => {
     return () => {
-      clearActiveTimer()
+      clearAnswerTimer()
+      clearHintTimers()
+      stopSpeech()
     }
-  }, [])
+  }, [stopSpeech])
+
+  useEffect(() => {
+    if (roundIndex >= TOTAL_ROUNDS || hintsDisabled) {
+      return
+    }
+
+    clearHintTimers()
+    setActiveHintSpriteIndex(null)
+
+    const runHintStep = (stepIndex: number) => {
+      if (stepIndex >= hintOrder.length) {
+        setActiveHintSpriteIndex(null)
+        hintRepeatTimerRef.current = window.setTimeout(() => {
+          runHintStep(0)
+        }, hintRepeatDelayMs)
+        return
+      }
+
+      setActiveHintSpriteIndex(hintOrder[stepIndex])
+      speakHintCount(stepIndex + 1)
+      hintStepTimerRef.current = window.setTimeout(() => {
+        runHintStep(stepIndex + 1)
+      }, HINT_COUNT_STEP_MS)
+    }
+
+    hintStartTimerRef.current = window.setTimeout(() => {
+      runHintStep(0)
+    }, hintFirstDelayMs)
+
+    return () => {
+      clearHintTimers()
+      stopSpeech()
+    }
+  }, [
+    hintsDisabled,
+    hintFirstDelayMs,
+    hintRepeatDelayMs,
+    round.roundIndex,
+    hintOrder,
+    roundIndex,
+    speakHintCount,
+    stopSpeech,
+  ])
 
   function moveToNextRound() {
     if (roundIndex + 1 >= TOTAL_ROUNDS) {
@@ -264,24 +389,26 @@ export function CountingGamePage() {
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
-      clearActiveTimer()
+      clearAnswerTimer()
+      stopHintSequence()
       playRewardSfx(round.item)
 
-      timerRef.current = window.setTimeout(() => {
+      answerTimerRef.current = window.setTimeout(() => {
         moveToNextRound()
       }, REWARD_SFX_DURATION_MS)
       return
     }
 
     setFeedback('wrong')
-    clearActiveTimer()
-    timerRef.current = window.setTimeout(() => {
+    clearAnswerTimer()
+    answerTimerRef.current = window.setTimeout(() => {
       setFeedback('idle')
     }, 700)
   }
 
   function restartGame() {
-    clearActiveTimer()
+    clearAnswerTimer()
+    stopHintSequence()
     setConfettiParticles([])
     setRoundIndex(0)
     setRound(createRound(0, maxObjects))
@@ -296,10 +423,6 @@ export function CountingGamePage() {
     score === TOTAL_ROUNDS
       ? commonText.perfectResultMessage
       : commonText.continueResultMessage
-  const itemPositions = useMemo(
-    () => createItemPositions(round.count),
-    [round.count],
-  )
   const celebrationMotions = useMemo(() => {
     if (feedback !== 'correct') {
       return []
@@ -357,23 +480,30 @@ export function CountingGamePage() {
               <div
                 className={`${sceneClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
               >
-                {itemPositions.map((position, index) => (
-                  <div
-                    key={`${round.roundIndex}-${round.item}-${index}`}
-                    className={`item-sprite ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-                    style={{
-                      left: `${position.left}%`,
-                      top: `${position.top}%`,
-                      width: `${position.size}%`,
-                      height: `${position.size}%`,
-                      animationDuration: feedback === 'correct' ? `${REWARD_SFX_DURATION_MS}ms` : undefined,
-                      ...(feedback === 'correct' ? celebrationMotions[index] : {}),
-                    }}
-                    aria-hidden="true"
-                  >
-                    <img src={imageByItem[round.item]} alt="" className="item-image" />
-                  </div>
-                ))}
+                {itemPositions.map((position, index) => {
+                  const isHinting =
+                    feedback !== 'correct' && activeHintSpriteIndex === index
+
+                  return (
+                    <div
+                      key={`${round.roundIndex}-${round.item}-${index}`}
+                      className={`item-sprite ${feedback === 'correct' ? 'is-celebrating' : ''} ${isHinting ? 'is-hinting' : ''}`}
+                      style={{
+                        left: `${position.left}%`,
+                        top: `${position.top}%`,
+                        width: `${position.size}%`,
+                        height: `${position.size}%`,
+                        zIndex: isHinting ? 8 : undefined,
+                        animationDuration:
+                          feedback === 'correct' ? `${REWARD_SFX_DURATION_MS}ms` : undefined,
+                        ...(feedback === 'correct' ? celebrationMotions[index] : {}),
+                      }}
+                      aria-hidden="true"
+                    >
+                      <img src={imageByItem[round.item]} alt="" className="item-image" />
+                    </div>
+                  )
+                })}
               </div>
               {feedback === 'correct' && confettiParticles.length > 0 ? (
                 <div className="micro-confetti" aria-hidden="true">

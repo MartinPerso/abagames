@@ -1,6 +1,10 @@
 const COUNTING_MAX_OBJECTS_STORAGE_KEY = 'abagames-counting-max-objects'
 const REVERSE_COUNTING_MAX_OBJECTS_STORAGE_KEY = 'abagames-reverse-counting-max-objects'
 const LETTER_LISTENING_ALLOWED_LETTERS_STORAGE_KEY = 'abagames-letter-listening-allowed-letters'
+const COUNTING_HINT_FIRST_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-counting-hint-first-delay-seconds'
+const COUNTING_HINT_REPEAT_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-counting-hint-repeat-delay-seconds'
 
 export const ALL_ALPHABET_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
@@ -10,6 +14,13 @@ const DEFAULT_COUNTING_MAX_OBJECTS = 5
 const MIN_REVERSE_COUNTING_MAX_OBJECTS = 3
 const MAX_REVERSE_COUNTING_MAX_OBJECTS = 10
 const DEFAULT_REVERSE_COUNTING_MAX_OBJECTS = 5
+const MIN_COUNTING_HINT_FIRST_DELAY_SECONDS = 1
+const MAX_COUNTING_HINT_FIRST_DELAY_SECONDS = 10
+const DEFAULT_COUNTING_HINT_FIRST_DELAY_SECONDS = 3
+export const COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS = MAX_COUNTING_HINT_FIRST_DELAY_SECONDS + 1
+const MIN_COUNTING_HINT_REPEAT_DELAY_SECONDS = 3
+const MAX_COUNTING_HINT_REPEAT_DELAY_SECONDS = 20
+const DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS = 10
 
 function clampCountingMaxObjects(value: number): number {
   return Math.max(MIN_COUNTING_MAX_OBJECTS, Math.min(MAX_COUNTING_MAX_OBJECTS, value))
@@ -19,6 +30,20 @@ function clampReverseCountingMaxObjects(value: number): number {
   return Math.max(
     MIN_REVERSE_COUNTING_MAX_OBJECTS,
     Math.min(MAX_REVERSE_COUNTING_MAX_OBJECTS, value),
+  )
+}
+
+function clampCountingHintFirstDelaySeconds(value: number): number {
+  return Math.max(
+    MIN_COUNTING_HINT_FIRST_DELAY_SECONDS,
+    Math.min(COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS, value),
+  )
+}
+
+function clampCountingHintRepeatDelaySeconds(value: number): number {
+  return Math.max(
+    MIN_COUNTING_HINT_REPEAT_DELAY_SECONDS,
+    Math.min(MAX_COUNTING_HINT_REPEAT_DELAY_SECONDS, value),
   )
 }
 
@@ -90,6 +115,76 @@ export const reverseCountingSettingsRange = {
   min: MIN_REVERSE_COUNTING_MAX_OBJECTS,
   max: MAX_REVERSE_COUNTING_MAX_OBJECTS,
   defaultValue: DEFAULT_REVERSE_COUNTING_MAX_OBJECTS,
+}
+
+export function getStoredCountingHintFirstDelaySeconds(): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_COUNTING_HINT_FIRST_DELAY_SECONDS
+  }
+
+  const raw = window.localStorage.getItem(COUNTING_HINT_FIRST_DELAY_SECONDS_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_COUNTING_HINT_FIRST_DELAY_SECONDS
+  }
+  const parsed = Number(raw)
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_COUNTING_HINT_FIRST_DELAY_SECONDS
+  }
+
+  return clampCountingHintFirstDelaySeconds(Math.floor(parsed))
+}
+
+export function setStoredCountingHintFirstDelaySeconds(nextValue: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(
+    COUNTING_HINT_FIRST_DELAY_SECONDS_STORAGE_KEY,
+    String(clampCountingHintFirstDelaySeconds(nextValue)),
+  )
+}
+
+export function getStoredCountingHintRepeatDelaySeconds(): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS
+  }
+
+  const raw = window.localStorage.getItem(COUNTING_HINT_REPEAT_DELAY_SECONDS_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS
+  }
+  const parsed = Number(raw)
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS
+  }
+
+  return clampCountingHintRepeatDelaySeconds(Math.floor(parsed))
+}
+
+export function setStoredCountingHintRepeatDelaySeconds(nextValue: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(
+    COUNTING_HINT_REPEAT_DELAY_SECONDS_STORAGE_KEY,
+    String(clampCountingHintRepeatDelaySeconds(nextValue)),
+  )
+}
+
+export const countingHintFirstDelaySettingsRange = {
+  min: MIN_COUNTING_HINT_FIRST_DELAY_SECONDS,
+  max: COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  defaultValue: DEFAULT_COUNTING_HINT_FIRST_DELAY_SECONDS,
+}
+
+export const countingHintRepeatDelaySettingsRange = {
+  min: MIN_COUNTING_HINT_REPEAT_DELAY_SECONDS,
+  max: MAX_COUNTING_HINT_REPEAT_DELAY_SECONDS,
+  defaultValue: DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS,
 }
 
 const MIN_ALLOWED_LETTERS = 5

@@ -152,6 +152,9 @@ type SettingsText = {
   title: string
   languageTitle: string
   countingMaxObjectsLabel: string
+  countingHintFirstDelayLabel: string
+  countingHintNeverLabel: string
+  countingHintRepeatDelayLabel: string
   reverseCountingMaxObjectsLabel: string
   letterListeningAllowedLettersLabel: string
   letterListeningAllLetters: string
@@ -165,6 +168,9 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     title: 'Réglages',
     languageTitle: 'Langue',
     countingMaxObjectsLabel: "Nombre d'objets maximum",
+    countingHintFirstDelayLabel: 'Premier indice après (secondes)',
+    countingHintNeverLabel: 'Jamais',
+    countingHintRepeatDelayLabel: "Répéter l'indice toutes les (secondes)",
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
     letterListeningAllLetters: 'Toutes',
@@ -176,6 +182,9 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     title: 'Settings',
     languageTitle: 'Language',
     countingMaxObjectsLabel: 'Maximum number of objects',
+    countingHintFirstDelayLabel: 'First hint after (seconds)',
+    countingHintNeverLabel: 'Never',
+    countingHintRepeatDelayLabel: 'Repeat hint every (seconds)',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
     letterListeningAllowedLettersLabel: 'Letters used in the game',
     letterListeningAllLetters: 'All',
