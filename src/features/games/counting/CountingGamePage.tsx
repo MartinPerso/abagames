@@ -20,6 +20,8 @@ import {
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
   getStoredCountingHintFirstDelaySeconds,
   getStoredCountingHintRepeatDelaySeconds,
+  getStoredCountingAnswerPointerDelaySeconds,
+  getStoredCountingAnswerPointerEnabled,
   getStoredCountingMaxObjects,
 } from '../../../shared/settings/gameSettings'
 import './CountingGamePage.css'
@@ -43,6 +45,7 @@ const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const HINT_COUNT_STEP_MS = 900
+const ANSWER_POINTER_VISIBLE_MS = 4000
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -224,6 +227,8 @@ export function CountingGamePage() {
   const hintsDisabled = hintFirstDelaySeconds === COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS
   const hintFirstDelayMs = hintFirstDelaySeconds * 1000
   const hintRepeatDelayMs = getStoredCountingHintRepeatDelaySeconds() * 1000
+  const answerPointerEnabled = getStoredCountingAnswerPointerEnabled()
+  const answerPointerDelayMs = getStoredCountingAnswerPointerDelaySeconds() * 1000
   const answerOptions = getAnswerOptions(maxObjects)
   const commonText = commonGameTextByLanguage[language]
   const text = countingGameTextByLanguage[language]
@@ -236,10 +241,13 @@ export function CountingGamePage() {
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [activeHintSpriteIndex, setActiveHintSpriteIndex] = useState<number | null>(null)
+  const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const answerTimerRef = useRef<number | null>(null)
   const hintStartTimerRef = useRef<number | null>(null)
   const hintStepTimerRef = useRef<number | null>(null)
   const hintRepeatTimerRef = useRef<number | null>(null)
+  const answerPointerTimerRef = useRef<number | null>(null)
+  const answerPointerHideTimerRef = useRef<number | null>(null)
 
   const itemPositions = useMemo(
     () => createItemPositions(round.count),
@@ -260,11 +268,21 @@ export function CountingGamePage() {
       })
       .map((position) => position.index)
   }, [itemPositions])
-
   function clearAnswerTimer() {
     if (answerTimerRef.current !== null) {
       window.clearTimeout(answerTimerRef.current)
       answerTimerRef.current = null
+    }
+  }
+
+  function clearAnswerPointerTimer() {
+    if (answerPointerTimerRef.current !== null) {
+      window.clearTimeout(answerPointerTimerRef.current)
+      answerPointerTimerRef.current = null
+    }
+    if (answerPointerHideTimerRef.current !== null) {
+      window.clearTimeout(answerPointerHideTimerRef.current)
+      answerPointerHideTimerRef.current = null
     }
   }
 
@@ -318,6 +336,7 @@ export function CountingGamePage() {
     return () => {
       clearAnswerTimer()
       clearHintTimers()
+      clearAnswerPointerTimer()
       stopSpeech()
     }
   }, [stopSpeech])
@@ -358,11 +377,37 @@ export function CountingGamePage() {
     hintsDisabled,
     hintFirstDelayMs,
     hintRepeatDelayMs,
-    round.roundIndex,
     hintOrder,
+    round.roundIndex,
     roundIndex,
     speakHintCount,
     stopSpeech,
+  ])
+
+  useEffect(() => {
+    if (roundIndex >= TOTAL_ROUNDS || !answerPointerEnabled || isLocked || feedback === 'correct') {
+      return
+    }
+
+    clearAnswerPointerTimer()
+    setShowAnswerPointer(false)
+    answerPointerTimerRef.current = window.setTimeout(() => {
+      setShowAnswerPointer(true)
+      answerPointerHideTimerRef.current = window.setTimeout(() => {
+        setShowAnswerPointer(false)
+      }, ANSWER_POINTER_VISIBLE_MS)
+    }, answerPointerDelayMs)
+
+    return () => {
+      clearAnswerPointerTimer()
+    }
+  }, [
+    answerPointerDelayMs,
+    answerPointerEnabled,
+    feedback,
+    isLocked,
+    round.roundIndex,
+    roundIndex,
   ])
 
   function moveToNextRound() {
@@ -377,6 +422,8 @@ export function CountingGamePage() {
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
     setIsLocked(false)
+    setActiveHintSpriteIndex(null)
+    setShowAnswerPointer(false)
   }
 
   function handleAnswer(answer: number) {
@@ -389,8 +436,11 @@ export function CountingGamePage() {
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
+      setActiveHintSpriteIndex(null)
+      setShowAnswerPointer(false)
       clearAnswerTimer()
       stopHintSequence()
+      clearAnswerPointerTimer()
       playRewardSfx(round.item)
 
       answerTimerRef.current = window.setTimeout(() => {
@@ -409,12 +459,15 @@ export function CountingGamePage() {
   function restartGame() {
     clearAnswerTimer()
     stopHintSequence()
+    clearAnswerPointerTimer()
     setConfettiParticles([])
     setRoundIndex(0)
     setRound(createRound(0, maxObjects))
     setScore(0)
     setFeedback('idle')
     setIsLocked(false)
+    setActiveHintSpriteIndex(null)
+    setShowAnswerPointer(false)
   }
 
   const finished = roundIndex >= TOTAL_ROUNDS
@@ -481,9 +534,7 @@ export function CountingGamePage() {
                 className={`${sceneClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
               >
                 {itemPositions.map((position, index) => {
-                  const isHinting =
-                    feedback !== 'correct' && activeHintSpriteIndex === index
-
+                  const isHinting = feedback !== 'correct' && activeHintSpriteIndex === index
                   return (
                     <div
                       key={`${round.roundIndex}-${round.item}-${index}`}
@@ -537,11 +588,16 @@ export function CountingGamePage() {
                 <button
                   key={value}
                   type="button"
-                  className={`answer-button ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''}`}
+                  className={`answer-button ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && value === round.count ? 'is-pointer-target' : ''}`}
                   onClick={() => handleAnswer(value)}
                   disabled={isLocked}
                 >
                   {value}
+                  {feedback !== 'correct' && showAnswerPointer && value === round.count ? (
+                    <span className="answer-pointer" aria-hidden="true">
+                      👉
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>

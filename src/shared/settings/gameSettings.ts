@@ -5,6 +5,17 @@ const COUNTING_HINT_FIRST_DELAY_SECONDS_STORAGE_KEY =
   'abagames-counting-hint-first-delay-seconds'
 const COUNTING_HINT_REPEAT_DELAY_SECONDS_STORAGE_KEY =
   'abagames-counting-hint-repeat-delay-seconds'
+const COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY = 'abagames-counting-answer-pointer-enabled'
+const REVERSE_COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY =
+  'abagames-reverse-counting-answer-pointer-enabled'
+const LETTER_LISTENING_ANSWER_POINTER_ENABLED_STORAGE_KEY =
+  'abagames-letter-listening-answer-pointer-enabled'
+const COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-counting-answer-pointer-delay-seconds'
+const REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-reverse-counting-answer-pointer-delay-seconds'
+const LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-letter-listening-answer-pointer-delay-seconds'
 
 export const ALL_ALPHABET_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
@@ -21,6 +32,9 @@ export const COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS = MAX_COUNTING_HINT_FIRST_D
 const MIN_COUNTING_HINT_REPEAT_DELAY_SECONDS = 3
 const MAX_COUNTING_HINT_REPEAT_DELAY_SECONDS = 20
 const DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS = 10
+const MIN_ANSWER_POINTER_DELAY_SECONDS = 5
+const MAX_ANSWER_POINTER_DELAY_SECONDS = 20
+const DEFAULT_ANSWER_POINTER_DELAY_SECONDS = 10
 
 function clampCountingMaxObjects(value: number): number {
   return Math.max(MIN_COUNTING_MAX_OBJECTS, Math.min(MAX_COUNTING_MAX_OBJECTS, value))
@@ -45,6 +59,58 @@ function clampCountingHintRepeatDelaySeconds(value: number): number {
     MIN_COUNTING_HINT_REPEAT_DELAY_SECONDS,
     Math.min(MAX_COUNTING_HINT_REPEAT_DELAY_SECONDS, value),
   )
+}
+
+function clampAnswerPointerDelaySeconds(value: number): number {
+  return Math.max(
+    MIN_ANSWER_POINTER_DELAY_SECONDS,
+    Math.min(MAX_ANSWER_POINTER_DELAY_SECONDS, value),
+  )
+}
+
+function getStoredBoolean(key: string, defaultValue: boolean): boolean {
+  if (typeof window === 'undefined') {
+    return defaultValue
+  }
+
+  const raw = window.localStorage.getItem(key)
+  if (raw === null) {
+    return defaultValue
+  }
+
+  return raw === '1'
+}
+
+function setStoredBoolean(key: string, value: boolean): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(key, value ? '1' : '0')
+}
+
+function getStoredDelaySeconds(key: string): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_ANSWER_POINTER_DELAY_SECONDS
+  }
+
+  const raw = window.localStorage.getItem(key)
+  if (raw === null) {
+    return DEFAULT_ANSWER_POINTER_DELAY_SECONDS
+  }
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_ANSWER_POINTER_DELAY_SECONDS
+  }
+  return clampAnswerPointerDelaySeconds(Math.floor(parsed))
+}
+
+function setStoredDelaySeconds(key: string, value: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(key, String(clampAnswerPointerDelaySeconds(value)))
 }
 
 export function getStoredCountingMaxObjects(): number {
@@ -185,6 +251,60 @@ export const countingHintRepeatDelaySettingsRange = {
   min: MIN_COUNTING_HINT_REPEAT_DELAY_SECONDS,
   max: MAX_COUNTING_HINT_REPEAT_DELAY_SECONDS,
   defaultValue: DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS,
+}
+
+export const answerPointerDelaySettingsRange = {
+  min: MIN_ANSWER_POINTER_DELAY_SECONDS,
+  max: MAX_ANSWER_POINTER_DELAY_SECONDS,
+  defaultValue: DEFAULT_ANSWER_POINTER_DELAY_SECONDS,
+}
+
+export function getStoredCountingAnswerPointerEnabled(): boolean {
+  return getStoredBoolean(COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY, true)
+}
+
+export function setStoredCountingAnswerPointerEnabled(enabled: boolean): void {
+  setStoredBoolean(COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredReverseCountingAnswerPointerEnabled(): boolean {
+  return getStoredBoolean(REVERSE_COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY, true)
+}
+
+export function setStoredReverseCountingAnswerPointerEnabled(enabled: boolean): void {
+  setStoredBoolean(REVERSE_COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredLetterListeningAnswerPointerEnabled(): boolean {
+  return getStoredBoolean(LETTER_LISTENING_ANSWER_POINTER_ENABLED_STORAGE_KEY, true)
+}
+
+export function setStoredLetterListeningAnswerPointerEnabled(enabled: boolean): void {
+  setStoredBoolean(LETTER_LISTENING_ANSWER_POINTER_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredCountingAnswerPointerDelaySeconds(): number {
+  return getStoredDelaySeconds(COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredCountingAnswerPointerDelaySeconds(value: number): void {
+  setStoredDelaySeconds(COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredReverseCountingAnswerPointerDelaySeconds(): number {
+  return getStoredDelaySeconds(REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredReverseCountingAnswerPointerDelaySeconds(value: number): void {
+  setStoredDelaySeconds(REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredLetterListeningAnswerPointerDelaySeconds(): number {
+  return getStoredDelaySeconds(LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredLetterListeningAnswerPointerDelaySeconds(value: number): void {
+  setStoredDelaySeconds(LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
 }
 
 const MIN_ALLOWED_LETTERS = 5

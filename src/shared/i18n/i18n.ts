@@ -127,6 +127,7 @@ type LetterListeningGameText = {
   instructionLabel: string
   replayLabel: string
   answerLabel: string
+  coloringInstructionLabel: string
   bravoAlert: string
   speechPrefix: string
 }
@@ -136,6 +137,7 @@ export const letterListeningGameTextByLanguage: Record<Language, LetterListening
     instructionLabel: 'Écoute la lettre',
     replayLabel: 'Réécouter la lettre',
     answerLabel: 'Choisis la bonne lettre',
+    coloringInstructionLabel: 'Colorie la lettre avec ton doigt',
     bravoAlert: 'Bravo',
     speechPrefix: 'La lettre : ',
   },
@@ -143,6 +145,7 @@ export const letterListeningGameTextByLanguage: Record<Language, LetterListening
     instructionLabel: 'Listen to the letter',
     replayLabel: 'Play letter again',
     answerLabel: 'Choose the correct letter',
+    coloringInstructionLabel: 'Color the letter with your finger',
     bravoAlert: 'Great',
     speechPrefix: 'The letter: ',
   },
@@ -155,6 +158,8 @@ type SettingsText = {
   countingHintFirstDelayLabel: string
   countingHintNeverLabel: string
   countingHintRepeatDelayLabel: string
+  answerPointerEnabledLabel: string
+  answerPointerDelayLabel: string
   reverseCountingMaxObjectsLabel: string
   letterListeningAllowedLettersLabel: string
   letterListeningAllLetters: string
@@ -171,6 +176,8 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     countingHintFirstDelayLabel: 'Premier indice après (secondes)',
     countingHintNeverLabel: 'Jamais',
     countingHintRepeatDelayLabel: "Répéter l'indice toutes les (secondes)",
+    answerPointerEnabledLabel: 'Montrer la bonne réponse automatiquement',
+    answerPointerDelayLabel: "Montrer l'animation après (secondes)",
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
     letterListeningAllLetters: 'Toutes',
@@ -185,6 +192,8 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     countingHintFirstDelayLabel: 'First hint after (seconds)',
     countingHintNeverLabel: 'Never',
     countingHintRepeatDelayLabel: 'Repeat hint every (seconds)',
+    answerPointerEnabledLabel: 'Show the correct answer automatically',
+    answerPointerDelayLabel: 'Show the animation after (seconds)',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
     letterListeningAllowedLettersLabel: 'Letters used in the game',
     letterListeningAllLetters: 'All',

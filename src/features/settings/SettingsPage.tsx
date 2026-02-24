@@ -13,19 +13,32 @@ import {
 import {
   ALL_ALPHABET_LETTERS,
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  answerPointerDelaySettingsRange,
   countingHintFirstDelaySettingsRange,
   countingHintRepeatDelaySettingsRange,
   countingSettingsRange,
+  getStoredCountingAnswerPointerDelaySeconds,
+  getStoredCountingAnswerPointerEnabled,
   getStoredCountingHintFirstDelaySeconds,
   getStoredCountingHintRepeatDelaySeconds,
   getStoredCountingMaxObjects,
+  getStoredLetterListeningAnswerPointerDelaySeconds,
+  getStoredLetterListeningAnswerPointerEnabled,
   getStoredLetterListeningAllowedLettersForSettings,
+  getStoredReverseCountingAnswerPointerDelaySeconds,
+  getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingMaxObjects,
   reverseCountingSettingsRange,
+  setStoredCountingAnswerPointerDelaySeconds,
+  setStoredCountingAnswerPointerEnabled,
   setStoredCountingHintFirstDelaySeconds,
   setStoredCountingHintRepeatDelaySeconds,
   setStoredCountingMaxObjects,
+  setStoredLetterListeningAnswerPointerDelaySeconds,
+  setStoredLetterListeningAnswerPointerEnabled,
   setStoredLetterListeningAllowedLetters,
+  setStoredReverseCountingAnswerPointerDelaySeconds,
+  setStoredReverseCountingAnswerPointerEnabled,
   setStoredReverseCountingMaxObjects,
 } from '../../shared/settings/gameSettings'
 import './SettingsPage.css'
@@ -38,6 +51,11 @@ export function SettingsPage() {
   const [countingMaxObjects, setCountingMaxObjects] = useState<number>(() =>
     getStoredCountingMaxObjects(),
   )
+  const [countingAnswerPointerEnabled, setCountingAnswerPointerEnabled] = useState<boolean>(() =>
+    getStoredCountingAnswerPointerEnabled(),
+  )
+  const [countingAnswerPointerDelaySeconds, setCountingAnswerPointerDelaySeconds] =
+    useState<number>(() => getStoredCountingAnswerPointerDelaySeconds())
   const [countingHintFirstDelaySeconds, setCountingHintFirstDelaySeconds] = useState<number>(() =>
     getStoredCountingHintFirstDelaySeconds(),
   )
@@ -46,6 +64,18 @@ export function SettingsPage() {
   )
   const [reverseCountingMaxObjects, setReverseCountingMaxObjects] = useState<number>(() =>
     getStoredReverseCountingMaxObjects(),
+  )
+  const [reverseAnswerPointerEnabled, setReverseAnswerPointerEnabled] = useState<boolean>(() =>
+    getStoredReverseCountingAnswerPointerEnabled(),
+  )
+  const [reverseAnswerPointerDelaySeconds, setReverseAnswerPointerDelaySeconds] = useState<number>(
+    () => getStoredReverseCountingAnswerPointerDelaySeconds(),
+  )
+  const [letterAnswerPointerEnabled, setLetterAnswerPointerEnabled] = useState<boolean>(() =>
+    getStoredLetterListeningAnswerPointerEnabled(),
+  )
+  const [letterAnswerPointerDelaySeconds, setLetterAnswerPointerDelaySeconds] = useState<number>(
+    () => getStoredLetterListeningAnswerPointerDelaySeconds(),
   )
   const [letterListeningLetters, setLetterListeningLetters] = useState<Set<string>>(
     () => new Set(getStoredLetterListeningAllowedLettersForSettings()),
@@ -69,6 +99,16 @@ export function SettingsPage() {
     setStoredCountingMaxObjects(nextValue)
   }
 
+  function handleCountingAnswerPointerEnabledChange(enabled: boolean) {
+    setCountingAnswerPointerEnabled(enabled)
+    setStoredCountingAnswerPointerEnabled(enabled)
+  }
+
+  function handleCountingAnswerPointerDelayChange(nextValue: number) {
+    setCountingAnswerPointerDelaySeconds(nextValue)
+    setStoredCountingAnswerPointerDelaySeconds(nextValue)
+  }
+
   function handleCountingHintFirstDelayChange(nextValue: number) {
     setCountingHintFirstDelaySeconds(nextValue)
     setStoredCountingHintFirstDelaySeconds(nextValue)
@@ -82,6 +122,26 @@ export function SettingsPage() {
   function handleReverseCountingMaxObjectsChange(nextValue: number) {
     setReverseCountingMaxObjects(nextValue)
     setStoredReverseCountingMaxObjects(nextValue)
+  }
+
+  function handleReverseAnswerPointerEnabledChange(enabled: boolean) {
+    setReverseAnswerPointerEnabled(enabled)
+    setStoredReverseCountingAnswerPointerEnabled(enabled)
+  }
+
+  function handleReverseAnswerPointerDelayChange(nextValue: number) {
+    setReverseAnswerPointerDelaySeconds(nextValue)
+    setStoredReverseCountingAnswerPointerDelaySeconds(nextValue)
+  }
+
+  function handleLetterAnswerPointerEnabledChange(enabled: boolean) {
+    setLetterAnswerPointerEnabled(enabled)
+    setStoredLetterListeningAnswerPointerEnabled(enabled)
+  }
+
+  function handleLetterAnswerPointerDelayChange(nextValue: number) {
+    setLetterAnswerPointerDelaySeconds(nextValue)
+    setStoredLetterListeningAnswerPointerDelaySeconds(nextValue)
   }
 
   function handleLetterListeningLetterToggle(letter: string) {
@@ -163,9 +223,7 @@ export function SettingsPage() {
             onChange={(event) => handleCountingHintFirstDelayChange(Number(event.target.value))}
           />
           <output htmlFor="counting-hint-first-delay">
-            {isCountingHintDisabled
-              ? text.countingHintNeverLabel
-              : `${countingHintFirstDelaySeconds}s`}
+            {isCountingHintDisabled ? text.countingHintNeverLabel : `${countingHintFirstDelaySeconds}s`}
           </output>
         </div>
 
@@ -184,6 +242,34 @@ export function SettingsPage() {
           />
           <output htmlFor="counting-hint-repeat-delay">{countingHintRepeatDelaySeconds}s</output>
         </div>
+
+        <label className="toggle-row" htmlFor="counting-answer-pointer-enabled">
+          <span>{text.answerPointerEnabledLabel}</span>
+          <input
+            id="counting-answer-pointer-enabled"
+            type="checkbox"
+            checked={countingAnswerPointerEnabled}
+            onChange={(event) => handleCountingAnswerPointerEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="field-label" htmlFor="counting-answer-pointer-delay">
+          {text.answerPointerDelayLabel}
+        </label>
+        <div className={`range-row ${!countingAnswerPointerEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="counting-answer-pointer-delay"
+            type="range"
+            min={answerPointerDelaySettingsRange.min}
+            max={answerPointerDelaySettingsRange.max}
+            value={countingAnswerPointerDelaySeconds}
+            onChange={(event) => handleCountingAnswerPointerDelayChange(Number(event.target.value))}
+            disabled={!countingAnswerPointerEnabled}
+          />
+          <output htmlFor="counting-answer-pointer-delay">
+            {countingAnswerPointerDelaySeconds}s
+          </output>
+        </div>
       </section>
 
       <section className="settings-card">
@@ -201,6 +287,32 @@ export function SettingsPage() {
             onChange={(event) => handleReverseCountingMaxObjectsChange(Number(event.target.value))}
           />
           <output htmlFor="reverse-counting-max-objects">{reverseCountingMaxObjects}</output>
+        </div>
+
+        <label className="toggle-row" htmlFor="reverse-answer-pointer-enabled">
+          <span>{text.answerPointerEnabledLabel}</span>
+          <input
+            id="reverse-answer-pointer-enabled"
+            type="checkbox"
+            checked={reverseAnswerPointerEnabled}
+            onChange={(event) => handleReverseAnswerPointerEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="field-label" htmlFor="reverse-answer-pointer-delay">
+          {text.answerPointerDelayLabel}
+        </label>
+        <div className={`range-row ${!reverseAnswerPointerEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="reverse-answer-pointer-delay"
+            type="range"
+            min={answerPointerDelaySettingsRange.min}
+            max={answerPointerDelaySettingsRange.max}
+            value={reverseAnswerPointerDelaySeconds}
+            onChange={(event) => handleReverseAnswerPointerDelayChange(Number(event.target.value))}
+            disabled={!reverseAnswerPointerEnabled}
+          />
+          <output htmlFor="reverse-answer-pointer-delay">{reverseAnswerPointerDelaySeconds}s</output>
         </div>
       </section>
 
@@ -240,6 +352,32 @@ export function SettingsPage() {
               </button>
             )
           })}
+        </div>
+
+        <label className="toggle-row" htmlFor="letter-answer-pointer-enabled">
+          <span>{text.answerPointerEnabledLabel}</span>
+          <input
+            id="letter-answer-pointer-enabled"
+            type="checkbox"
+            checked={letterAnswerPointerEnabled}
+            onChange={(event) => handleLetterAnswerPointerEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="field-label" htmlFor="letter-answer-pointer-delay">
+          {text.answerPointerDelayLabel}
+        </label>
+        <div className={`range-row ${!letterAnswerPointerEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="letter-answer-pointer-delay"
+            type="range"
+            min={answerPointerDelaySettingsRange.min}
+            max={answerPointerDelaySettingsRange.max}
+            value={letterAnswerPointerDelaySeconds}
+            onChange={(event) => handleLetterAnswerPointerDelayChange(Number(event.target.value))}
+            disabled={!letterAnswerPointerEnabled}
+          />
+          <output htmlFor="letter-answer-pointer-delay">{letterAnswerPointerDelaySeconds}s</output>
         </div>
       </section>
     </main>

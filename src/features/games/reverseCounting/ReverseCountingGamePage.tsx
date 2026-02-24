@@ -9,7 +9,11 @@ import {
   parseLanguageParam,
 } from '../../../shared/i18n/i18n'
 import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
-import { getStoredReverseCountingMaxObjects } from '../../../shared/settings/gameSettings'
+import {
+  getStoredReverseCountingAnswerPointerDelaySeconds,
+  getStoredReverseCountingAnswerPointerEnabled,
+  getStoredReverseCountingMaxObjects,
+} from '../../../shared/settings/gameSettings'
 import {
   type CountingItem,
   TOTAL_ROUNDS,
@@ -36,6 +40,7 @@ const CONFETTI_DURATION_SECONDS = 5
 const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
+const ANSWER_POINTER_VISIBLE_MS = 4000
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -203,6 +208,8 @@ export function ReverseCountingGamePage() {
   const [searchParams] = useSearchParams()
   const language = parseLanguageParam(searchParams.get('lang'))
   const maxObjects = getStoredReverseCountingMaxObjects()
+  const answerPointerEnabled = getStoredReverseCountingAnswerPointerEnabled()
+  const answerPointerDelayMs = getStoredReverseCountingAnswerPointerDelaySeconds() * 1000
   const commonText = commonGameTextByLanguage[language]
   const text = inverseCountingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
@@ -213,7 +220,10 @@ export function ReverseCountingGamePage() {
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
+  const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const timerRef = useRef<number | null>(null)
+  const answerPointerTimerRef = useRef<number | null>(null)
+  const answerPointerHideTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -222,11 +232,42 @@ export function ReverseCountingGamePage() {
     }
   }
 
+  function clearAnswerPointerTimer() {
+    if (answerPointerTimerRef.current !== null) {
+      window.clearTimeout(answerPointerTimerRef.current)
+      answerPointerTimerRef.current = null
+    }
+    if (answerPointerHideTimerRef.current !== null) {
+      window.clearTimeout(answerPointerHideTimerRef.current)
+      answerPointerHideTimerRef.current = null
+    }
+  }
+
   useEffect(() => {
     return () => {
       clearActiveTimer()
+      clearAnswerPointerTimer()
     }
   }, [])
+
+  useEffect(() => {
+    if (roundIndex >= TOTAL_ROUNDS || !answerPointerEnabled || isLocked || feedback === 'correct') {
+      return
+    }
+
+    clearAnswerPointerTimer()
+    setShowAnswerPointer(false)
+    answerPointerTimerRef.current = window.setTimeout(() => {
+      setShowAnswerPointer(true)
+      answerPointerHideTimerRef.current = window.setTimeout(() => {
+        setShowAnswerPointer(false)
+      }, ANSWER_POINTER_VISIBLE_MS)
+    }, answerPointerDelayMs)
+
+    return () => {
+      clearAnswerPointerTimer()
+    }
+  }, [answerPointerDelayMs, answerPointerEnabled, feedback, isLocked, round.roundIndex, roundIndex])
 
   function moveToNextRound() {
     if (roundIndex + 1 >= TOTAL_ROUNDS) {
@@ -240,6 +281,7 @@ export function ReverseCountingGamePage() {
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
     setIsLocked(false)
+    setShowAnswerPointer(false)
   }
 
   function handleChoice(choiceId: string) {
@@ -252,7 +294,9 @@ export function ReverseCountingGamePage() {
       setFeedback('correct')
       setScore((current) => current + 1)
       setIsLocked(true)
+      setShowAnswerPointer(false)
       clearActiveTimer()
+      clearAnswerPointerTimer()
 
       const correctChoice = round.choices.find((choice) => choice.id === round.correctChoiceId)
       if (correctChoice) {
@@ -274,12 +318,14 @@ export function ReverseCountingGamePage() {
 
   function restartGame() {
     clearActiveTimer()
+    clearAnswerPointerTimer()
     setConfettiParticles([])
     setRoundIndex(0)
     setRound(createRound(0, maxObjects))
     setScore(0)
     setFeedback('idle')
     setIsLocked(false)
+    setShowAnswerPointer(false)
   }
 
   const finished = roundIndex >= TOTAL_ROUNDS
@@ -382,11 +428,16 @@ export function ReverseCountingGamePage() {
                 <button
                   key={choice.id}
                   type="button"
-                  className={`choice-card ${isHighlighted ? 'is-correct' : ''}`}
+                  className={`choice-card ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? 'is-pointer-target' : ''}`}
                   onClick={() => handleChoice(choice.id)}
                   disabled={isLocked}
                   aria-label={`${choice.count} ${itemLabels[choice.item]}`}
                 >
+                  {feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? (
+                    <span className="answer-pointer" aria-hidden="true">
+                      👉
+                    </span>
+                  ) : null}
                   <div className="choice-scene">
                     {positions.map((position, index) => (
                       <div
