@@ -126,22 +126,22 @@ function createTargetCelebrationMotion(): TargetCelebrationMotion {
     'target-voyage-spiral',
   ]
   const easingFunctions = [
-    'cubic-bezier(0.22, 0.75, 0.22, 1)',
-    'cubic-bezier(0.2, 0.95, 0.3, 1)',
-    'cubic-bezier(0.32, 0.72, 0.16, 1)',
+    'cubic-bezier(0.28, 0.62, 0.24, 1)',
+    'cubic-bezier(0.3, 0.68, 0.24, 1)',
+    'cubic-bezier(0.34, 0.64, 0.2, 1)',
   ]
   const randomSign = () => (Math.random() < 0.5 ? -1 : 1)
 
   return {
-    '--target-travel-x-mid': `${Math.round((10 + Math.random() * 12) * randomSign())}vw`,
-    '--target-travel-y-mid': `${Math.round((-8 - Math.random() * 8) * (0.45 + Math.random() * 0.45))}vh`,
-    '--target-travel-x-late': `${Math.round((16 + Math.random() * 16) * randomSign())}vw`,
-    '--target-travel-y-late': `${Math.round((-12 - Math.random() * 12) * (0.5 + Math.random() * 0.45))}vh`,
-    '--target-travel-x-end': `${Math.round((20 + Math.random() * 22) * randomSign())}vw`,
-    '--target-travel-y-end': `${Math.round((-16 - Math.random() * 14) * (0.6 + Math.random() * 0.45))}vh`,
-    '--target-rotation-mid': `${Math.round((10 + Math.random() * 18) * randomSign())}deg`,
-    '--target-rotation-late': `${Math.round((20 + Math.random() * 26) * randomSign())}deg`,
-    '--target-rotation-end': `${Math.round((30 + Math.random() * 34) * randomSign())}deg`,
+    '--target-travel-x-mid': `${Math.round((8 + Math.random() * 9) * randomSign())}vw`,
+    '--target-travel-y-mid': `${Math.round((-7 - Math.random() * 6) * (0.45 + Math.random() * 0.35))}vh`,
+    '--target-travel-x-late': `${Math.round((12 + Math.random() * 11) * randomSign())}vw`,
+    '--target-travel-y-late': `${Math.round((-10 - Math.random() * 8) * (0.5 + Math.random() * 0.35))}vh`,
+    '--target-travel-x-end': `${Math.round((15 + Math.random() * 13) * randomSign())}vw`,
+    '--target-travel-y-end': `${Math.round((-13 - Math.random() * 9) * (0.55 + Math.random() * 0.35))}vh`,
+    '--target-rotation-mid': `${Math.round((8 + Math.random() * 14) * randomSign())}deg`,
+    '--target-rotation-late': `${Math.round((14 + Math.random() * 20) * randomSign())}deg`,
+    '--target-rotation-end': `${Math.round((22 + Math.random() * 24) * randomSign())}deg`,
     '--target-scale-mid': (0.96 + Math.random() * 0.14).toFixed(2),
     '--target-scale-late': (0.85 + Math.random() * 0.12).toFixed(2),
     '--target-scale-end': (0.72 + Math.random() * 0.12).toFixed(2),

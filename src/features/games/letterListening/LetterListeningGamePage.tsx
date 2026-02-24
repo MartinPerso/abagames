@@ -883,7 +883,7 @@ export function LetterListeningGamePage() {
                   onClick={() => handleAnswer(letter)}
                   disabled={isLocked}
                 >
-                  {letter}
+                  <span className="answer-letter">{letter}</span>
                   {feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? (
                     <span className="answer-pointer" aria-hidden="true">
                       👉

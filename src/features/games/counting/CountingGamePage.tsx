@@ -178,22 +178,22 @@ function createCelebrationMotions(count: number): CelebrationMotion[] {
     'reward-voyage-spiral',
   ]
   const easingFunctions = [
-    'cubic-bezier(0.22, 0.75, 0.22, 1)',
-    'cubic-bezier(0.2, 0.95, 0.3, 1)',
-    'cubic-bezier(0.32, 0.72, 0.16, 1)',
+    'cubic-bezier(0.28, 0.62, 0.24, 1)',
+    'cubic-bezier(0.3, 0.68, 0.24, 1)',
+    'cubic-bezier(0.34, 0.64, 0.2, 1)',
   ]
 
   return Array.from({ length: count }, () => {
     const randomSign = () => (Math.random() < 0.5 ? -1 : 1)
-    const travelMidX = `${Math.round((20 + Math.random() * 20) * randomSign())}vw`
-    const travelMidY = `${Math.round((-22 - Math.random() * 18) * (0.5 + Math.random()))}vh`
-    const travelLateX = `${Math.round((28 + Math.random() * 24) * randomSign())}vw`
-    const travelLateY = `${Math.round((-30 - Math.random() * 24) * (0.55 + Math.random() * 0.6))}vh`
-    const travelEndX = `${Math.round((34 + Math.random() * 28) * randomSign())}vw`
-    const travelEndY = `${Math.round((-34 - Math.random() * 26) * (0.65 + Math.random() * 0.5))}vh`
-    const rotationMid = `${Math.round((18 + Math.random() * 28) * randomSign())}deg`
-    const rotationLate = `${Math.round((35 + Math.random() * 45) * randomSign())}deg`
-    const rotationEnd = `${Math.round((58 + Math.random() * 82) * randomSign())}deg`
+    const travelMidX = `${Math.round((16 + Math.random() * 14) * randomSign())}vw`
+    const travelMidY = `${Math.round((-18 - Math.random() * 12) * (0.5 + Math.random() * 0.8))}vh`
+    const travelLateX = `${Math.round((22 + Math.random() * 18) * randomSign())}vw`
+    const travelLateY = `${Math.round((-24 - Math.random() * 18) * (0.55 + Math.random() * 0.5))}vh`
+    const travelEndX = `${Math.round((26 + Math.random() * 20) * randomSign())}vw`
+    const travelEndY = `${Math.round((-26 - Math.random() * 20) * (0.6 + Math.random() * 0.4))}vh`
+    const rotationMid = `${Math.round((14 + Math.random() * 20) * randomSign())}deg`
+    const rotationLate = `${Math.round((28 + Math.random() * 34) * randomSign())}deg`
+    const rotationEnd = `${Math.round((44 + Math.random() * 56) * randomSign())}deg`
     const scaleMid = (0.9 + Math.random() * 0.45).toFixed(2)
     const scaleLate = (0.68 + Math.random() * 0.44).toFixed(2)
     const scaleEnd = (0.35 + Math.random() * 0.45).toFixed(2)
@@ -603,7 +603,7 @@ export function CountingGamePage() {
                   onClick={() => handleAnswer(value)}
                   disabled={isLocked}
                 >
-                  {value}
+                  <span className="answer-value">{value}</span>
                   {feedback !== 'correct' && showAnswerPointer && value === round.count ? (
                     <span className="answer-pointer" aria-hidden="true">
                       👉
