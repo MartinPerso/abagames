@@ -133,24 +133,6 @@
   display: block;
 }
 
-.reward-letter-shape,
-.reward-letter-base,
-.reward-letter-outline {
-  font-size: 78px;
-  font-family: 'Avenir Next Rounded', 'Arial Rounded MT Bold', 'Avenir Next', 'Inter', sans-serif;
-  font-weight: 900;
-}
-
-.reward-letter-base {
-  fill: #f8d67b;
-}
-
-.reward-letter-outline {
-  fill: transparent;
-  stroke: rgba(167, 122, 11, 0.52);
-  stroke-width: 1.2;
-}
-
 .reward-brush-stroke {
   fill: none;
   stroke: #ff7f50;

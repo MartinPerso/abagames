@@ -42,6 +42,8 @@ type LetterMaskData = {
   size: number
   mask: Uint8Array
   totalPixels: number
+  maskImageDataUrl: string
+  letterImageDataUrl: string
 }
 
 type ActiveStroke = {
@@ -78,6 +80,10 @@ const REWARD_COMPLETE_DELAY_MS = 500
 const REWARD_RESULT_VISIBLE_MS = 5000
 const ANSWER_POINTER_VISIBLE_MS = 4000
 const LETTER_SPEECH_DELAY_MS = 500
+const REWARD_FONT_WEIGHT = 700
+const REWARD_LETTER_FILL_COLOR = '#f8d67b'
+const REWARD_LETTER_STROKE_COLOR = 'rgba(167, 122, 11, 0.52)'
+const REWARD_LETTER_STROKE_WIDTH_VIEWBOX = 1.2
 const REWARD_FONT_FAMILY =
   '"Avenir Next Rounded", "Arial Rounded MT Bold", "Avenir Next", "Inter", sans-serif'
 
@@ -126,7 +132,7 @@ function createLetterMaskData(letter: string): LetterMaskData | null {
 
   let fontSize = REWARD_MASK_SIZE * 0.84
   while (fontSize >= REWARD_MASK_SIZE * 0.48) {
-    context.font = `900 ${fontSize}px ${REWARD_FONT_FAMILY}`
+    context.font = `${REWARD_FONT_WEIGHT} ${fontSize}px ${REWARD_FONT_FAMILY}`
     const metrics = context.measureText(letter)
     const glyphHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
     if (metrics.width <= REWARD_MASK_SIZE * 0.78 && glyphHeight <= REWARD_MASK_SIZE * 0.82) {
@@ -135,7 +141,9 @@ function createLetterMaskData(letter: string): LetterMaskData | null {
     fontSize -= 2
   }
 
-  context.fillText(letter, REWARD_MASK_SIZE / 2, REWARD_MASK_SIZE / 2)
+  const letterCenterX = REWARD_MASK_SIZE / 2
+  const letterCenterY = REWARD_MASK_SIZE / 2
+  context.fillText(letter, letterCenterX, letterCenterY)
   const imageData = context.getImageData(0, 0, REWARD_MASK_SIZE, REWARD_MASK_SIZE)
   const mask = new Uint8Array(REWARD_MASK_SIZE * REWARD_MASK_SIZE)
   let totalPixels = 0
@@ -148,10 +156,49 @@ function createLetterMaskData(letter: string): LetterMaskData | null {
     totalPixels += 1
   }
 
+  const maskCanvas = document.createElement('canvas')
+  maskCanvas.width = REWARD_MASK_SIZE
+  maskCanvas.height = REWARD_MASK_SIZE
+  const maskContext = maskCanvas.getContext('2d')
+  if (!maskContext) {
+    return null
+  }
+  maskContext.clearRect(0, 0, REWARD_MASK_SIZE, REWARD_MASK_SIZE)
+  maskContext.fillStyle = '#000000'
+  maskContext.fillRect(0, 0, REWARD_MASK_SIZE, REWARD_MASK_SIZE)
+  maskContext.textAlign = 'center'
+  maskContext.textBaseline = 'middle'
+  maskContext.font = `${REWARD_FONT_WEIGHT} ${fontSize}px ${REWARD_FONT_FAMILY}`
+  maskContext.fillStyle = '#ffffff'
+  maskContext.fillText(letter, letterCenterX, letterCenterY)
+
+  const letterCanvas = document.createElement('canvas')
+  letterCanvas.width = REWARD_MASK_SIZE
+  letterCanvas.height = REWARD_MASK_SIZE
+  const letterContext = letterCanvas.getContext('2d')
+  if (!letterContext) {
+    return null
+  }
+  letterContext.clearRect(0, 0, REWARD_MASK_SIZE, REWARD_MASK_SIZE)
+  letterContext.textAlign = 'center'
+  letterContext.textBaseline = 'middle'
+  letterContext.font = `${REWARD_FONT_WEIGHT} ${fontSize}px ${REWARD_FONT_FAMILY}`
+  letterContext.lineCap = 'round'
+  letterContext.lineJoin = 'round'
+  letterContext.strokeStyle = REWARD_LETTER_STROKE_COLOR
+  letterContext.lineWidth =
+    (REWARD_LETTER_STROKE_WIDTH_VIEWBOX / REWARD_VIEWBOX_SIZE) * REWARD_MASK_SIZE
+  letterContext.fillStyle = REWARD_LETTER_FILL_COLOR
+  // Match previous paint-order: stroke under fill
+  letterContext.strokeText(letter, letterCenterX, letterCenterY)
+  letterContext.fillText(letter, letterCenterX, letterCenterY)
+
   return {
     size: REWARD_MASK_SIZE,
     mask,
     totalPixels,
+    maskImageDataUrl: maskCanvas.toDataURL(),
+    letterImageDataUrl: letterCanvas.toDataURL(),
   }
 }
 
@@ -242,7 +289,11 @@ function createConfettiParticles(count: number): ConfettiParticle[] {
 function LetterColoringReward({ letter, instructionLabel, onComplete }: LetterColoringRewardProps) {
   const [paths, setPaths] = useState<Array<{ id: string; d: string }>>([])
   const [progress, setProgress] = useState(0)
-  const clipPathId = useId().replace(/:/g, '')
+  const [letterRenderData, setLetterRenderData] = useState<{
+    maskImageDataUrl: string
+    letterImageDataUrl: string
+  } | null>(null)
+  const letterMaskId = useId().replace(/:/g, '')
   const maskDataRef = useRef<LetterMaskData | null>(null)
   const visitedPixelsRef = useRef<Uint8Array>(new Uint8Array(0))
   const coveredPixelsRef = useRef(0)
@@ -259,6 +310,14 @@ function LetterColoringReward({ letter, instructionLabel, onComplete }: LetterCo
 
     const maskData = createLetterMaskData(letter)
     maskDataRef.current = maskData
+    setLetterRenderData(
+      maskData
+        ? {
+            maskImageDataUrl: maskData.maskImageDataUrl,
+            letterImageDataUrl: maskData.letterImageDataUrl,
+          }
+        : null,
+    )
     visitedPixelsRef.current = new Uint8Array(maskData?.size ? maskData.size * maskData.size : 0)
     coveredPixelsRef.current = 0
     progressRef.current = 0
@@ -420,25 +479,38 @@ function LetterColoringReward({ letter, instructionLabel, onComplete }: LetterCo
       >
         <svg className="letter-reward-svg" viewBox="0 0 100 100" aria-hidden="true">
           <defs>
-            <clipPath id={clipPathId}>
-              <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" className="reward-letter-shape">
-                {letter}
-              </text>
-            </clipPath>
+            {letterRenderData ? (
+              <mask id={letterMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                <image
+                  href={letterRenderData.maskImageDataUrl}
+                  xlinkHref={letterRenderData.maskImageDataUrl}
+                  x="0"
+                  y="0"
+                  width="100"
+                  height="100"
+                  preserveAspectRatio="none"
+                />
+              </mask>
+            ) : null}
           </defs>
 
           <rect x="0" y="0" width="100" height="100" fill="rgba(255, 255, 255, 0.66)" />
-          <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" className="reward-letter-base">
-            {letter}
-          </text>
-          <g clipPath={`url(#${clipPathId})`}>
+          {letterRenderData ? (
+            <image
+              href={letterRenderData.letterImageDataUrl}
+              xlinkHref={letterRenderData.letterImageDataUrl}
+              x="0"
+              y="0"
+              width="100"
+              height="100"
+              preserveAspectRatio="none"
+            />
+          ) : null}
+          <g mask={letterRenderData ? `url(#${letterMaskId})` : undefined}>
             {paths.map((path) => (
               <path key={path.id} d={path.d} className="reward-brush-stroke" />
             ))}
           </g>
-          <text x="50" y="50" textAnchor="middle" dominantBaseline="middle" className="reward-letter-outline">
-            {letter}
-          </text>
         </svg>
       </div>
 
