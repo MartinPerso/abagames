@@ -80,3 +80,50 @@
   font-weight: 800;
   background: #e7efff;
 }
+
+.settings-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5a6b7d;
+}
+
+.letter-selection-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.letter-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 8px;
+}
+
+.letter-chip {
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px;
+  border: 2px solid #c5d4eb;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #244372;
+  background: #f5f9ff;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.letter-chip:hover {
+  background: #e7efff;
+  border-color: #8fa8e0;
+}
+
+.letter-chip.is-active {
+  background: #2f72f7;
+  border-color: #2f72f7;
+  color: #ffffff;
+}
+
+@media (max-width: 520px) {
+  .letter-selection-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}

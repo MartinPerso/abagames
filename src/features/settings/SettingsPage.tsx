@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import {
   countingGameNameByLanguage,
   inverseCountingGameNameByLanguage,
+  letterListeningGameNameByLanguage,
   type Language,
   languageLabels,
   parseLanguageParam,
@@ -10,11 +11,14 @@ import {
   settingsTextByLanguage,
 } from '../../shared/i18n/i18n'
 import {
+  ALL_ALPHABET_LETTERS,
   countingSettingsRange,
   getStoredCountingMaxObjects,
+  getStoredLetterListeningAllowedLettersForSettings,
   getStoredReverseCountingMaxObjects,
   reverseCountingSettingsRange,
   setStoredCountingMaxObjects,
+  setStoredLetterListeningAllowedLetters,
   setStoredReverseCountingMaxObjects,
 } from '../../shared/settings/gameSettings'
 import './SettingsPage.css'
@@ -29,6 +33,9 @@ export function SettingsPage() {
   )
   const [reverseCountingMaxObjects, setReverseCountingMaxObjects] = useState<number>(() =>
     getStoredReverseCountingMaxObjects(),
+  )
+  const [letterListeningLetters, setLetterListeningLetters] = useState<Set<string>>(
+    () => new Set(getStoredLetterListeningAllowedLettersForSettings()),
   )
   const text = settingsTextByLanguage[language]
 
@@ -50,6 +57,27 @@ export function SettingsPage() {
   function handleReverseCountingMaxObjectsChange(nextValue: number) {
     setReverseCountingMaxObjects(nextValue)
     setStoredReverseCountingMaxObjects(nextValue)
+  }
+
+  function handleLetterListeningLetterToggle(letter: string) {
+    const next = new Set(letterListeningLetters)
+    if (next.has(letter)) {
+      next.delete(letter)
+    } else {
+      next.add(letter)
+    }
+    setLetterListeningLetters(next)
+    setStoredLetterListeningAllowedLetters([...next])
+  }
+
+  function handleLetterListeningSelectAll() {
+    setLetterListeningLetters(new Set(ALL_ALPHABET_LETTERS))
+    setStoredLetterListeningAllowedLetters([...ALL_ALPHABET_LETTERS])
+  }
+
+  function handleLetterListeningDeselectAll() {
+    setLetterListeningLetters(new Set())
+    setStoredLetterListeningAllowedLetters([])
   }
 
   return (
@@ -113,6 +141,45 @@ export function SettingsPage() {
             onChange={(event) => handleReverseCountingMaxObjectsChange(Number(event.target.value))}
           />
           <output htmlFor="reverse-counting-max-objects">{reverseCountingMaxObjects}</output>
+        </div>
+      </section>
+
+      <section className="settings-card">
+        <h2>{letterListeningGameNameByLanguage[language]}</h2>
+        <label className="field-label">{text.letterListeningAllowedLettersLabel}</label>
+        <p className="settings-hint">{text.letterListeningMinLettersHint}</p>
+        <div className="letter-selection-actions">
+          <button
+            type="button"
+            className="language-chip"
+            onClick={handleLetterListeningSelectAll}
+          >
+            {text.letterListeningAllLetters}
+          </button>
+          <button
+            type="button"
+            className="language-chip"
+            onClick={handleLetterListeningDeselectAll}
+          >
+            {text.letterListeningNoLetters}
+          </button>
+        </div>
+        <div className="letter-selection-grid" role="group" aria-label={text.letterListeningAllowedLettersLabel}>
+          {ALL_ALPHABET_LETTERS.map((letter) => {
+            const isSelected = letterListeningLetters.has(letter)
+            return (
+              <button
+                key={letter}
+                type="button"
+                className={`letter-chip ${isSelected ? 'is-active' : ''}`}
+                onClick={() => handleLetterListeningLetterToggle(letter)}
+                aria-pressed={isSelected}
+                aria-label={letter}
+              >
+                {letter}
+              </button>
+            )
+          })}
         </div>
       </section>
     </main>

@@ -22,7 +22,7 @@ export const homeTextByLanguage: Record<Language, HomeText> = {
     settingsLabel: 'Reglages',
     aboutTitle: 'Avertissement',
     aboutText:
-      "Ce site a ete cree par le parent d'un enfant avec un trouble du spectre autistique, a partir de sa propre comprehension de l'ABA, avec des jeux concus pour son enfant. Si cela peut servir a d'autres familles, l'auteur s'en rejouit. Ce contenu ne remplace pas un accompagnement professionnel et n'a pas ete realise avec des professionnels.",
+      "Ce site a été créé par le parent à partir de sa propre comprehension de l'ABA. Si cela peut servir a d'autres familles, l'auteur s'en rejouit. Ce contenu ne remplace pas un accompagnement professionnel et n'a pas ete realisé avec des professionnels.",
   },
   en: {
     title: 'ABA Games',
@@ -30,7 +30,7 @@ export const homeTextByLanguage: Record<Language, HomeText> = {
     settingsLabel: 'Settings',
     aboutTitle: 'Disclaimer',
     aboutText:
-      "This site was created by the parent of an autistic child, based on their own understanding of ABA, with games made for their child. If it helps other families, the author is glad. It does not replace professional support and was not created with professionals.",
+      "This site was created by a parent based on their own understanding of ABA. If it helps other families, the author is glad. It does not replace professional support and was not created with professionals.",
   },
 }
 
@@ -114,6 +114,10 @@ type SettingsText = {
   languageTitle: string
   countingMaxObjectsLabel: string
   reverseCountingMaxObjectsLabel: string
+  letterListeningAllowedLettersLabel: string
+  letterListeningAllLetters: string
+  letterListeningNoLetters: string
+  letterListeningMinLettersHint: string
   backHomeLabel: string
 }
 
@@ -123,6 +127,10 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     languageTitle: 'Langue',
     countingMaxObjectsLabel: "Nombre d'objets maximum",
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
+    letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
+    letterListeningAllLetters: 'Toutes',
+    letterListeningNoLetters: 'Aucune',
+    letterListeningMinLettersHint: 'Au moins 5 lettres (sinon toutes sont utilisees).',
     backHomeLabel: 'Retour accueil',
   },
   en: {
@@ -130,6 +138,10 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     languageTitle: 'Language',
     countingMaxObjectsLabel: 'Maximum number of objects',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
+    letterListeningAllowedLettersLabel: 'Letters used in the game',
+    letterListeningAllLetters: 'All',
+    letterListeningNoLetters: 'None',
+    letterListeningMinLettersHint: 'At least 5 letters (otherwise all are used).',
     backHomeLabel: 'Back home',
   },
 }

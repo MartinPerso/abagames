@@ -24,12 +24,25 @@ function shuffled<T>(values: T[]): T[] {
   return next
 }
 
-export function createRound(roundIndex: number): LetterRound {
-  const targetLetter = LETTERS[randomIntInclusive(0, LETTERS.length - 1)]
-  const distractors = shuffled(LETTERS.filter((letter) => letter !== targetLetter)).slice(
-    0,
-    OPTIONS_PER_ROUND - 1,
-  )
+function getLettersToUse(allowedLetters: string[] | undefined): string[] {
+  if (
+    allowedLetters === undefined ||
+    allowedLetters.length < OPTIONS_PER_ROUND
+  ) {
+    return LETTERS
+  }
+  return allowedLetters
+}
+
+export function createRound(
+  roundIndex: number,
+  allowedLetters?: string[],
+): LetterRound {
+  const letters = getLettersToUse(allowedLetters)
+  const targetLetter = letters[randomIntInclusive(0, letters.length - 1)]
+  const distractors = shuffled(
+    letters.filter((letter) => letter !== targetLetter),
+  ).slice(0, OPTIONS_PER_ROUND - 1)
   const options = shuffled([targetLetter, ...distractors])
 
   return {
