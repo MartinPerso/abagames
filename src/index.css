@@ -14,20 +14,37 @@
   box-sizing: border-box;
 }
 
+html {
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Allow selection in settings (inputs, labels, etc.) */
+.settings-page {
+  user-select: auto;
 }
 
 .app-shell {
   max-width: 980px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 .secondary-link {

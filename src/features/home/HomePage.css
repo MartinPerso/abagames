@@ -4,6 +4,7 @@
   gap: 16px;
   min-height: calc(100vh - 48px);
   min-height: calc(100dvh - 48px);
+  overflow-x: hidden;
 }
 
 .home-header {

@@ -23,10 +23,6 @@ type ConfettiParticle = {
 
 const NEXT_ROUND_DELAY_MS = 1200
 const CONFETTI_COLORS = ['#ff6f91', '#ffd166', '#7ed957', '#66d9ff', '#c084ff']
-const SURPRISES_BY_LANGUAGE = {
-  fr: ['🌟 Super !', '🎈 Top !', '🚀 Extra !', '✨ Genial !', '🎉 Formidable !'],
-  en: ['🌟 Super!', '🎈 Great!', '🚀 Awesome!', '✨ Nice!', '🎉 Fantastic!'],
-} as const
 const LETTER_PROMPT_TONES = [
   { start: '#ffe8ef', middle: '#fff4d9', end: '#dff7f6' },
   { start: '#fff0df', middle: '#fff8d6', end: '#e8f8db' },
@@ -64,9 +60,6 @@ export function LetterListeningGamePage() {
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
-  const [surpriseLabel, setSurpriseLabel] = useState<string>(
-    language === 'fr' ? SURPRISES_BY_LANGUAGE.fr[0] : SURPRISES_BY_LANGUAGE.en[0],
-  )
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const timerRef = useRef<number | null>(null)
 
@@ -116,10 +109,6 @@ export function LetterListeningGamePage() {
   }, [round.targetLetter, speakLetter, stopSpeech])
 
   useEffect(() => {
-    setSurpriseLabel(language === 'fr' ? SURPRISES_BY_LANGUAGE.fr[0] : SURPRISES_BY_LANGUAGE.en[0])
-  }, [language])
-
-  useEffect(() => {
     return () => {
       if (timerRef.current !== null) {
         window.clearTimeout(timerRef.current)
@@ -148,9 +137,6 @@ export function LetterListeningGamePage() {
     }
 
     if (isCorrectAnswer(round, letter)) {
-      const surprises = SURPRISES_BY_LANGUAGE[language]
-      const nextSurprise = surprises[randomIntInclusive(0, surprises.length - 1)]
-      setSurpriseLabel(nextSurprise)
       setConfettiParticles(createConfettiParticles(16))
       setFeedback('correct')
       setScore((current) => current + 1)
@@ -350,17 +336,6 @@ export function LetterListeningGamePage() {
               ))}
             </div>
           </section>
-          {feedback === 'correct' ? (
-            <div className="success-overlay" role="alert" aria-live="assertive">
-              <div className="success-alert">
-                <span>{text.bravoAlert}</span>
-                <span className="surprise-badge">{surpriseLabel}</span>
-                <span className="emoji-burst" aria-hidden="true">
-                  🎉 ✨ 🎉
-                </span>
-              </div>
-            </div>
-          ) : null}
         </>
       )}
     </main>
