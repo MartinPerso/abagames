@@ -1,6 +1,8 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
+  commonGameTextByLanguage,
+  getGameScoreAriaLabel,
   letterListeningGameNameByLanguage,
   letterListeningGameTextByLanguage,
   parseLanguageParam,
@@ -67,6 +69,7 @@ function createConfettiParticles(count: number): ConfettiParticle[] {
 export function LetterListeningGamePage() {
   const [searchParams] = useSearchParams()
   const language = parseLanguageParam(searchParams.get('lang'))
+  const commonText = commonGameTextByLanguage[language]
   const text = letterListeningGameTextByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
@@ -104,8 +107,7 @@ export function LetterListeningGamePage() {
         return
       }
 
-      const spokenText =
-        language === 'fr' ? `La lettre: ${letter}` : `The letter: ${letter}`
+      const spokenText = `${text.speechPrefix}${letter}`
 
       stopSpeech()
       const utterance = new SpeechSynthesisUtterance(spokenText)
@@ -114,7 +116,7 @@ export function LetterListeningGamePage() {
       utterance.pitch = 1.05
       synth.speak(utterance)
     },
-    [language, stopSpeech],
+    [text.speechPrefix, language, stopSpeech],
   )
 
   useEffect(() => {
@@ -186,15 +188,11 @@ export function LetterListeningGamePage() {
   }
 
   const finished = roundIndex >= TOTAL_ROUNDS
-  const resultTitle = language === 'fr' ? 'Partie terminee !' : 'Game complete!'
+  const resultTitle = commonText.resultTitle
   const resultMessage =
     score === TOTAL_ROUNDS
-      ? language === 'fr'
-        ? 'Sans faute, bravo !'
-        : 'Perfect run, amazing!'
-      : language === 'fr'
-        ? 'Bravo, on continue !'
-        : 'Great effort, let us play again!'
+      ? commonText.perfectResultMessage
+      : commonText.continueResultMessage
   const promptToneStyle = useMemo<CSSProperties>(() => {
     const alphabetIndex = round.targetLetter.charCodeAt(0) - 'A'.charCodeAt(0)
     const tone = LETTER_PROMPT_TONES[Math.abs(alphabetIndex) % LETTER_PROMPT_TONES.length]
@@ -271,7 +269,7 @@ export function LetterListeningGamePage() {
             🎉
           </p>
           <h2 className="result-title">{resultTitle}</h2>
-          <p className="result-score" aria-label={`${score} sur ${TOTAL_ROUNDS}`}>
+          <p className="result-score" aria-label={getGameScoreAriaLabel(language, score, TOTAL_ROUNDS)}>
             <span>{score}</span>
             <span>/{TOTAL_ROUNDS}</span>
           </p>
@@ -281,14 +279,14 @@ export function LetterListeningGamePage() {
               type="button"
               className="answer-button"
               onClick={restartGame}
-              aria-label={language === 'fr' ? 'Rejouer' : 'Play again'}
+              aria-label={commonText.playAgainLabel}
             >
               ↺
             </button>
             <Link
               to={`/?lang=${language}`}
               className="secondary-link"
-              aria-label={language === 'fr' ? 'Retour accueil' : 'Back to home'}
+              aria-label={commonText.backHomeLabel}
             >
               ⌂
             </Link>

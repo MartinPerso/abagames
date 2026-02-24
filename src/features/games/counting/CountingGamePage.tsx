@@ -1,8 +1,10 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
+  commonGameTextByLanguage,
   countingGameNameByLanguage,
   countingGameTextByLanguage,
+  getGameScoreAriaLabel,
   itemLabelByLanguage,
   parseLanguageParam,
 } from '../../../shared/i18n/i18n'
@@ -213,6 +215,7 @@ export function CountingGamePage() {
   const language = parseLanguageParam(searchParams.get('lang'))
   const maxObjects = getStoredCountingMaxObjects()
   const answerOptions = getAnswerOptions(maxObjects)
+  const commonText = commonGameTextByLanguage[language]
   const text = countingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
 
@@ -288,15 +291,11 @@ export function CountingGamePage() {
   }
 
   const finished = roundIndex >= TOTAL_ROUNDS
-  const resultTitle = language === 'fr' ? 'Partie terminee !' : 'Game complete!'
+  const resultTitle = commonText.resultTitle
   const resultMessage =
     score === TOTAL_ROUNDS
-      ? language === 'fr'
-        ? 'Sans faute, bravo !'
-        : 'Perfect run, amazing!'
-      : language === 'fr'
-        ? 'Bravo, on continue !'
-        : 'Great effort, let us play again!'
+      ? commonText.perfectResultMessage
+      : commonText.continueResultMessage
   const itemPositions = useMemo(
     () => createItemPositions(round.count),
     [round.count],
@@ -328,7 +327,7 @@ export function CountingGamePage() {
             🎉
           </p>
           <h2 className="result-title">{resultTitle}</h2>
-          <p className="result-score" aria-label={`${score} sur ${TOTAL_ROUNDS}`}>
+          <p className="result-score" aria-label={getGameScoreAriaLabel(language, score, TOTAL_ROUNDS)}>
             <span>{score}</span>
             <span>/{TOTAL_ROUNDS}</span>
           </p>
@@ -338,14 +337,14 @@ export function CountingGamePage() {
               type="button"
               className="answer-button"
               onClick={restartGame}
-              aria-label={language === 'fr' ? 'Rejouer' : 'Play again'}
+              aria-label={commonText.playAgainLabel}
             >
               ↺
             </button>
             <Link
               to={`/?lang=${language}`}
               className="secondary-link"
-              aria-label={language === 'fr' ? 'Retour accueil' : 'Back to home'}
+              aria-label={commonText.backHomeLabel}
             >
               ⌂
             </Link>

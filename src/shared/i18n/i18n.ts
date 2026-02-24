@@ -19,10 +19,10 @@ export const homeTextByLanguage: Record<Language, HomeText> = {
   fr: {
     title: 'Jeux ABA',
     availableGames: 'Jeux disponibles',
-    settingsLabel: 'Reglages',
+    settingsLabel: 'Réglages',
     aboutTitle: 'Avertissement',
     aboutText:
-      "Ce site a été créé par le parent à partir de sa propre comprehension de l'ABA. Si cela peut servir a d'autres familles, l'auteur s'en rejouit. Ce contenu ne remplace pas un accompagnement professionnel et n'a pas ete realisé avec des professionnels.",
+      "Ce site a été créé par le parent à partir de sa propre compréhension de l'ABA. Si cela peut servir à d'autres familles, l'auteur s'en réjouit. Ce contenu ne remplace pas un accompagnement professionnel et n'a pas été réalisé avec des professionnels.",
   },
   en: {
     title: 'ABA Games',
@@ -49,6 +49,42 @@ export const letterListeningGameNameByLanguage: Record<Language, string> = {
   en: 'Letter Game',
 }
 
+type CommonGameText = {
+  resultTitle: string
+  perfectResultMessage: string
+  continueResultMessage: string
+  playAgainLabel: string
+  backHomeLabel: string
+}
+
+export const commonGameTextByLanguage: Record<Language, CommonGameText> = {
+  fr: {
+    resultTitle: 'Partie terminée !',
+    perfectResultMessage: 'Sans faute, bravo !',
+    continueResultMessage: 'Bravo, on continue !',
+    playAgainLabel: 'Rejouer',
+    backHomeLabel: "Retour à l'accueil",
+  },
+  en: {
+    resultTitle: 'Game complete!',
+    perfectResultMessage: 'Perfect run, amazing!',
+    continueResultMessage: 'Great effort, let us play again!',
+    playAgainLabel: 'Play again',
+    backHomeLabel: 'Back to home',
+  },
+}
+
+export function getGameScoreAriaLabel(
+  language: Language,
+  score: number,
+  total: number,
+): string {
+  if (language === 'fr') {
+    return `${score} sur ${total}`
+  }
+  return `${score} out of ${total}`
+}
+
 type CountingGameText = {
   answerLabel: string
   soundOn: string
@@ -59,8 +95,8 @@ type CountingGameText = {
 export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
   fr: {
     answerLabel: 'Choisis un chiffre',
-    soundOn: 'Son active',
-    soundOff: 'Son coupe',
+    soundOn: 'Son activé',
+    soundOff: 'Son coupé',
     bravoAlert: 'Bravo',
   },
   en: {
@@ -92,20 +128,23 @@ type LetterListeningGameText = {
   replayLabel: string
   answerLabel: string
   bravoAlert: string
+  speechPrefix: string
 }
 
 export const letterListeningGameTextByLanguage: Record<Language, LetterListeningGameText> = {
   fr: {
-    instructionLabel: 'Ecoute la lettre',
-    replayLabel: 'Reecouter la lettre',
+    instructionLabel: 'Écoute la lettre',
+    replayLabel: 'Réécouter la lettre',
     answerLabel: 'Choisis la bonne lettre',
     bravoAlert: 'Bravo',
+    speechPrefix: 'La lettre : ',
   },
   en: {
     instructionLabel: 'Listen to the letter',
     replayLabel: 'Play letter again',
     answerLabel: 'Choose the correct letter',
     bravoAlert: 'Great',
+    speechPrefix: 'The letter: ',
   },
 }
 
@@ -123,15 +162,15 @@ type SettingsText = {
 
 export const settingsTextByLanguage: Record<Language, SettingsText> = {
   fr: {
-    title: 'Reglages',
+    title: 'Réglages',
     languageTitle: 'Langue',
     countingMaxObjectsLabel: "Nombre d'objets maximum",
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
     letterListeningAllLetters: 'Toutes',
     letterListeningNoLetters: 'Aucune',
-    letterListeningMinLettersHint: 'Au moins 5 lettres (sinon toutes sont utilisees).',
-    backHomeLabel: 'Retour accueil',
+    letterListeningMinLettersHint: 'Au moins 5 lettres (sinon toutes sont utilisées).',
+    backHomeLabel: "Retour à l'accueil",
   },
   en: {
     title: 'Settings',
