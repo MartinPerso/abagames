@@ -49,42 +49,6 @@ export const letterListeningGameNameByLanguage: Record<Language, string> = {
   en: 'Letter Game',
 }
 
-type CommonGameText = {
-  resultTitle: string
-  perfectResultMessage: string
-  continueResultMessage: string
-  playAgainLabel: string
-  backHomeLabel: string
-}
-
-export const commonGameTextByLanguage: Record<Language, CommonGameText> = {
-  fr: {
-    resultTitle: 'Partie terminée !',
-    perfectResultMessage: 'Sans faute, bravo !',
-    continueResultMessage: 'Bravo, on continue !',
-    playAgainLabel: 'Rejouer',
-    backHomeLabel: "Retour à l'accueil",
-  },
-  en: {
-    resultTitle: 'Game complete!',
-    perfectResultMessage: 'Perfect run, amazing!',
-    continueResultMessage: 'Great effort, let us play again!',
-    playAgainLabel: 'Play again',
-    backHomeLabel: 'Back to home',
-  },
-}
-
-export function getGameScoreAriaLabel(
-  language: Language,
-  score: number,
-  total: number,
-): string {
-  if (language === 'fr') {
-    return `${score} sur ${total}`
-  }
-  return `${score} out of ${total}`
-}
-
 type CountingGameText = {
   answerLabel: string
   soundOn: string

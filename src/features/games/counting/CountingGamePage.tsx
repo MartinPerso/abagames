@@ -1,17 +1,14 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
-  commonGameTextByLanguage,
   countingGameNameByLanguage,
   countingGameTextByLanguage,
-  getGameScoreAriaLabel,
   itemLabelByLanguage,
   parseLanguageParam,
 } from '../../../shared/i18n/i18n'
 import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
 import {
   type CountingItem,
-  TOTAL_ROUNDS,
   createRound,
   getAnswerOptions,
   isCorrectAnswer,
@@ -230,13 +227,11 @@ export function CountingGamePage() {
   const answerPointerEnabled = getStoredCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredCountingAnswerPointerDelaySeconds() * 1000
   const answerOptions = getAnswerOptions(maxObjects)
-  const commonText = commonGameTextByLanguage[language]
   const text = countingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
   const [round, setRound] = useState(() => createRound(0, maxObjects))
-  const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
@@ -347,7 +342,7 @@ export function CountingGamePage() {
   }, [stopSpeech])
 
   useEffect(() => {
-    if (roundIndex >= TOTAL_ROUNDS || hintsDisabled) {
+    if (hintsDisabled) {
       return
     }
 
@@ -390,7 +385,7 @@ export function CountingGamePage() {
   ])
 
   useEffect(() => {
-    if (roundIndex >= TOTAL_ROUNDS || !answerPointerEnabled || isLocked || feedback === 'correct') {
+    if (!answerPointerEnabled || isLocked || feedback === 'correct') {
       return
     }
 
@@ -413,12 +408,6 @@ export function CountingGamePage() {
   ])
 
   function moveToNextRound() {
-    if (roundIndex + 1 >= TOTAL_ROUNDS) {
-      setRoundIndex(TOTAL_ROUNDS)
-      setIsLocked(false)
-      return
-    }
-
     const nextIndex = roundIndex + 1
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
@@ -429,14 +418,13 @@ export function CountingGamePage() {
   }
 
   function handleAnswer(answer: number) {
-    if (isLocked || roundIndex >= TOTAL_ROUNDS) {
+    if (isLocked) {
       return
     }
 
     if (isCorrectAnswer(round, answer)) {
       setConfettiParticles(createConfettiParticles(400))
       setFeedback('correct')
-      setScore((current) => current + 1)
       setIsLocked(true)
       setActiveHintSpriteIndex(null)
       setShowAnswerPointer(false)
@@ -457,27 +445,6 @@ export function CountingGamePage() {
       setFeedback('idle')
     }, 700)
   }
-
-  function restartGame() {
-    clearAnswerTimer()
-    stopHintSequence()
-    clearAnswerPointerTimer()
-    setConfettiParticles([])
-    setRoundIndex(0)
-    setRound(createRound(0, maxObjects))
-    setScore(0)
-    setFeedback('idle')
-    setIsLocked(false)
-    setActiveHintSpriteIndex(null)
-    setShowAnswerPointer(false)
-  }
-
-  const finished = roundIndex >= TOTAL_ROUNDS
-  const resultTitle = commonText.resultTitle
-  const resultMessage =
-    score === TOTAL_ROUNDS
-      ? commonText.perfectResultMessage
-      : commonText.continueResultMessage
   const celebrationMotions = useMemo(() => {
     if (feedback !== 'correct') {
       return []
@@ -496,116 +463,80 @@ export function CountingGamePage() {
         </div>
       </header>
 
-      {finished ? (
-        <section
-          className={`result-card ${score === TOTAL_ROUNDS ? 'is-perfect' : ''}`}
-          aria-live="polite"
-        >
-          <p className="result-emoji" aria-hidden="true">
-            🎉
-          </p>
-          <h2 className="result-title">{resultTitle}</h2>
-          <p className="result-score" aria-label={getGameScoreAriaLabel(language, score, TOTAL_ROUNDS)}>
-            <span>{score}</span>
-            <span>/{TOTAL_ROUNDS}</span>
-          </p>
-          <p className="result-message">{resultMessage}</p>
-          <div className="result-actions">
-            <button
-              type="button"
-              className="answer-button"
-              onClick={restartGame}
-              aria-label={commonText.playAgainLabel}
-            >
-              ↺
-            </button>
-            <Link
-              to={`/?lang=${language}`}
-              className="secondary-link"
-              aria-label={commonText.backHomeLabel}
-            >
-              ⌂
-            </Link>
-          </div>
-        </section>
-      ) : (
-        <>
-          <div className="question-content">
-            <section className="counting-stage" aria-label={itemLabels[round.item]}>
-              <div
-                className={`${sceneClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-              >
-                {itemPositions.map((position, index) => {
-                  const isHinting = feedback !== 'correct' && activeHintSpriteIndex === index
-                  return (
-                    <div
-                      key={`${round.roundIndex}-${round.item}-${index}`}
-                      className={`item-sprite ${feedback === 'correct' ? 'is-celebrating' : ''} ${isHinting ? 'is-hinting' : ''}`}
-                      style={{
-                        left: `${position.left}%`,
-                        top: `${position.top}%`,
-                        width: `${position.size}%`,
-                        height: `${position.size}%`,
-                        zIndex: isHinting ? 8 : undefined,
-                        animationDuration:
-                          feedback === 'correct' ? `${REWARD_SFX_DURATION_MS}ms` : undefined,
-                        ...(feedback === 'correct' ? celebrationMotions[index] : {}),
-                      }}
-                      aria-hidden="true"
-                    >
-                      <img src={imageByItem[round.item]} alt="" className="item-image" />
-                    </div>
-                  )
-                })}
-              </div>
-              {feedback === 'correct' && confettiParticles.length > 0 ? (
-                <div className="micro-confetti" aria-hidden="true">
-                  {confettiParticles.map((particle) => {
-                    const style = {
-                      left: particle.left,
-                      top: particle.top,
-                      width: particle.size,
-                      height: `calc(${particle.size} * 0.52)`,
-                      backgroundColor: particle.color,
-                      animationDelay: particle.delay,
-                      '--confetti-dx': particle.dx,
-                      '--confetti-dy': particle.dy,
-                      '--confetti-rotation': particle.rotation,
-                    } as CSSProperties
-                    return <span key={particle.id} className="confetti-piece" style={style} />
-                  })}
-                </div>
-              ) : null}
-            </section>
-
-            <p className={`feedback ${feedback}`} />
-          </div>
-
-          <section
-            className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
-            aria-label={text.answerLabel}
+      <div className="question-content">
+        <section className="counting-stage" aria-label={itemLabels[round.item]}>
+          <div
+            className={`${sceneClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
           >
-            <div className="answer-grid">
-              {answerOptions.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={`answer-button ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && value === round.count ? 'is-pointer-target' : ''}`}
-                  onClick={() => handleAnswer(value)}
-                  disabled={isLocked}
+            {itemPositions.map((position, index) => {
+              const isHinting = feedback !== 'correct' && activeHintSpriteIndex === index
+              return (
+                <div
+                  key={`${round.roundIndex}-${round.item}-${index}`}
+                  className={`item-sprite ${feedback === 'correct' ? 'is-celebrating' : ''} ${isHinting ? 'is-hinting' : ''}`}
+                  style={{
+                    left: `${position.left}%`,
+                    top: `${position.top}%`,
+                    width: `${position.size}%`,
+                    height: `${position.size}%`,
+                    zIndex: isHinting ? 8 : undefined,
+                    animationDuration:
+                      feedback === 'correct' ? `${REWARD_SFX_DURATION_MS}ms` : undefined,
+                    ...(feedback === 'correct' ? celebrationMotions[index] : {}),
+                  }}
+                  aria-hidden="true"
                 >
-                  <span className="answer-value">{value}</span>
-                  {feedback !== 'correct' && showAnswerPointer && value === round.count ? (
-                    <span className="answer-pointer" aria-hidden="true">
-                      👉
-                    </span>
-                  ) : null}
-                </button>
-              ))}
+                  <img src={imageByItem[round.item]} alt="" className="item-image" />
+                </div>
+              )
+            })}
+          </div>
+          {feedback === 'correct' && confettiParticles.length > 0 ? (
+            <div className="micro-confetti" aria-hidden="true">
+              {confettiParticles.map((particle) => {
+                const style = {
+                  left: particle.left,
+                  top: particle.top,
+                  width: particle.size,
+                  height: `calc(${particle.size} * 0.52)`,
+                  backgroundColor: particle.color,
+                  animationDelay: particle.delay,
+                  '--confetti-dx': particle.dx,
+                  '--confetti-dy': particle.dy,
+                  '--confetti-rotation': particle.rotation,
+                } as CSSProperties
+                return <span key={particle.id} className="confetti-piece" style={style} />
+              })}
             </div>
-          </section>
-        </>
-      )}
+          ) : null}
+        </section>
+
+        <p className={`feedback ${feedback}`} />
+      </div>
+
+      <section
+        className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
+        aria-label={text.answerLabel}
+      >
+        <div className="answer-grid">
+          {answerOptions.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`answer-button ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && value === round.count ? 'is-pointer-target' : ''}`}
+              onClick={() => handleAnswer(value)}
+              disabled={isLocked}
+            >
+              <span className="answer-value">{value}</span>
+              {feedback !== 'correct' && showAnswerPointer && value === round.count ? (
+                <span className="answer-pointer" aria-hidden="true">
+                  👉
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }

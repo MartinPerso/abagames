@@ -1,5 +1,3 @@
-export const TOTAL_ROUNDS = 8
-
 export type CountingItem = 'fireTruck' | 'policeCar' | 'ambulance' | 'boat' | 'plane'
 
 export type ReverseCountingChoice = {

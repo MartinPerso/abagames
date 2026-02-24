@@ -1,4 +1,3 @@
-export const TOTAL_ROUNDS = 8
 export const OPTIONS_PER_ROUND = 5
 
 export type LetterRound = {

@@ -1,8 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
-  commonGameTextByLanguage,
-  getGameScoreAriaLabel,
   inverseCountingGameNameByLanguage,
   inverseCountingGameTextByLanguage,
   itemLabelByLanguage,
@@ -17,7 +15,6 @@ import {
 } from '../../../shared/settings/gameSettings'
 import {
   type CountingItem,
-  TOTAL_ROUNDS,
   createRound,
   isCorrectAnswer,
 } from './gameLogic'
@@ -211,13 +208,11 @@ export function ReverseCountingGamePage() {
   const maxObjects = getStoredReverseCountingMaxObjects()
   const answerPointerEnabled = getStoredReverseCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredReverseCountingAnswerPointerDelaySeconds() * 1000
-  const commonText = commonGameTextByLanguage[language]
   const text = inverseCountingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
   const [round, setRound] = useState(() => createRound(0, maxObjects))
-  const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
@@ -295,7 +290,7 @@ export function ReverseCountingGamePage() {
   }, [stopSpeech])
 
   useEffect(() => {
-    if (roundIndex >= TOTAL_ROUNDS || isLocked || feedback === 'correct') {
+    if (isLocked || feedback === 'correct') {
       return
     }
 
@@ -311,7 +306,7 @@ export function ReverseCountingGamePage() {
   }, [feedback, isLocked, round.roundIndex, round.targetCount, roundIndex, speakTargetCount, stopSpeech])
 
   useEffect(() => {
-    if (roundIndex >= TOTAL_ROUNDS || !answerPointerEnabled || isLocked || feedback === 'correct') {
+    if (!answerPointerEnabled || isLocked || feedback === 'correct') {
       return
     }
 
@@ -327,12 +322,6 @@ export function ReverseCountingGamePage() {
   }, [answerPointerDelayMs, answerPointerEnabled, feedback, isLocked, round.roundIndex, roundIndex])
 
   function moveToNextRound() {
-    if (roundIndex + 1 >= TOTAL_ROUNDS) {
-      setRoundIndex(TOTAL_ROUNDS)
-      setIsLocked(false)
-      return
-    }
-
     const nextIndex = roundIndex + 1
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
@@ -342,14 +331,13 @@ export function ReverseCountingGamePage() {
   }
 
   function handleChoice(choiceId: string) {
-    if (isLocked || roundIndex >= TOTAL_ROUNDS) {
+    if (isLocked) {
       return
     }
 
     if (isCorrectAnswer(round, choiceId)) {
       setConfettiParticles(createConfettiParticles(400))
       setFeedback('correct')
-      setScore((current) => current + 1)
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
@@ -374,27 +362,6 @@ export function ReverseCountingGamePage() {
       setFeedback('idle')
     }, 700)
   }
-
-  function restartGame() {
-    clearActiveTimer()
-    clearAnswerPointerTimer()
-    clearSpeechTimer()
-    stopSpeech()
-    setConfettiParticles([])
-    setRoundIndex(0)
-    setRound(createRound(0, maxObjects))
-    setScore(0)
-    setFeedback('idle')
-    setIsLocked(false)
-    setShowAnswerPointer(false)
-  }
-
-  const finished = roundIndex >= TOTAL_ROUNDS
-  const resultTitle = commonText.resultTitle
-  const resultMessage =
-    score === TOTAL_ROUNDS
-      ? commonText.perfectResultMessage
-      : commonText.continueResultMessage
   const targetToneStyle = useMemo<CSSProperties>(() => {
     const index = (round.targetCount - 1) % targetTonePalette.length
     const tone = targetTonePalette[index]
@@ -435,111 +402,75 @@ export function ReverseCountingGamePage() {
         </div>
       </header>
 
-      {finished ? (
-        <section
-          className={`result-card ${score === TOTAL_ROUNDS ? 'is-perfect' : ''}`}
-          aria-live="polite"
+      <section className="target-section" aria-live="polite" style={targetToneStyle}>
+        <p className="target-label">{text.answerLabel}</p>
+        <p
+          className={`target-number ${feedback === 'correct' ? 'is-celebrating' : ''}`}
+          style={targetCelebrationStyle}
         >
-          <p className="result-emoji" aria-hidden="true">
-            🎉
-          </p>
-          <h2 className="result-title">{resultTitle}</h2>
-          <p className="result-score" aria-label={getGameScoreAriaLabel(language, score, TOTAL_ROUNDS)}>
-            <span>{score}</span>
-            <span>/{TOTAL_ROUNDS}</span>
-          </p>
-          <p className="result-message">{resultMessage}</p>
-          <div className="result-actions">
+          {round.targetCount}
+        </p>
+      </section>
+
+      <section className={`choice-grid ${feedback === 'wrong' ? 'is-wrong' : ''}`}>
+        {round.choices.map((choice) => {
+          const isCorrectChoice = choice.id === round.correctChoiceId
+          const isHighlighted = feedback === 'correct' && isCorrectChoice
+          const positions = positionsByChoice.get(choice.id) ?? []
+
+          return (
             <button
+              key={choice.id}
               type="button"
-              className="answer-button"
-              onClick={restartGame}
-              aria-label={commonText.playAgainLabel}
+              className={`choice-card ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? 'is-pointer-target' : ''}`}
+              onClick={() => handleChoice(choice.id)}
+              disabled={isLocked}
+              aria-label={`${choice.count} ${itemLabels[choice.item]}`}
             >
-              ↺
-            </button>
-            <Link
-              to={`/?lang=${language}`}
-              className="secondary-link"
-              aria-label={commonText.backHomeLabel}
-            >
-              ⌂
-            </Link>
-          </div>
-        </section>
-      ) : (
-        <>
-          <section className="target-section" aria-live="polite" style={targetToneStyle}>
-            <p className="target-label">{text.answerLabel}</p>
-            <p
-              className={`target-number ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-              style={targetCelebrationStyle}
-            >
-              {round.targetCount}
-            </p>
-          </section>
-
-          <section className={`choice-grid ${feedback === 'wrong' ? 'is-wrong' : ''}`}>
-            {round.choices.map((choice) => {
-              const isCorrectChoice = choice.id === round.correctChoiceId
-              const isHighlighted = feedback === 'correct' && isCorrectChoice
-              const positions = positionsByChoice.get(choice.id) ?? []
-
-              return (
-                <button
-                  key={choice.id}
-                  type="button"
-                  className={`choice-card ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? 'is-pointer-target' : ''}`}
-                  onClick={() => handleChoice(choice.id)}
-                  disabled={isLocked}
-                  aria-label={`${choice.count} ${itemLabels[choice.item]}`}
-                >
-                  {feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? (
-                    <span className="answer-pointer" aria-hidden="true">
-                      👉
-                    </span>
-                  ) : null}
-                  <div className="choice-scene">
-                    {positions.map((position, index) => (
-                      <div
-                        key={`${choice.id}-${index}`}
-                        className="item-sprite"
-                        style={{
-                          left: `${position.left}%`,
-                          top: `${position.top}%`,
-                          width: `${position.size}%`,
-                          height: `${position.size}%`,
-                        }}
-                        aria-hidden="true"
-                      >
-                        <img src={imageByItem[choice.item]} alt="" className="item-image" />
-                      </div>
-                    ))}
+              {feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? (
+                <span className="answer-pointer" aria-hidden="true">
+                  👉
+                </span>
+              ) : null}
+              <div className="choice-scene">
+                {positions.map((position, index) => (
+                  <div
+                    key={`${choice.id}-${index}`}
+                    className="item-sprite"
+                    style={{
+                      left: `${position.left}%`,
+                      top: `${position.top}%`,
+                      width: `${position.size}%`,
+                      height: `${position.size}%`,
+                    }}
+                    aria-hidden="true"
+                  >
+                    <img src={imageByItem[choice.item]} alt="" className="item-image" />
                   </div>
-                </button>
-              )
-            })}
-            {feedback === 'correct' && confettiParticles.length > 0 ? (
-              <div className="micro-confetti" aria-hidden="true">
-                {confettiParticles.map((particle) => {
-                  const style = {
-                    left: particle.left,
-                    top: particle.top,
-                    width: particle.size,
-                    height: `calc(${particle.size} * 0.52)`,
-                    backgroundColor: particle.color,
-                    animationDelay: particle.delay,
-                    '--confetti-dx': particle.dx,
-                    '--confetti-dy': particle.dy,
-                    '--confetti-rotation': particle.rotation,
-                  } as CSSProperties
-                  return <span key={particle.id} className="confetti-piece" style={style} />
-                })}
+                ))}
               </div>
-            ) : null}
-          </section>
-        </>
-      )}
+            </button>
+          )
+        })}
+        {feedback === 'correct' && confettiParticles.length > 0 ? (
+          <div className="micro-confetti" aria-hidden="true">
+            {confettiParticles.map((particle) => {
+              const style = {
+                left: particle.left,
+                top: particle.top,
+                width: particle.size,
+                height: `calc(${particle.size} * 0.52)`,
+                backgroundColor: particle.color,
+                animationDelay: particle.delay,
+                '--confetti-dx': particle.dx,
+                '--confetti-dy': particle.dy,
+                '--confetti-rotation': particle.rotation,
+              } as CSSProperties
+              return <span key={particle.id} className="confetti-piece" style={style} />
+            })}
+          </div>
+        ) : null}
+      </section>
     </main>
   )
 }

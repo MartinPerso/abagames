@@ -10,8 +10,6 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import {
-  commonGameTextByLanguage,
-  getGameScoreAriaLabel,
   letterListeningGameNameByLanguage,
   letterListeningGameTextByLanguage,
   parseLanguageParam,
@@ -22,7 +20,7 @@ import {
   getStoredLetterListeningAnswerPointerEnabled,
   getStoredSpeechVoiceUri,
 } from '../../../shared/settings/gameSettings'
-import { TOTAL_ROUNDS, createRound, isCorrectAnswer } from './gameLogic'
+import { createRound, isCorrectAnswer } from './gameLogic'
 import './LetterListeningGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -525,14 +523,12 @@ export function LetterListeningGamePage() {
   const language = parseLanguageParam(searchParams.get('lang'))
   const answerPointerEnabled = getStoredLetterListeningAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredLetterListeningAnswerPointerDelaySeconds() * 1000
-  const commonText = commonGameTextByLanguage[language]
   const text = letterListeningGameTextByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
   const [round, setRound] = useState(() =>
     createRound(0, getStoredLetterListeningAllowedLetters()),
   )
-  const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
@@ -626,7 +622,7 @@ export function LetterListeningGamePage() {
   }, [stopSpeech])
 
   useEffect(() => {
-    if (roundIndex >= TOTAL_ROUNDS || !answerPointerEnabled || isLocked || feedback === 'correct') {
+    if (!answerPointerEnabled || isLocked || feedback === 'correct') {
       return
     }
 
@@ -642,14 +638,6 @@ export function LetterListeningGamePage() {
   }, [answerPointerDelayMs, answerPointerEnabled, feedback, isLocked, round.roundIndex, roundIndex])
 
   function moveToNextRound() {
-    if (roundIndex + 1 >= TOTAL_ROUNDS) {
-      setRoundIndex(TOTAL_ROUNDS)
-      setConfettiParticles([])
-      setIsLocked(false)
-      setShowAnswerPointer(false)
-      return
-    }
-
     const nextIndex = roundIndex + 1
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, getStoredLetterListeningAllowedLetters()))
@@ -660,13 +648,12 @@ export function LetterListeningGamePage() {
   }
 
   function handleAnswer(letter: string) {
-    if (isLocked || roundIndex >= TOTAL_ROUNDS) {
+    if (isLocked) {
       return
     }
 
     if (isCorrectAnswer(round, letter)) {
       setFeedback('correct')
-      setScore((current) => current + 1)
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
@@ -693,25 +680,6 @@ export function LetterListeningGamePage() {
     }, REWARD_RESULT_VISIBLE_MS)
   }
 
-  function restartGame() {
-    clearActiveTimer()
-    clearAnswerPointerTimer()
-    stopSpeech()
-    setRoundIndex(0)
-    setRound(createRound(0, getStoredLetterListeningAllowedLetters()))
-    setScore(0)
-    setFeedback('idle')
-    setIsLocked(false)
-    setShowAnswerPointer(false)
-    setConfettiParticles([])
-  }
-
-  const finished = roundIndex >= TOTAL_ROUNDS
-  const resultTitle = commonText.resultTitle
-  const resultMessage =
-    score === TOTAL_ROUNDS
-      ? commonText.perfectResultMessage
-      : commonText.continueResultMessage
   const promptToneStyle = useMemo<CSSProperties>(() => {
     const alphabetIndex = round.targetLetter.charCodeAt(0) - 'A'.charCodeAt(0)
     const tone = LETTER_PROMPT_TONES[Math.abs(alphabetIndex) % LETTER_PROMPT_TONES.length]
@@ -779,113 +747,77 @@ export function LetterListeningGamePage() {
         </div>
       </header>
 
-      {finished ? (
-        <section
-          className={`result-card ${score === TOTAL_ROUNDS ? 'is-perfect' : ''}`}
-          aria-live="polite"
-        >
-          <p className="result-emoji" aria-hidden="true">
-            🎉
-          </p>
-          <h2 className="result-title">{resultTitle}</h2>
-          <p className="result-score" aria-label={getGameScoreAriaLabel(language, score, TOTAL_ROUNDS)}>
-            <span>{score}</span>
-            <span>/{TOTAL_ROUNDS}</span>
-          </p>
-          <p className="result-message">{resultMessage}</p>
-          <div className="result-actions">
-            <button
-              type="button"
-              className="answer-button"
-              onClick={restartGame}
-              aria-label={commonText.playAgainLabel}
-            >
-              ↺
-            </button>
-            <Link
-              to={`/?lang=${language}`}
-              className="secondary-link"
-              aria-label={commonText.backHomeLabel}
-            >
-              ⌂
-            </Link>
+      <section
+        className={`prompt-card ${feedback === 'correct' ? 'is-flash' : ''}`}
+        aria-live="polite"
+        style={promptToneStyle}
+      >
+        <p className="prompt-label">
+          {feedback === 'correct' ? text.coloringInstructionLabel : text.instructionLabel}
+        </p>
+        {feedback === 'correct' ? (
+          <LetterColoringReward
+            letter={round.targetLetter}
+            instructionLabel={text.coloringInstructionLabel}
+            onComplete={handleColoringCompleted}
+          />
+        ) : (
+          <button
+            type="button"
+            className="play-letter-button"
+            onClick={() => speakLetter(round.targetLetter)}
+            aria-label={text.replayLabel}
+            title={text.replayLabel}
+          >
+            ▶
+          </button>
+        )}
+        {feedback === 'correct' ? (
+          <div className="micro-confetti" aria-hidden="true">
+            {confettiParticles.map((particle) => {
+              const style = {
+                left: particle.left,
+                top: particle.top,
+                width: particle.size,
+                height: `calc(${particle.size} * 0.52)`,
+                backgroundColor: particle.color,
+                animationDelay: particle.delay,
+                '--confetti-dx': particle.dx,
+                '--confetti-dy': particle.dy,
+                '--confetti-rotation': particle.rotation,
+              } as CSSProperties
+
+              return <span key={particle.id} className="confetti-piece" style={style} />
+            })}
           </div>
-        </section>
-      ) : (
-        <>
-          <section
-            className={`prompt-card ${feedback === 'correct' ? 'is-flash' : ''}`}
-            aria-live="polite"
-            style={promptToneStyle}
-          >
-            <p className="prompt-label">
-              {feedback === 'correct' ? text.coloringInstructionLabel : text.instructionLabel}
-            </p>
-            {feedback === 'correct' ? (
-              <LetterColoringReward
-                letter={round.targetLetter}
-                instructionLabel={text.coloringInstructionLabel}
-                onComplete={handleColoringCompleted}
-              />
-            ) : (
-              <button
-                type="button"
-                className="play-letter-button"
-                onClick={() => speakLetter(round.targetLetter)}
-                aria-label={text.replayLabel}
-                title={text.replayLabel}
-              >
-                ▶
-              </button>
-            )}
-            {feedback === 'correct' ? (
-              <div className="micro-confetti" aria-hidden="true">
-                {confettiParticles.map((particle) => {
-                  const style = {
-                    left: particle.left,
-                    top: particle.top,
-                    width: particle.size,
-                    height: `calc(${particle.size} * 0.52)`,
-                    backgroundColor: particle.color,
-                    animationDelay: particle.delay,
-                    '--confetti-dx': particle.dx,
-                    '--confetti-dy': particle.dy,
-                    '--confetti-rotation': particle.rotation,
-                  } as CSSProperties
+        ) : null}
+      </section>
 
-                  return <span key={particle.id} className="confetti-piece" style={style} />
-                })}
-              </div>
-            ) : null}
-          </section>
-
-          <section
-            className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
-            aria-label={text.answerLabel}
-          >
-            <div className="answer-grid">
-              {round.options.map((letter) => (
-                <button
-                  key={letter}
-                  type="button"
-                  className={`answer-button ${
-                    feedback === 'correct' && letter === round.targetLetter ? 'is-correct-answer' : ''
-                  } ${feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? 'is-pointer-target' : ''}`}
-                  onClick={() => handleAnswer(letter)}
-                  disabled={isLocked}
-                >
-                  <span className="answer-letter">{letter}</span>
-                  {feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? (
-                    <span className="answer-pointer" aria-hidden="true">
-                      👉
-                    </span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
+      <section
+        className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
+        aria-label={text.answerLabel}
+      >
+        <div className="answer-grid">
+          {round.options.map((letter) => (
+            <button
+              key={letter}
+              type="button"
+              className={`answer-button ${
+                feedback === 'correct' && letter === round.targetLetter ? 'is-correct-answer' : ''
+              } ${feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? 'is-pointer-target' : ''}`}
+              onClick={() => handleAnswer(letter)}
+              disabled={isLocked}
+            >
+              <span className="answer-letter">{letter}</span>
+              {feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? (
+                <span className="answer-pointer" aria-hidden="true">
+                  👉
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }
