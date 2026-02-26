@@ -42,6 +42,7 @@ const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const TARGET_SPEECH_DELAY_MS = 1000
+const SUCCESS_SEQUENCE_DELAY_MS = 900
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -317,6 +318,33 @@ export function ReverseCountingGamePage() {
     [language, stopSpeech],
   )
 
+  const speakBravo = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const synth = window.speechSynthesis
+    if (!synth) {
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text.bravoAlert)
+    const selectedVoiceUri = getStoredSpeechVoiceUri()
+    const selectedVoice = selectedVoiceUri
+      ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+      : undefined
+    const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+    if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+      utterance.voice = selectedVoice
+      utterance.lang = selectedVoice.lang
+    } else {
+      utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    }
+    utterance.rate = 0.82
+    utterance.pitch = 1.08
+    synth.speak(utterance)
+  }, [language, text.bravoAlert])
+
   useEffect(() => {
     return () => {
       clearActiveTimer()
@@ -327,10 +355,6 @@ export function ReverseCountingGamePage() {
   }, [stopSpeech])
 
   useEffect(() => {
-    if (isLocked || feedback === 'correct') {
-      return
-    }
-
     clearSpeechTimer()
     speechTimerRef.current = window.setTimeout(() => {
       speakTargetCount(round.targetCount)
@@ -338,9 +362,8 @@ export function ReverseCountingGamePage() {
 
     return () => {
       clearSpeechTimer()
-      stopSpeech()
     }
-  }, [feedback, isLocked, round.roundIndex, round.targetCount, roundIndex, speakTargetCount, stopSpeech])
+  }, [round.roundIndex, round.targetCount, speakTargetCount])
 
   useEffect(() => {
     if (!answerPointerEnabled || isLocked || feedback === 'correct') {
@@ -363,6 +386,7 @@ export function ReverseCountingGamePage() {
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
+    setConfettiParticles([])
     setIsLocked(false)
     setShowAnswerPointer(false)
   }
@@ -379,23 +403,26 @@ export function ReverseCountingGamePage() {
     }
 
     if (isCorrectAnswer(round, choiceId)) {
-      setConfettiParticles(createConfettiParticles(400))
-      setFeedback('correct')
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
       clearAnswerPointerTimer()
       clearSpeechTimer()
-      stopSpeech()
-
       const correctChoice = round.choices.find((choice) => choice.id === round.correctChoiceId)
-      if (correctChoice) {
-        playRewardSfx(correctChoice.item)
-      }
 
       timerRef.current = window.setTimeout(() => {
-        moveToNextRound()
-      }, REWARD_SFX_DURATION_MS)
+        timerRef.current = null
+        setConfettiParticles(createConfettiParticles(400))
+        setFeedback('correct')
+        if (correctChoice) {
+          playRewardSfx(correctChoice.item)
+        }
+        speakBravo()
+        timerRef.current = window.setTimeout(() => {
+          timerRef.current = null
+          moveToNextRound()
+        }, REWARD_SFX_DURATION_MS)
+      }, SUCCESS_SEQUENCE_DELAY_MS)
       return
     }
 
@@ -456,6 +483,18 @@ export function ReverseCountingGamePage() {
             {diceHintEnabled ? <DiceHint value={round.targetCount} className="target-dice-hint" /> : null}
           </span>
         </p>
+        {feedback !== 'correct' ? (
+          <button
+            type="button"
+            className="target-replay-button"
+            onClick={() => speakTargetCount(round.targetCount)}
+            disabled={isLocked}
+            aria-label={text.replayLabel}
+            title={text.replayLabel}
+          >
+            ▶
+          </button>
+        ) : null}
       </section>
 
       <section className={`choice-grid ${feedback === 'wrong' ? 'is-wrong' : ''}`}>

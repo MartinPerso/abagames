@@ -75,6 +75,7 @@ type InverseCountingGameText = {
   answerLabel: string
   bravoAlert: string
   speechPrefix: string
+  replayLabel: string
 }
 
 export const inverseCountingGameTextByLanguage: Record<Language, InverseCountingGameText> = {
@@ -82,11 +83,13 @@ export const inverseCountingGameTextByLanguage: Record<Language, InverseCounting
     answerLabel: 'Trouve le bon groupe',
     bravoAlert: 'Bravo',
     speechPrefix: 'Le chiffre ',
+    replayLabel: 'Réécouter le chiffre',
   },
   en: {
     answerLabel: 'Find the matching group',
     bravoAlert: 'Great',
     speechPrefix: 'The number ',
+    replayLabel: 'Play number again',
   },
 }
 

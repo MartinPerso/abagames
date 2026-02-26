@@ -77,6 +77,7 @@ const REWARD_FILL_THRESHOLD = 0.9
 const REWARD_COMPLETE_DELAY_MS = 500
 const REWARD_RESULT_VISIBLE_MS = 5000
 const LETTER_SPEECH_DELAY_MS = 500
+const SUCCESS_SEQUENCE_DELAY_MS = 900
 const REWARD_FONT_WEIGHT = 700
 const REWARD_LETTER_FILL_COLOR = '#f8d67b'
 const REWARD_LETTER_STROKE_COLOR = 'rgba(167, 122, 11, 0.52)'
@@ -630,6 +631,33 @@ export function LetterListeningGamePage() {
     [language, stopSpeech],
   )
 
+  const speakBravo = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const synth = window.speechSynthesis
+    if (!synth) {
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text.bravoAlert)
+    const selectedVoiceUri = getStoredSpeechVoiceUri()
+    const selectedVoice = selectedVoiceUri
+      ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+      : undefined
+    const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+    if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+      utterance.voice = selectedVoice
+      utterance.lang = selectedVoice.lang
+    } else {
+      utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    }
+    utterance.rate = 0.82
+    utterance.pitch = 1.08
+    synth.speak(utterance)
+  }, [language, text.bravoAlert])
+
   useEffect(() => {
     clearSpeechTimer()
     speechTimerRef.current = window.setTimeout(() => {
@@ -688,11 +716,17 @@ export function LetterListeningGamePage() {
     speakSelectedLetter(letter)
 
     if (isCorrectAnswer(round, letter)) {
-      setFeedback('correct')
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
       clearAnswerPointerTimer()
+      timerRef.current = window.setTimeout(() => {
+        timerRef.current = null
+        setFeedback('correct')
+        setConfettiParticles(createConfettiParticles(400))
+        playSuccessJingle()
+        speakBravo()
+      }, SUCCESS_SEQUENCE_DELAY_MS)
       return
     }
 
@@ -709,6 +743,7 @@ export function LetterListeningGamePage() {
     setConfettiParticles(createConfettiParticles(400))
     playSuccessJingle()
     triggerLightVibration()
+    speakBravo()
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null
       moveToNextRound()

@@ -45,6 +45,7 @@ const BASE_CONFETTI_DURATION_SECONDS = 0.8
 const CONFETTI_TRAVEL_MULTIPLIER =
   CONFETTI_DURATION_SECONDS / BASE_CONFETTI_DURATION_SECONDS
 const HINT_COUNT_STEP_MS = 900
+const SUCCESS_SEQUENCE_DELAY_MS = 900
 const assetsBaseUrl = `${import.meta.env.BASE_URL}assets/illustrations`
 
 function randomIntInclusive(min: number, max: number): number {
@@ -329,10 +330,39 @@ export function CountingGamePage() {
     synth.speak(utterance)
   }, [language, stopSpeech])
 
-  function stopHintSequence() {
+  const speakBravo = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const synth = window.speechSynthesis
+    if (!synth) {
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text.bravoAlert)
+    const selectedVoiceUri = getStoredSpeechVoiceUri()
+    const selectedVoice = selectedVoiceUri
+      ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+      : undefined
+    const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+    if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+      utterance.voice = selectedVoice
+      utterance.lang = selectedVoice.lang
+    } else {
+      utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+    }
+    utterance.rate = 0.82
+    utterance.pitch = 1.08
+    synth.speak(utterance)
+  }, [language, text.bravoAlert])
+
+  function stopHintSequence(stopCurrentSpeech = true) {
     clearHintTimers()
     setActiveHintSpriteIndex(null)
-    stopSpeech()
+    if (stopCurrentSpeech) {
+      stopSpeech()
+    }
   }
 
   useEffect(() => {
@@ -415,6 +445,7 @@ export function CountingGamePage() {
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
+    setConfettiParticles([])
     setIsLocked(false)
     setActiveHintSpriteIndex(null)
     setShowAnswerPointer(false)
@@ -428,19 +459,24 @@ export function CountingGamePage() {
     speakHintCount(answer)
 
     if (isCorrectAnswer(round, answer)) {
-      setConfettiParticles(createConfettiParticles(400))
-      setFeedback('correct')
       setIsLocked(true)
       setActiveHintSpriteIndex(null)
       setShowAnswerPointer(false)
       clearAnswerTimer()
-      stopHintSequence()
+      // Keep the selected number pronunciation audible before reward feedback.
+      stopHintSequence(false)
       clearAnswerPointerTimer()
-      playRewardSfx(round.item)
-
       answerTimerRef.current = window.setTimeout(() => {
-        moveToNextRound()
-      }, REWARD_SFX_DURATION_MS)
+        answerTimerRef.current = null
+        setConfettiParticles(createConfettiParticles(400))
+        setFeedback('correct')
+        playRewardSfx(round.item)
+        speakBravo()
+        answerTimerRef.current = window.setTimeout(() => {
+          answerTimerRef.current = null
+          moveToNextRound()
+        }, REWARD_SFX_DURATION_MS)
+      }, SUCCESS_SEQUENCE_DELAY_MS)
       return
     }
 
