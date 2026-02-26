@@ -67,6 +67,16 @@
   transform: translate3d(0, 0, 0);
 }
 
+.target-number-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.16em;
+}
+
+.target-dice-hint {
+  --dice-size: 0.26em;
+}
+
 .target-number.is-celebrating {
   animation-fill-mode: forwards;
   will-change: transform, opacity;

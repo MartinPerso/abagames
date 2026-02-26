@@ -19,9 +19,11 @@ import {
   getStoredCountingHintRepeatDelaySeconds,
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
+  getStoredCountingDiceHintEnabled,
   getStoredCountingMaxObjects,
   getStoredSpeechVoiceUri,
 } from '../../../shared/settings/gameSettings'
+import { DiceHint } from '../../../shared/ui/DiceHint'
 import './CountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -226,6 +228,7 @@ export function CountingGamePage() {
   const hintRepeatDelayMs = getStoredCountingHintRepeatDelaySeconds() * 1000
   const answerPointerEnabled = getStoredCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredCountingAnswerPointerDelaySeconds() * 1000
+  const diceHintEnabled = getStoredCountingDiceHintEnabled()
   const answerOptions = getAnswerOptions(maxObjects)
   const text = countingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
@@ -422,6 +425,8 @@ export function CountingGamePage() {
       return
     }
 
+    speakHintCount(answer)
+
     if (isCorrectAnswer(round, answer)) {
       setConfettiParticles(createConfettiParticles(400))
       setFeedback('correct')
@@ -527,7 +532,10 @@ export function CountingGamePage() {
               onClick={() => handleAnswer(value)}
               disabled={isLocked}
             >
-              <span className="answer-value">{value}</span>
+              <span className="answer-content">
+                <span className="answer-value">{value}</span>
+                {diceHintEnabled ? <DiceHint value={value} className="answer-dice-hint" /> : null}
+              </span>
               {feedback !== 'correct' && showAnswerPointer && value === round.count ? (
                 <span className="answer-pointer" aria-hidden="true">
                   👉

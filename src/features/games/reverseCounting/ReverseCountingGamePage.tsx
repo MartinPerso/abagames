@@ -5,14 +5,17 @@ import {
   inverseCountingGameTextByLanguage,
   itemLabelByLanguage,
   parseLanguageParam,
+  quantitySpeechLabelByLanguage,
 } from '../../../shared/i18n/i18n'
 import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
 import {
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
+  getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredSpeechVoiceUri,
 } from '../../../shared/settings/gameSettings'
+import { DiceHint } from '../../../shared/ui/DiceHint'
 import {
   type CountingItem,
   createRound,
@@ -208,6 +211,7 @@ export function ReverseCountingGamePage() {
   const maxObjects = getStoredReverseCountingMaxObjects()
   const answerPointerEnabled = getStoredReverseCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredReverseCountingAnswerPointerDelaySeconds() * 1000
+  const diceHintEnabled = getStoredReverseCountingDiceHintEnabled()
   const text = inverseCountingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
 
@@ -280,6 +284,39 @@ export function ReverseCountingGamePage() {
     [language, stopSpeech, text.speechPrefix],
   )
 
+  const speakChoice = useCallback(
+    (item: CountingItem, count: number) => {
+      if (typeof window === 'undefined') {
+        return
+      }
+
+      const synth = window.speechSynthesis
+      if (!synth) {
+        return
+      }
+
+      stopSpeech()
+      const labels = quantitySpeechLabelByLanguage[language][item]
+      const noun = count > 1 ? labels.plural : labels.singular
+      const utterance = new SpeechSynthesisUtterance(`${count} ${noun}`)
+      const selectedVoiceUri = getStoredSpeechVoiceUri()
+      const selectedVoice = selectedVoiceUri
+        ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+        : undefined
+      const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+      if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+        utterance.voice = selectedVoice
+        utterance.lang = selectedVoice.lang
+      } else {
+        utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+      }
+      utterance.rate = 0.76
+      utterance.pitch = 1
+      synth.speak(utterance)
+    },
+    [language, stopSpeech],
+  )
+
   useEffect(() => {
     return () => {
       clearActiveTimer()
@@ -333,6 +370,12 @@ export function ReverseCountingGamePage() {
   function handleChoice(choiceId: string) {
     if (isLocked) {
       return
+    }
+
+    const selectedChoice = round.choices.find((choice) => choice.id === choiceId)
+    clearSpeechTimer()
+    if (selectedChoice) {
+      speakChoice(selectedChoice.item, selectedChoice.count)
     }
 
     if (isCorrectAnswer(round, choiceId)) {
@@ -408,7 +451,10 @@ export function ReverseCountingGamePage() {
           className={`target-number ${feedback === 'correct' ? 'is-celebrating' : ''}`}
           style={targetCelebrationStyle}
         >
-          {round.targetCount}
+          <span className="target-number-content">
+            <span>{round.targetCount}</span>
+            {diceHintEnabled ? <DiceHint value={round.targetCount} className="target-dice-hint" /> : null}
+          </span>
         </p>
       </section>
 

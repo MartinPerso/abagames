@@ -8,6 +8,9 @@ const COUNTING_HINT_REPEAT_DELAY_SECONDS_STORAGE_KEY =
 const COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY = 'abagames-counting-answer-pointer-enabled'
 const REVERSE_COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY =
   'abagames-reverse-counting-answer-pointer-enabled'
+const COUNTING_DICE_HINT_ENABLED_STORAGE_KEY = 'abagames-counting-dice-hint-enabled'
+const REVERSE_COUNTING_DICE_HINT_ENABLED_STORAGE_KEY =
+  'abagames-reverse-counting-dice-hint-enabled'
 const LETTER_LISTENING_ANSWER_POINTER_ENABLED_STORAGE_KEY =
   'abagames-letter-listening-answer-pointer-enabled'
 const COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
@@ -282,6 +285,22 @@ export function getStoredLetterListeningAnswerPointerEnabled(): boolean {
 
 export function setStoredLetterListeningAnswerPointerEnabled(enabled: boolean): void {
   setStoredBoolean(LETTER_LISTENING_ANSWER_POINTER_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredCountingDiceHintEnabled(): boolean {
+  return getStoredBoolean(COUNTING_DICE_HINT_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredCountingDiceHintEnabled(enabled: boolean): void {
+  setStoredBoolean(COUNTING_DICE_HINT_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredReverseCountingDiceHintEnabled(): boolean {
+  return getStoredBoolean(REVERSE_COUNTING_DICE_HINT_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredReverseCountingDiceHintEnabled(enabled: boolean): void {
+  setStoredBoolean(REVERSE_COUNTING_DICE_HINT_ENABLED_STORAGE_KEY, enabled)
 }
 
 export function getStoredCountingAnswerPointerDelaySeconds(): number {

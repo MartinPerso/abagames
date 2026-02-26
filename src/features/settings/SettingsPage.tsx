@@ -19,6 +19,7 @@ import {
   countingSettingsRange,
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
+  getStoredCountingDiceHintEnabled,
   getStoredCountingHintFirstDelaySeconds,
   getStoredCountingHintRepeatDelaySeconds,
   getStoredCountingMaxObjects,
@@ -27,11 +28,13 @@ import {
   getStoredLetterListeningAllowedLettersForSettings,
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
+  getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredSpeechVoiceUri,
   reverseCountingSettingsRange,
   setStoredCountingAnswerPointerDelaySeconds,
   setStoredCountingAnswerPointerEnabled,
+  setStoredCountingDiceHintEnabled,
   setStoredCountingHintFirstDelaySeconds,
   setStoredCountingHintRepeatDelaySeconds,
   setStoredCountingMaxObjects,
@@ -40,6 +43,7 @@ import {
   setStoredLetterListeningAllowedLetters,
   setStoredReverseCountingAnswerPointerDelaySeconds,
   setStoredReverseCountingAnswerPointerEnabled,
+  setStoredReverseCountingDiceHintEnabled,
   setStoredReverseCountingMaxObjects,
   setStoredSpeechVoiceUri,
 } from '../../shared/settings/gameSettings'
@@ -56,6 +60,9 @@ export function SettingsPage() {
   const [countingAnswerPointerEnabled, setCountingAnswerPointerEnabled] = useState<boolean>(() =>
     getStoredCountingAnswerPointerEnabled(),
   )
+  const [countingDiceHintEnabled, setCountingDiceHintEnabled] = useState<boolean>(() =>
+    getStoredCountingDiceHintEnabled(),
+  )
   const [countingAnswerPointerDelaySeconds, setCountingAnswerPointerDelaySeconds] =
     useState<number>(() => getStoredCountingAnswerPointerDelaySeconds())
   const [countingHintFirstDelaySeconds, setCountingHintFirstDelaySeconds] = useState<number>(() =>
@@ -69,6 +76,9 @@ export function SettingsPage() {
   )
   const [reverseAnswerPointerEnabled, setReverseAnswerPointerEnabled] = useState<boolean>(() =>
     getStoredReverseCountingAnswerPointerEnabled(),
+  )
+  const [reverseDiceHintEnabled, setReverseDiceHintEnabled] = useState<boolean>(() =>
+    getStoredReverseCountingDiceHintEnabled(),
   )
   const [reverseAnswerPointerDelaySeconds, setReverseAnswerPointerDelaySeconds] = useState<number>(
     () => getStoredReverseCountingAnswerPointerDelaySeconds(),
@@ -165,6 +175,11 @@ export function SettingsPage() {
     setStoredCountingAnswerPointerEnabled(enabled)
   }
 
+  function handleCountingDiceHintEnabledChange(enabled: boolean) {
+    setCountingDiceHintEnabled(enabled)
+    setStoredCountingDiceHintEnabled(enabled)
+  }
+
   function handleCountingAnswerPointerDelayChange(nextValue: number) {
     setCountingAnswerPointerDelaySeconds(nextValue)
     setStoredCountingAnswerPointerDelaySeconds(nextValue)
@@ -188,6 +203,11 @@ export function SettingsPage() {
   function handleReverseAnswerPointerEnabledChange(enabled: boolean) {
     setReverseAnswerPointerEnabled(enabled)
     setStoredReverseCountingAnswerPointerEnabled(enabled)
+  }
+
+  function handleReverseDiceHintEnabledChange(enabled: boolean) {
+    setReverseDiceHintEnabled(enabled)
+    setStoredReverseCountingDiceHintEnabled(enabled)
   }
 
   function handleReverseAnswerPointerDelayChange(nextValue: number) {
@@ -333,6 +353,16 @@ export function SettingsPage() {
           />
         </label>
 
+        <label className="toggle-row" htmlFor="counting-dice-hint-enabled">
+          <span>{text.diceHintEnabledLabel}</span>
+          <input
+            id="counting-dice-hint-enabled"
+            type="checkbox"
+            checked={countingDiceHintEnabled}
+            onChange={(event) => handleCountingDiceHintEnabledChange(event.target.checked)}
+          />
+        </label>
+
         <label className="field-label" htmlFor="counting-answer-pointer-delay">
           {text.answerPointerDelayLabel}
         </label>
@@ -376,6 +406,16 @@ export function SettingsPage() {
             type="checkbox"
             checked={reverseAnswerPointerEnabled}
             onChange={(event) => handleReverseAnswerPointerEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="toggle-row" htmlFor="reverse-dice-hint-enabled">
+          <span>{text.diceHintEnabledLabel}</span>
+          <input
+            id="reverse-dice-hint-enabled"
+            type="checkbox"
+            checked={reverseDiceHintEnabled}
+            onChange={(event) => handleReverseDiceHintEnabledChange(event.target.checked)}
           />
         </label>
 

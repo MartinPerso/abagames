@@ -130,6 +130,7 @@ type SettingsText = {
   countingHintRepeatDelayLabel: string
   answerPointerEnabledLabel: string
   answerPointerDelayLabel: string
+  diceHintEnabledLabel: string
   reverseCountingMaxObjectsLabel: string
   letterListeningAllowedLettersLabel: string
   letterListeningAllLetters: string
@@ -151,6 +152,7 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     countingHintRepeatDelayLabel: "Répéter l'indice toutes les (secondes)",
     answerPointerEnabledLabel: 'Montrer la bonne réponse automatiquement',
     answerPointerDelayLabel: "Montrer l'animation après (secondes)",
+    diceHintEnabledLabel: 'Montrer un dé à côté du chiffre',
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
     letterListeningAllLetters: 'Toutes',
@@ -170,6 +172,7 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     countingHintRepeatDelayLabel: 'Repeat hint every (seconds)',
     answerPointerEnabledLabel: 'Show the correct answer automatically',
     answerPointerDelayLabel: 'Show the animation after (seconds)',
+    diceHintEnabledLabel: 'Show a die next to the number',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
     letterListeningAllowedLettersLabel: 'Letters used in the game',
     letterListeningAllLetters: 'All',
@@ -193,6 +196,28 @@ export const itemLabelByLanguage: Record<Language, Record<string, string>> = {
     ambulance: 'Ambulance',
     boat: 'Boat',
     plane: 'Plane',
+  },
+}
+
+type QuantitySpeechLabel = {
+  singular: string
+  plural: string
+}
+
+export const quantitySpeechLabelByLanguage: Record<Language, Record<string, QuantitySpeechLabel>> = {
+  fr: {
+    fireTruck: { singular: 'camion pompier', plural: 'camions pompiers' },
+    policeCar: { singular: 'voiture de police', plural: 'voitures de police' },
+    ambulance: { singular: 'ambulance', plural: 'ambulances' },
+    boat: { singular: 'bateau', plural: 'bateaux' },
+    plane: { singular: 'avion', plural: 'avions' },
+  },
+  en: {
+    fireTruck: { singular: 'fire truck', plural: 'fire trucks' },
+    policeCar: { singular: 'police car', plural: 'police cars' },
+    ambulance: { singular: 'ambulance', plural: 'ambulances' },
+    boat: { singular: 'boat', plural: 'boats' },
+    plane: { singular: 'plane', plural: 'planes' },
   },
 }
 

@@ -1,0 +1,72 @@
+.dice-hint {
+  --dice-size: 1.18em;
+  --dice-border: rgba(18, 38, 58, 0.24);
+  --dice-pip: currentColor;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.16em;
+}
+
+.dice-hint-face {
+  position: relative;
+  width: var(--dice-size);
+  height: var(--dice-size);
+  border-radius: 0.22em;
+  background: #ffffff;
+  border: 0.06em solid var(--dice-border);
+  box-shadow: 0 0.08em 0.14em rgba(18, 38, 58, 0.18);
+}
+
+.dice-hint-pip {
+  position: absolute;
+  width: 0.2em;
+  height: 0.2em;
+  border-radius: 50%;
+  background: var(--dice-pip);
+  transform: translate(-50%, -50%);
+}
+
+.dice-hint-pip.is-tl {
+  top: 28%;
+  left: 28%;
+}
+
+.dice-hint-pip.is-tc {
+  top: 28%;
+  left: 50%;
+}
+
+.dice-hint-pip.is-tr {
+  top: 28%;
+  left: 72%;
+}
+
+.dice-hint-pip.is-ml {
+  top: 50%;
+  left: 28%;
+}
+
+.dice-hint-pip.is-mc {
+  top: 50%;
+  left: 50%;
+}
+
+.dice-hint-pip.is-mr {
+  top: 50%;
+  left: 72%;
+}
+
+.dice-hint-pip.is-bl {
+  top: 72%;
+  left: 28%;
+}
+
+.dice-hint-pip.is-bc {
+  top: 72%;
+  left: 50%;
+}
+
+.dice-hint-pip.is-br {
+  top: 72%;
+  left: 72%;
+}
