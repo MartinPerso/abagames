@@ -598,6 +598,38 @@ export function LetterListeningGamePage() {
     [text.speechPrefix, language, stopSpeech],
   )
 
+  const speakSelectedLetter = useCallback(
+    (letter: string) => {
+      if (typeof window === 'undefined') {
+        return
+      }
+
+      const synth = window.speechSynthesis
+      if (!synth) {
+        return
+      }
+
+      stopSpeech()
+      const spokenLetter = letter.toLowerCase()
+      const utterance = new SpeechSynthesisUtterance(spokenLetter)
+      const selectedVoiceUri = getStoredSpeechVoiceUri()
+      const selectedVoice = selectedVoiceUri
+        ? synth.getVoices().find((voice) => voice.voiceURI === selectedVoiceUri)
+        : undefined
+      const expectedLangPrefix = language === 'fr' ? 'fr' : 'en'
+      if (selectedVoice && selectedVoice.lang.toLowerCase().startsWith(expectedLangPrefix)) {
+        utterance.voice = selectedVoice
+        utterance.lang = selectedVoice.lang
+      } else {
+        utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US'
+      }
+      utterance.rate = 0.75
+      utterance.pitch = 1.05
+      synth.speak(utterance)
+    },
+    [language, stopSpeech],
+  )
+
   useEffect(() => {
     clearSpeechTimer()
     speechTimerRef.current = window.setTimeout(() => {
@@ -651,6 +683,9 @@ export function LetterListeningGamePage() {
     if (isLocked) {
       return
     }
+
+    clearSpeechTimer()
+    speakSelectedLetter(letter)
 
     if (isCorrectAnswer(round, letter)) {
       setFeedback('correct')
