@@ -534,6 +534,8 @@ export function LetterListeningGamePage() {
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
+  const [wrongLetters, setWrongLetters] = useState<string[]>([])
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
@@ -705,6 +707,8 @@ export function LetterListeningGamePage() {
     setConfettiParticles([])
     setIsLocked(false)
     setShowAnswerPointer(false)
+    setSelectedLetter(null)
+    setWrongLetters([])
   }
 
   function handleAnswer(letter: string) {
@@ -716,6 +720,7 @@ export function LetterListeningGamePage() {
     speakSelectedLetter(letter)
 
     if (isCorrectAnswer(round, letter)) {
+      setSelectedLetter(letter)
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
@@ -730,6 +735,7 @@ export function LetterListeningGamePage() {
       return
     }
 
+    setWrongLetters((current) => (current.includes(letter) ? current : [...current, letter]))
     setFeedback('wrong')
     clearActiveTimer()
     timerRef.current = window.setTimeout(() => {
@@ -873,6 +879,10 @@ export function LetterListeningGamePage() {
               key={letter}
               type="button"
               className={`answer-button ${
+                selectedLetter === letter && letter === round.targetLetter ? 'is-selected-correct' : ''
+              } ${
+                wrongLetters.includes(letter) ? 'is-selected-wrong' : ''
+              } ${
                 feedback === 'correct' && letter === round.targetLetter ? 'is-correct-answer' : ''
               } ${feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? 'is-pointer-target' : ''}`}
               onClick={() => handleAnswer(letter)}

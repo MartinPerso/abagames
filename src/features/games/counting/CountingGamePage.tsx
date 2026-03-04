@@ -241,6 +241,8 @@ export function CountingGamePage() {
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [activeHintSpriteIndex, setActiveHintSpriteIndex] = useState<number | null>(null)
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [wrongAnswers, setWrongAnswers] = useState<number[]>([])
   const answerTimerRef = useRef<number | null>(null)
   const hintStartTimerRef = useRef<number | null>(null)
   const hintStepTimerRef = useRef<number | null>(null)
@@ -449,6 +451,8 @@ export function CountingGamePage() {
     setIsLocked(false)
     setActiveHintSpriteIndex(null)
     setShowAnswerPointer(false)
+    setSelectedAnswer(null)
+    setWrongAnswers([])
   }
 
   function handleAnswer(answer: number) {
@@ -459,6 +463,7 @@ export function CountingGamePage() {
     speakHintCount(answer)
 
     if (isCorrectAnswer(round, answer)) {
+      setSelectedAnswer(answer)
       setIsLocked(true)
       setActiveHintSpriteIndex(null)
       setShowAnswerPointer(false)
@@ -480,9 +485,11 @@ export function CountingGamePage() {
       return
     }
 
+    setWrongAnswers((current) => (current.includes(answer) ? current : [...current, answer]))
     setFeedback('wrong')
     clearAnswerTimer()
     answerTimerRef.current = window.setTimeout(() => {
+      answerTimerRef.current = null
       setFeedback('idle')
     }, 700)
   }
@@ -564,7 +571,7 @@ export function CountingGamePage() {
             <button
               key={value}
               type="button"
-              className={`answer-button ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && value === round.count ? 'is-pointer-target' : ''}`}
+              className={`answer-button ${selectedAnswer === value && value === round.count ? 'is-selected-correct' : ''} ${wrongAnswers.includes(value) ? 'is-selected-wrong' : ''} ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && value === round.count ? 'is-pointer-target' : ''}`}
               onClick={() => handleAnswer(value)}
               disabled={isLocked}
             >

@@ -222,6 +222,8 @@ export function ReverseCountingGamePage() {
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
+  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
+  const [wrongChoiceIds, setWrongChoiceIds] = useState<string[]>([])
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
@@ -389,6 +391,8 @@ export function ReverseCountingGamePage() {
     setConfettiParticles([])
     setIsLocked(false)
     setShowAnswerPointer(false)
+    setSelectedChoiceId(null)
+    setWrongChoiceIds([])
   }
 
   function handleChoice(choiceId: string) {
@@ -403,6 +407,7 @@ export function ReverseCountingGamePage() {
     }
 
     if (isCorrectAnswer(round, choiceId)) {
+      setSelectedChoiceId(choiceId)
       setIsLocked(true)
       setShowAnswerPointer(false)
       clearActiveTimer()
@@ -426,9 +431,11 @@ export function ReverseCountingGamePage() {
       return
     }
 
+    setWrongChoiceIds((current) => (current.includes(choiceId) ? current : [...current, choiceId]))
     setFeedback('wrong')
     clearActiveTimer()
     timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
       setFeedback('idle')
     }, 700)
   }
@@ -501,13 +508,15 @@ export function ReverseCountingGamePage() {
         {round.choices.map((choice) => {
           const isCorrectChoice = choice.id === round.correctChoiceId
           const isHighlighted = feedback === 'correct' && isCorrectChoice
+          const isSelectedCorrect = selectedChoiceId === choice.id && isCorrectChoice
+          const isSelectedWrong = wrongChoiceIds.includes(choice.id)
           const positions = positionsByChoice.get(choice.id) ?? []
 
           return (
             <button
               key={choice.id}
               type="button"
-              className={`choice-card ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? 'is-pointer-target' : ''}`}
+              className={`choice-card ${isSelectedCorrect ? 'is-selected-correct' : ''} ${isSelectedWrong ? 'is-selected-wrong' : ''} ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? 'is-pointer-target' : ''}`}
               onClick={() => handleChoice(choice.id)}
               disabled={isLocked}
               aria-label={`${choice.count} ${itemLabels[choice.item]}`}
