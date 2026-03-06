@@ -649,6 +649,7 @@ export function CountingGamePage() {
         embedUrl={activeSuperRewardEmbedUrl ?? ''}
         title={superRewardText.modalTitle}
         closeLabel={superRewardText.closeLabel}
+        tapToPlayLabel={superRewardText.tapToPlayLabel}
         onClose={closeSuperRewardVideo}
       />
     </main>

@@ -626,6 +626,7 @@ export function ReverseCountingGamePage() {
         embedUrl={activeSuperRewardEmbedUrl ?? ''}
         title={superRewardText.modalTitle}
         closeLabel={superRewardText.closeLabel}
+        tapToPlayLabel={superRewardText.tapToPlayLabel}
         onClose={closeSuperRewardVideo}
       />
     </main>

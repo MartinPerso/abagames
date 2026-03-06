@@ -50,11 +50,26 @@
 }
 
 .super-reward-player {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
   background: #0b111b;
+}
+
+.super-reward-tap-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border: 0;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
+  background: rgba(6, 16, 28, 0.56);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.48);
 }
 
 .super-reward-player iframe {

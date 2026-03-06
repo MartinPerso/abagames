@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import './SuperRewardVideoModal.css'
 
 type SuperRewardVideoModalProps = {
@@ -6,7 +7,19 @@ type SuperRewardVideoModalProps = {
   embedUrl: string
   title: string
   closeLabel: string
+  tapToPlayLabel: string
   onClose: () => void
+}
+
+function isIOSLikeDevice(): boolean {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+
+  const ua = navigator.userAgent
+  const iOSPlatform = /iPad|iPhone|iPod/.test(ua)
+  const iPadDesktopUA = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+  return iOSPlatform || iPadDesktopUA
 }
 
 export function SuperRewardVideoModal({
@@ -15,8 +28,20 @@ export function SuperRewardVideoModal({
   embedUrl,
   title,
   closeLabel,
+  tapToPlayLabel,
   onClose,
 }: SuperRewardVideoModalProps) {
+  const [playAttempt, setPlayAttempt] = useState(0)
+  const [showTapOverlay, setShowTapOverlay] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+    setPlayAttempt(0)
+    setShowTapOverlay(isIOSLikeDevice())
+  }, [embedUrl, isOpen])
+
   if (!isOpen) {
     return null
   }
@@ -42,8 +67,21 @@ export function SuperRewardVideoModal({
           </button>
         </div>
         <div className="super-reward-player">
+          {showTapOverlay ? (
+            <button
+              type="button"
+              className="super-reward-tap-overlay"
+              onClick={() => {
+                setPlayAttempt((current) => current + 1)
+                setShowTapOverlay(false)
+              }}
+              aria-label={tapToPlayLabel}
+            >
+              {tapToPlayLabel}
+            </button>
+          ) : null}
           <iframe
-            key={iframeKey}
+            key={`${iframeKey}-${playAttempt}`}
             src={embedUrl}
             title={title}
             allow="autoplay; fullscreen; picture-in-picture; encrypted-media"

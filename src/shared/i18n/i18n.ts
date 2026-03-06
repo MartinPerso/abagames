@@ -124,16 +124,19 @@ export const letterListeningGameTextByLanguage: Record<Language, LetterListening
 type SuperRewardUiText = {
   modalTitle: string
   closeLabel: string
+  tapToPlayLabel: string
 }
 
 export const superRewardUiTextByLanguage: Record<Language, SuperRewardUiText> = {
   fr: {
     modalTitle: 'Super récompense vidéo',
     closeLabel: 'Fermer et continuer',
+    tapToPlayLabel: 'Touchez pour lancer la vidéo',
   },
   en: {
     modalTitle: 'Super reward video',
     closeLabel: 'Close and continue',
+    tapToPlayLabel: 'Tap to play video',
   },
 }
 
