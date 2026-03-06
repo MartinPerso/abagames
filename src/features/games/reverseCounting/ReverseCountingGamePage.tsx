@@ -6,6 +6,7 @@ import {
   itemLabelByLanguage,
   parseLanguageParam,
   quantitySpeechLabelByLanguage,
+  superRewardUiTextByLanguage,
 } from '../../../shared/i18n/i18n'
 import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
 import {
@@ -13,9 +14,13 @@ import {
   getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
+  getStoredReverseCountingSuperRewardEnabled,
   getStoredSpeechVoiceUri,
+  getStoredSuperRewardVideos,
 } from '../../../shared/settings/gameSettings'
+import { toPlayableSuperRewardVideo } from '../../../shared/rewards/superRewardVideo'
 import { DiceHint } from '../../../shared/ui/DiceHint'
+import { SuperRewardVideoModal } from '../../../shared/ui/SuperRewardVideoModal'
 import {
   type CountingItem,
   createRound,
@@ -213,8 +218,13 @@ export function ReverseCountingGamePage() {
   const answerPointerEnabled = getStoredReverseCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredReverseCountingAnswerPointerDelaySeconds() * 1000
   const diceHintEnabled = getStoredReverseCountingDiceHintEnabled()
+  const superRewardEnabled = getStoredReverseCountingSuperRewardEnabled()
+  const playableSuperRewardVideos = getStoredSuperRewardVideos()
+    .map((video) => toPlayableSuperRewardVideo(video))
+    .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
   const text = inverseCountingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
+  const superRewardText = superRewardUiTextByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
   const [round, setRound] = useState(() => createRound(0, maxObjects))
@@ -224,9 +234,12 @@ export function ReverseCountingGamePage() {
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
   const [wrongChoiceIds, setWrongChoiceIds] = useState<string[]>([])
+  const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
+  const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
+  const superRewardCloseTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -246,6 +259,13 @@ export function ReverseCountingGamePage() {
     if (speechTimerRef.current !== null) {
       window.clearTimeout(speechTimerRef.current)
       speechTimerRef.current = null
+    }
+  }
+
+  function clearSuperRewardCloseTimer() {
+    if (superRewardCloseTimerRef.current !== null) {
+      window.clearTimeout(superRewardCloseTimerRef.current)
+      superRewardCloseTimerRef.current = null
     }
   }
 
@@ -352,6 +372,7 @@ export function ReverseCountingGamePage() {
       clearActiveTimer()
       clearAnswerPointerTimer()
       clearSpeechTimer()
+      clearSuperRewardCloseTimer()
       stopSpeech()
     }
   }, [stopSpeech])
@@ -385,6 +406,7 @@ export function ReverseCountingGamePage() {
 
   function moveToNextRound() {
     const nextIndex = roundIndex + 1
+    clearSuperRewardCloseTimer()
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
@@ -393,6 +415,32 @@ export function ReverseCountingGamePage() {
     setShowAnswerPointer(false)
     setSelectedChoiceId(null)
     setWrongChoiceIds([])
+    setActiveSuperRewardEmbedUrl(null)
+    setActiveSuperRewardIframeKey('')
+  }
+
+  function launchSuperRewardVideo() {
+    if (playableSuperRewardVideos.length === 0) {
+      moveToNextRound()
+      return
+    }
+
+    const chosenIndex = randomIntInclusive(0, playableSuperRewardVideos.length - 1)
+    const chosenVideo = playableSuperRewardVideos[chosenIndex]
+
+    clearSuperRewardCloseTimer()
+    setActiveSuperRewardEmbedUrl(chosenVideo.embedUrl)
+    setActiveSuperRewardIframeKey(`reward-${round.roundIndex}-${Date.now()}`)
+    superRewardCloseTimerRef.current = window.setTimeout(() => {
+      closeSuperRewardVideo()
+    }, chosenVideo.durationMs)
+  }
+
+  function closeSuperRewardVideo() {
+    clearSuperRewardCloseTimer()
+    setActiveSuperRewardEmbedUrl(null)
+    setActiveSuperRewardIframeKey('')
+    moveToNextRound()
   }
 
   function handleChoice(choiceId: string) {
@@ -407,6 +455,8 @@ export function ReverseCountingGamePage() {
     }
 
     if (isCorrectAnswer(round, choiceId)) {
+      const shouldOfferSuperReward =
+        superRewardEnabled && wrongChoiceIds.length === 0 && playableSuperRewardVideos.length > 0
       setSelectedChoiceId(choiceId)
       setIsLocked(true)
       setShowAnswerPointer(false)
@@ -423,6 +473,10 @@ export function ReverseCountingGamePage() {
           playRewardSfx(correctChoice.item)
         }
         speakBravo()
+        if (shouldOfferSuperReward) {
+          launchSuperRewardVideo()
+          return
+        }
         timerRef.current = window.setTimeout(() => {
           timerRef.current = null
           moveToNextRound()
@@ -565,6 +619,15 @@ export function ReverseCountingGamePage() {
           </div>
         ) : null}
       </section>
+
+      <SuperRewardVideoModal
+        isOpen={activeSuperRewardEmbedUrl !== null}
+        iframeKey={activeSuperRewardIframeKey}
+        embedUrl={activeSuperRewardEmbedUrl ?? ''}
+        title={superRewardText.modalTitle}
+        closeLabel={superRewardText.closeLabel}
+        onClose={closeSuperRewardVideo}
+      />
     </main>
   )
 }

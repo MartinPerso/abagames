@@ -5,6 +5,7 @@ import {
   countingGameTextByLanguage,
   itemLabelByLanguage,
   parseLanguageParam,
+  superRewardUiTextByLanguage,
 } from '../../../shared/i18n/i18n'
 import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
 import {
@@ -17,13 +18,17 @@ import {
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
   getStoredCountingHintFirstDelaySeconds,
   getStoredCountingHintRepeatDelaySeconds,
+  getStoredCountingSuperRewardEnabled,
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
   getStoredCountingDiceHintEnabled,
   getStoredCountingMaxObjects,
   getStoredSpeechVoiceUri,
+  getStoredSuperRewardVideos,
 } from '../../../shared/settings/gameSettings'
+import { toPlayableSuperRewardVideo } from '../../../shared/rewards/superRewardVideo'
 import { DiceHint } from '../../../shared/ui/DiceHint'
+import { SuperRewardVideoModal } from '../../../shared/ui/SuperRewardVideoModal'
 import './CountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -230,9 +235,14 @@ export function CountingGamePage() {
   const answerPointerEnabled = getStoredCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredCountingAnswerPointerDelaySeconds() * 1000
   const diceHintEnabled = getStoredCountingDiceHintEnabled()
+  const superRewardEnabled = getStoredCountingSuperRewardEnabled()
+  const playableSuperRewardVideos = getStoredSuperRewardVideos()
+    .map((video) => toPlayableSuperRewardVideo(video))
+    .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
   const answerOptions = getAnswerOptions(maxObjects)
   const text = countingGameTextByLanguage[language]
   const itemLabels = itemLabelByLanguage[language]
+  const superRewardText = superRewardUiTextByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
   const [round, setRound] = useState(() => createRound(0, maxObjects))
@@ -243,11 +253,14 @@ export function CountingGamePage() {
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [wrongAnswers, setWrongAnswers] = useState<number[]>([])
+  const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
+  const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
   const answerTimerRef = useRef<number | null>(null)
   const hintStartTimerRef = useRef<number | null>(null)
   const hintStepTimerRef = useRef<number | null>(null)
   const hintRepeatTimerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
+  const superRewardCloseTimerRef = useRef<number | null>(null)
 
   const itemPositions = useMemo(
     () => createItemPositions(round.count),
@@ -294,6 +307,13 @@ export function CountingGamePage() {
     if (hintRepeatTimerRef.current !== null) {
       window.clearTimeout(hintRepeatTimerRef.current)
       hintRepeatTimerRef.current = null
+    }
+  }
+
+  function clearSuperRewardCloseTimer() {
+    if (superRewardCloseTimerRef.current !== null) {
+      window.clearTimeout(superRewardCloseTimerRef.current)
+      superRewardCloseTimerRef.current = null
     }
   }
 
@@ -372,6 +392,7 @@ export function CountingGamePage() {
       clearAnswerTimer()
       clearHintTimers()
       clearAnswerPointerTimer()
+      clearSuperRewardCloseTimer()
       stopSpeech()
     }
   }, [stopSpeech])
@@ -444,6 +465,7 @@ export function CountingGamePage() {
 
   function moveToNextRound() {
     const nextIndex = roundIndex + 1
+    clearSuperRewardCloseTimer()
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
@@ -453,6 +475,32 @@ export function CountingGamePage() {
     setShowAnswerPointer(false)
     setSelectedAnswer(null)
     setWrongAnswers([])
+    setActiveSuperRewardEmbedUrl(null)
+    setActiveSuperRewardIframeKey('')
+  }
+
+  function launchSuperRewardVideo() {
+    if (playableSuperRewardVideos.length === 0) {
+      moveToNextRound()
+      return
+    }
+
+    const chosenIndex = randomIntInclusive(0, playableSuperRewardVideos.length - 1)
+    const chosenVideo = playableSuperRewardVideos[chosenIndex]
+
+    clearSuperRewardCloseTimer()
+    setActiveSuperRewardEmbedUrl(chosenVideo.embedUrl)
+    setActiveSuperRewardIframeKey(`reward-${round.roundIndex}-${Date.now()}`)
+    superRewardCloseTimerRef.current = window.setTimeout(() => {
+      closeSuperRewardVideo()
+    }, chosenVideo.durationMs)
+  }
+
+  function closeSuperRewardVideo() {
+    clearSuperRewardCloseTimer()
+    setActiveSuperRewardEmbedUrl(null)
+    setActiveSuperRewardIframeKey('')
+    moveToNextRound()
   }
 
   function handleAnswer(answer: number) {
@@ -463,6 +511,8 @@ export function CountingGamePage() {
     speakHintCount(answer)
 
     if (isCorrectAnswer(round, answer)) {
+      const shouldOfferSuperReward =
+        superRewardEnabled && wrongAnswers.length === 0 && playableSuperRewardVideos.length > 0
       setSelectedAnswer(answer)
       setIsLocked(true)
       setActiveHintSpriteIndex(null)
@@ -477,6 +527,10 @@ export function CountingGamePage() {
         setFeedback('correct')
         playRewardSfx(round.item)
         speakBravo()
+        if (shouldOfferSuperReward) {
+          launchSuperRewardVideo()
+          return
+        }
         answerTimerRef.current = window.setTimeout(() => {
           answerTimerRef.current = null
           moveToNextRound()
@@ -588,6 +642,15 @@ export function CountingGamePage() {
           ))}
         </div>
       </section>
+
+      <SuperRewardVideoModal
+        isOpen={activeSuperRewardEmbedUrl !== null}
+        iframeKey={activeSuperRewardIframeKey}
+        embedUrl={activeSuperRewardEmbedUrl ?? ''}
+        title={superRewardText.modalTitle}
+        closeLabel={superRewardText.closeLabel}
+        onClose={closeSuperRewardVideo}
+      />
     </main>
   )
 }

@@ -13,14 +13,19 @@ import {
   letterListeningGameNameByLanguage,
   letterListeningGameTextByLanguage,
   parseLanguageParam,
+  superRewardUiTextByLanguage,
 } from '../../../shared/i18n/i18n'
 import {
   getStoredLetterListeningAllowedLetters,
   getStoredLetterListeningAnswerPointerDelaySeconds,
   getStoredLetterListeningAnswerPointerEnabled,
+  getStoredLetterListeningSuperRewardEnabled,
   getStoredSpeechVoiceUri,
+  getStoredSuperRewardVideos,
 } from '../../../shared/settings/gameSettings'
+import { toPlayableSuperRewardVideo } from '../../../shared/rewards/superRewardVideo'
 import { createRound, isCorrectAnswer } from './gameLogic'
+import { SuperRewardVideoModal } from '../../../shared/ui/SuperRewardVideoModal'
 import './LetterListeningGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -524,7 +529,12 @@ export function LetterListeningGamePage() {
   const language = parseLanguageParam(searchParams.get('lang'))
   const answerPointerEnabled = getStoredLetterListeningAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredLetterListeningAnswerPointerDelaySeconds() * 1000
+  const superRewardEnabled = getStoredLetterListeningSuperRewardEnabled()
+  const playableSuperRewardVideos = getStoredSuperRewardVideos()
+    .map((video) => toPlayableSuperRewardVideo(video))
+    .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
   const text = letterListeningGameTextByLanguage[language]
+  const superRewardText = superRewardUiTextByLanguage[language]
 
   const [roundIndex, setRoundIndex] = useState(0)
   const [round, setRound] = useState(() =>
@@ -536,9 +546,12 @@ export function LetterListeningGamePage() {
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
   const [wrongLetters, setWrongLetters] = useState<string[]>([])
+  const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
+  const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
+  const superRewardCloseTimerRef = useRef<number | null>(null)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -558,6 +571,13 @@ export function LetterListeningGamePage() {
     if (speechTimerRef.current !== null) {
       window.clearTimeout(speechTimerRef.current)
       speechTimerRef.current = null
+    }
+  }
+
+  function clearSuperRewardCloseTimer() {
+    if (superRewardCloseTimerRef.current !== null) {
+      window.clearTimeout(superRewardCloseTimerRef.current)
+      superRewardCloseTimerRef.current = null
     }
   }
 
@@ -679,6 +699,7 @@ export function LetterListeningGamePage() {
       }
       clearAnswerPointerTimer()
       clearSpeechTimer()
+      clearSuperRewardCloseTimer()
       stopSpeech()
     }
   }, [stopSpeech])
@@ -701,6 +722,7 @@ export function LetterListeningGamePage() {
 
   function moveToNextRound() {
     const nextIndex = roundIndex + 1
+    clearSuperRewardCloseTimer()
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, getStoredLetterListeningAllowedLetters()))
     setFeedback('idle')
@@ -709,6 +731,32 @@ export function LetterListeningGamePage() {
     setShowAnswerPointer(false)
     setSelectedLetter(null)
     setWrongLetters([])
+    setActiveSuperRewardEmbedUrl(null)
+    setActiveSuperRewardIframeKey('')
+  }
+
+  function launchSuperRewardVideo() {
+    if (playableSuperRewardVideos.length === 0) {
+      moveToNextRound()
+      return
+    }
+
+    const chosenIndex = randomIntInclusive(0, playableSuperRewardVideos.length - 1)
+    const chosenVideo = playableSuperRewardVideos[chosenIndex]
+
+    clearSuperRewardCloseTimer()
+    setActiveSuperRewardEmbedUrl(chosenVideo.embedUrl)
+    setActiveSuperRewardIframeKey(`reward-${round.roundIndex}-${Date.now()}`)
+    superRewardCloseTimerRef.current = window.setTimeout(() => {
+      closeSuperRewardVideo()
+    }, chosenVideo.durationMs)
+  }
+
+  function closeSuperRewardVideo() {
+    clearSuperRewardCloseTimer()
+    setActiveSuperRewardEmbedUrl(null)
+    setActiveSuperRewardIframeKey('')
+    moveToNextRound()
   }
 
   function handleAnswer(letter: string) {
@@ -720,6 +768,8 @@ export function LetterListeningGamePage() {
     speakSelectedLetter(letter)
 
     if (isCorrectAnswer(round, letter)) {
+      const shouldOfferSuperReward =
+        superRewardEnabled && wrongLetters.length === 0 && playableSuperRewardVideos.length > 0
       setSelectedLetter(letter)
       setIsLocked(true)
       setShowAnswerPointer(false)
@@ -731,6 +781,9 @@ export function LetterListeningGamePage() {
         setConfettiParticles(createConfettiParticles(400))
         playSuccessJingle()
         speakBravo()
+        if (shouldOfferSuperReward) {
+          launchSuperRewardVideo()
+        }
       }, SUCCESS_SEQUENCE_DELAY_MS)
       return
     }
@@ -766,6 +819,8 @@ export function LetterListeningGamePage() {
       '--prompt-pastel-end': tone.end,
     } as CSSProperties
   }, [round.targetLetter])
+  const shouldShowColoringReward =
+    feedback === 'correct' && activeSuperRewardEmbedUrl === null
 
   function playSuccessJingle() {
     if (typeof window === 'undefined') {
@@ -829,15 +884,15 @@ export function LetterListeningGamePage() {
         style={promptToneStyle}
       >
         <p className="prompt-label">
-          {feedback === 'correct' ? text.coloringInstructionLabel : text.instructionLabel}
+          {shouldShowColoringReward ? text.coloringInstructionLabel : text.instructionLabel}
         </p>
-        {feedback === 'correct' ? (
+        {shouldShowColoringReward ? (
           <LetterColoringReward
             letter={round.targetLetter}
             instructionLabel={text.coloringInstructionLabel}
             onComplete={handleColoringCompleted}
           />
-        ) : (
+        ) : feedback !== 'correct' ? (
           <button
             type="button"
             className="play-letter-button"
@@ -847,7 +902,7 @@ export function LetterListeningGamePage() {
           >
             ▶
           </button>
-        )}
+        ) : null}
         {feedback === 'correct' ? (
           <div className="micro-confetti" aria-hidden="true">
             {confettiParticles.map((particle) => {
@@ -898,6 +953,15 @@ export function LetterListeningGamePage() {
           ))}
         </div>
       </section>
+
+      <SuperRewardVideoModal
+        isOpen={activeSuperRewardEmbedUrl !== null}
+        iframeKey={activeSuperRewardIframeKey}
+        embedUrl={activeSuperRewardEmbedUrl ?? ''}
+        title={superRewardText.modalTitle}
+        closeLabel={superRewardText.closeLabel}
+        onClose={closeSuperRewardVideo}
+      />
     </main>
   )
 }

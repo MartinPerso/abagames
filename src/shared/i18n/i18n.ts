@@ -121,6 +121,22 @@ export const letterListeningGameTextByLanguage: Record<Language, LetterListening
   },
 }
 
+type SuperRewardUiText = {
+  modalTitle: string
+  closeLabel: string
+}
+
+export const superRewardUiTextByLanguage: Record<Language, SuperRewardUiText> = {
+  fr: {
+    modalTitle: 'Super récompense vidéo',
+    closeLabel: 'Fermer et continuer',
+  },
+  en: {
+    modalTitle: 'Super reward video',
+    closeLabel: 'Close and continue',
+  },
+}
+
 type SettingsText = {
   title: string
   languageTitle: string
@@ -139,6 +155,17 @@ type SettingsText = {
   letterListeningAllLetters: string
   letterListeningNoLetters: string
   letterListeningMinLettersHint: string
+  superRewardSectionTitle: string
+  superRewardDescription: string
+  superRewardEnabledLabel: string
+  superRewardVideosLabel: string
+  superRewardVideoUrlLabel: string
+  superRewardVideoStartLabel: string
+  superRewardVideoDurationLabel: string
+  superRewardAddVideoLabel: string
+  superRewardRemoveVideoLabel: string
+  superRewardNoVideosHint: string
+  superRewardInvalidVideoHint: string
   backHomeLabel: string
 }
 
@@ -161,6 +188,19 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     letterListeningAllLetters: 'Toutes',
     letterListeningNoLetters: 'Aucune',
     letterListeningMinLettersHint: 'Au moins 5 lettres (sinon toutes sont utilisées).',
+    superRewardSectionTitle: 'Super renforçateur vidéo',
+    superRewardDescription:
+      'Ajoutez des vidéos YouTube pour les bonnes réponses du premier coup. Fermeture auto.',
+    superRewardEnabledLabel: 'Activer la super récompense vidéo (1er essai)',
+    superRewardVideosLabel: 'Vidéos',
+    superRewardVideoUrlLabel: 'URL YouTube',
+    superRewardVideoStartLabel: 'Début (s)',
+    superRewardVideoDurationLabel: 'Durée (s)',
+    superRewardAddVideoLabel: 'Ajouter une vidéo',
+    superRewardRemoveVideoLabel: 'Supprimer',
+    superRewardNoVideosHint: 'Ajoutez au moins une vidéo pour utiliser cette récompense.',
+    superRewardInvalidVideoHint:
+      'URL YouTube invalide (ex: youtu.be/... ou youtube.com/watch?v=...)',
     backHomeLabel: "Retour à l'accueil",
   },
   en: {
@@ -181,6 +221,18 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     letterListeningAllLetters: 'All',
     letterListeningNoLetters: 'None',
     letterListeningMinLettersHint: 'At least 5 letters (otherwise all are used).',
+    superRewardSectionTitle: 'Super video reward',
+    superRewardDescription: 'Add YouTube videos for first-try correct answers. Auto-close enabled.',
+    superRewardEnabledLabel: 'Enable super video reward (first try)',
+    superRewardVideosLabel: 'Videos',
+    superRewardVideoUrlLabel: 'YouTube URL',
+    superRewardVideoStartLabel: 'Start (s)',
+    superRewardVideoDurationLabel: 'Duration (s)',
+    superRewardAddVideoLabel: 'Add video',
+    superRewardRemoveVideoLabel: 'Remove',
+    superRewardNoVideosHint: 'Add at least one video to use this reward.',
+    superRewardInvalidVideoHint:
+      'Invalid YouTube URL (for example youtu.be/... or youtube.com/watch?v=...)',
     backHomeLabel: 'Back home',
   },
 }

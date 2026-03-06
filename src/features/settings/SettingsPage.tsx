@@ -13,7 +13,9 @@ import {
 import {
   ALL_ALPHABET_LETTERS,
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  type SuperRewardVideoSetting,
   answerPointerDelaySettingsRange,
+  createDefaultSuperRewardVideoSetting,
   countingHintFirstDelaySettingsRange,
   countingHintRepeatDelaySettingsRange,
   countingSettingsRange,
@@ -26,12 +28,17 @@ import {
   getStoredLetterListeningAnswerPointerDelaySeconds,
   getStoredLetterListeningAnswerPointerEnabled,
   getStoredLetterListeningAllowedLettersForSettings,
+  getStoredLetterListeningSuperRewardEnabled,
+  getStoredSuperRewardVideos,
+  getStoredCountingSuperRewardEnabled,
+  getStoredReverseCountingSuperRewardEnabled,
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredSpeechVoiceUri,
   reverseCountingSettingsRange,
+  superRewardDurationSettingsRange,
   setStoredCountingAnswerPointerDelaySeconds,
   setStoredCountingAnswerPointerEnabled,
   setStoredCountingDiceHintEnabled,
@@ -41,12 +48,17 @@ import {
   setStoredLetterListeningAnswerPointerDelaySeconds,
   setStoredLetterListeningAnswerPointerEnabled,
   setStoredLetterListeningAllowedLetters,
+  setStoredLetterListeningSuperRewardEnabled,
+  setStoredSuperRewardVideos,
+  setStoredCountingSuperRewardEnabled,
+  setStoredReverseCountingSuperRewardEnabled,
   setStoredReverseCountingAnswerPointerDelaySeconds,
   setStoredReverseCountingAnswerPointerEnabled,
   setStoredReverseCountingDiceHintEnabled,
   setStoredReverseCountingMaxObjects,
   setStoredSpeechVoiceUri,
 } from '../../shared/settings/gameSettings'
+import { extractYouTubeVideoId } from '../../shared/rewards/superRewardVideo'
 import './SettingsPage.css'
 
 export function SettingsPage() {
@@ -71,6 +83,9 @@ export function SettingsPage() {
   const [countingHintRepeatDelaySeconds, setCountingHintRepeatDelaySeconds] = useState<number>(() =>
     getStoredCountingHintRepeatDelaySeconds(),
   )
+  const [countingSuperRewardEnabled, setCountingSuperRewardEnabled] = useState<boolean>(() =>
+    getStoredCountingSuperRewardEnabled(),
+  )
   const [reverseCountingMaxObjects, setReverseCountingMaxObjects] = useState<number>(() =>
     getStoredReverseCountingMaxObjects(),
   )
@@ -83,6 +98,9 @@ export function SettingsPage() {
   const [reverseAnswerPointerDelaySeconds, setReverseAnswerPointerDelaySeconds] = useState<number>(
     () => getStoredReverseCountingAnswerPointerDelaySeconds(),
   )
+  const [reverseSuperRewardEnabled, setReverseSuperRewardEnabled] = useState<boolean>(() =>
+    getStoredReverseCountingSuperRewardEnabled(),
+  )
   const [letterAnswerPointerEnabled, setLetterAnswerPointerEnabled] = useState<boolean>(() =>
     getStoredLetterListeningAnswerPointerEnabled(),
   )
@@ -91,6 +109,12 @@ export function SettingsPage() {
   )
   const [letterListeningLetters, setLetterListeningLetters] = useState<Set<string>>(
     () => new Set(getStoredLetterListeningAllowedLettersForSettings()),
+  )
+  const [letterSuperRewardEnabled, setLetterSuperRewardEnabled] = useState<boolean>(() =>
+    getStoredLetterListeningSuperRewardEnabled(),
+  )
+  const [superRewardVideos, setSuperRewardVideos] = useState<SuperRewardVideoSetting[]>(() =>
+    getStoredSuperRewardVideos(),
   )
   const [speechVoiceUri, setSpeechVoiceUri] = useState<string>(() => getStoredSpeechVoiceUri())
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -103,6 +127,9 @@ export function SettingsPage() {
   const selectedCompatibleVoiceUri = compatibleVoices.some((voice) => voice.voiceURI === speechVoiceUri)
     ? speechVoiceUri
     : ''
+  const hasAtLeastOneValidSuperRewardVideo = superRewardVideos.some(
+    (video) => extractYouTubeVideoId(video.youtubeUrl) !== null,
+  )
 
   useEffect(() => {
     const fromQuery = parseLanguageParam(searchParams.get('lang'))
@@ -195,6 +222,11 @@ export function SettingsPage() {
     setStoredCountingHintRepeatDelaySeconds(nextValue)
   }
 
+  function handleCountingSuperRewardEnabledChange(enabled: boolean) {
+    setCountingSuperRewardEnabled(enabled)
+    setStoredCountingSuperRewardEnabled(enabled)
+  }
+
   function handleReverseCountingMaxObjectsChange(nextValue: number) {
     setReverseCountingMaxObjects(nextValue)
     setStoredReverseCountingMaxObjects(nextValue)
@@ -215,6 +247,11 @@ export function SettingsPage() {
     setStoredReverseCountingAnswerPointerDelaySeconds(nextValue)
   }
 
+  function handleReverseSuperRewardEnabledChange(enabled: boolean) {
+    setReverseSuperRewardEnabled(enabled)
+    setStoredReverseCountingSuperRewardEnabled(enabled)
+  }
+
   function handleLetterAnswerPointerEnabledChange(enabled: boolean) {
     setLetterAnswerPointerEnabled(enabled)
     setStoredLetterListeningAnswerPointerEnabled(enabled)
@@ -223,6 +260,69 @@ export function SettingsPage() {
   function handleLetterAnswerPointerDelayChange(nextValue: number) {
     setLetterAnswerPointerDelaySeconds(nextValue)
     setStoredLetterListeningAnswerPointerDelaySeconds(nextValue)
+  }
+
+  function handleLetterSuperRewardEnabledChange(enabled: boolean) {
+    setLetterSuperRewardEnabled(enabled)
+    setStoredLetterListeningSuperRewardEnabled(enabled)
+  }
+
+  function persistSuperRewardVideos(nextVideos: SuperRewardVideoSetting[]) {
+    setSuperRewardVideos(nextVideos)
+    setStoredSuperRewardVideos(nextVideos)
+  }
+
+  function handleAddSuperRewardVideo() {
+    persistSuperRewardVideos([...superRewardVideos, createDefaultSuperRewardVideoSetting()])
+  }
+
+  function handleRemoveSuperRewardVideo(videoId: string) {
+    persistSuperRewardVideos(superRewardVideos.filter((video) => video.id !== videoId))
+  }
+
+  function handleSuperRewardVideoUrlChange(videoId: string, youtubeUrl: string) {
+    persistSuperRewardVideos(
+      superRewardVideos.map((video) =>
+        video.id === videoId ? { ...video, youtubeUrl } : video,
+      ),
+    )
+  }
+
+  function handleSuperRewardVideoStartChange(videoId: string, startSecondsRaw: string) {
+    const parsed = Number(startSecondsRaw)
+    const startSeconds = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0
+
+    persistSuperRewardVideos(
+      superRewardVideos.map((video) =>
+        video.id === videoId
+          ? {
+              ...video,
+              startSeconds,
+            }
+          : video,
+      ),
+    )
+  }
+
+  function handleSuperRewardVideoDurationChange(videoId: string, durationSecondsRaw: string) {
+    const parsed = Number(durationSecondsRaw)
+    const durationSeconds = Number.isFinite(parsed)
+      ? Math.max(
+          superRewardDurationSettingsRange.min,
+          Math.min(superRewardDurationSettingsRange.max, Math.floor(parsed)),
+        )
+      : superRewardDurationSettingsRange.defaultValue
+
+    persistSuperRewardVideos(
+      superRewardVideos.map((video) =>
+        video.id === videoId
+          ? {
+              ...video,
+              durationSeconds,
+            }
+          : video,
+      ),
+    )
   }
 
   function handleLetterListeningLetterToggle(letter: string) {
@@ -291,6 +391,79 @@ export function SettingsPage() {
         {compatibleVoices.length === 0 ? (
           <p className="settings-hint">{text.speechVoiceUnavailableHint}</p>
         ) : null}
+      </section>
+
+      <section className="settings-card">
+        <h2>{text.superRewardSectionTitle}</h2>
+        <p className="settings-hint">{text.superRewardDescription}</p>
+        <label className="field-label">{text.superRewardVideosLabel}</label>
+        {superRewardVideos.length === 0 ? (
+          <p className="settings-hint">{text.superRewardNoVideosHint}</p>
+        ) : null}
+        <div className="super-reward-list">
+          {superRewardVideos.map((video) => {
+            const hasUrl = video.youtubeUrl.trim().length > 0
+            const hasValidYouTubeUrl = extractYouTubeVideoId(video.youtubeUrl) !== null
+            return (
+              <div key={video.id} className="super-reward-item">
+                <label className="field-label super-reward-url">
+                  <span>{text.superRewardVideoUrlLabel}</span>
+                  <input
+                    type="text"
+                    className="settings-text-input"
+                    value={video.youtubeUrl}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    onChange={(event) =>
+                      handleSuperRewardVideoUrlChange(video.id, event.target.value)
+                    }
+                  />
+                </label>
+
+                <label className="field-label super-reward-number-field">
+                  <span>{text.superRewardVideoStartLabel}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    className="settings-number-input"
+                    value={video.startSeconds}
+                    onChange={(event) =>
+                      handleSuperRewardVideoStartChange(video.id, event.target.value)
+                    }
+                  />
+                </label>
+
+                <label className="field-label super-reward-number-field">
+                  <span>{text.superRewardVideoDurationLabel}</span>
+                  <input
+                    type="number"
+                    min={superRewardDurationSettingsRange.min}
+                    max={superRewardDurationSettingsRange.max}
+                    className="settings-number-input"
+                    value={video.durationSeconds}
+                    onChange={(event) =>
+                      handleSuperRewardVideoDurationChange(video.id, event.target.value)
+                    }
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  className="super-reward-remove-button"
+                  onClick={() => handleRemoveSuperRewardVideo(video.id)}
+                >
+                  {text.superRewardRemoveVideoLabel}
+                </button>
+
+                {hasUrl && !hasValidYouTubeUrl ? (
+                  <p className="super-reward-invalid-hint">{text.superRewardInvalidVideoHint}</p>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+        <button type="button" className="language-chip" onClick={handleAddSuperRewardVideo}>
+          {text.superRewardAddVideoLabel}
+        </button>
       </section>
 
       <section className="settings-card">
@@ -363,6 +536,17 @@ export function SettingsPage() {
           />
         </label>
 
+        <label className="toggle-row" htmlFor="counting-super-reward-enabled">
+          <span>{text.superRewardEnabledLabel}</span>
+          <input
+            id="counting-super-reward-enabled"
+            type="checkbox"
+            checked={countingSuperRewardEnabled}
+            onChange={(event) => handleCountingSuperRewardEnabledChange(event.target.checked)}
+            disabled={!hasAtLeastOneValidSuperRewardVideo}
+          />
+        </label>
+
         <label className="field-label" htmlFor="counting-answer-pointer-delay">
           {text.answerPointerDelayLabel}
         </label>
@@ -416,6 +600,17 @@ export function SettingsPage() {
             type="checkbox"
             checked={reverseDiceHintEnabled}
             onChange={(event) => handleReverseDiceHintEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="toggle-row" htmlFor="reverse-super-reward-enabled">
+          <span>{text.superRewardEnabledLabel}</span>
+          <input
+            id="reverse-super-reward-enabled"
+            type="checkbox"
+            checked={reverseSuperRewardEnabled}
+            onChange={(event) => handleReverseSuperRewardEnabledChange(event.target.checked)}
+            disabled={!hasAtLeastOneValidSuperRewardVideo}
           />
         </label>
 
@@ -481,6 +676,17 @@ export function SettingsPage() {
             type="checkbox"
             checked={letterAnswerPointerEnabled}
             onChange={(event) => handleLetterAnswerPointerEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="toggle-row" htmlFor="letter-super-reward-enabled">
+          <span>{text.superRewardEnabledLabel}</span>
+          <input
+            id="letter-super-reward-enabled"
+            type="checkbox"
+            checked={letterSuperRewardEnabled}
+            onChange={(event) => handleLetterSuperRewardEnabledChange(event.target.checked)}
+            disabled={!hasAtLeastOneValidSuperRewardVideo}
           />
         </label>
 

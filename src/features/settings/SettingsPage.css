@@ -71,6 +71,22 @@
   background: #f5f9ff;
 }
 
+.settings-text-input,
+.settings-number-input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #c5d4eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  color: #244372;
+  background: #f5f9ff;
+}
+
+.settings-number-input {
+  text-align: center;
+}
+
 .field-label {
   font-weight: 700;
 }
@@ -148,6 +164,44 @@
   color: #5a6b7d;
 }
 
+.super-reward-list {
+  display: grid;
+  gap: 10px;
+}
+
+.super-reward-item {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) repeat(2, minmax(104px, 130px)) auto;
+  gap: 10px;
+  border-radius: 14px;
+  border: 1px solid #d7e2f4;
+  background: #f8fbff;
+  padding: 10px;
+  align-items: end;
+}
+
+.super-reward-item .field-label {
+  display: grid;
+  gap: 6px;
+}
+
+.super-reward-remove-button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #ffffff;
+  background: #be1e4a;
+  font-weight: 700;
+}
+
+.super-reward-invalid-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.86rem;
+  color: #ab2046;
+}
+
 .letter-selection-actions {
   display: flex;
   gap: 8px;
@@ -186,5 +240,15 @@
 @media (max-width: 520px) {
   .letter-selection-grid {
     grid-template-columns: repeat(7, 1fr);
+  }
+
+  .super-reward-item {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .super-reward-url,
+  .super-reward-remove-button {
+    grid-column: 1 / -1;
   }
 }

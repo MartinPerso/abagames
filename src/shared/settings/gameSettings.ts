@@ -20,8 +20,25 @@ const REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
 const LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
   'abagames-letter-listening-answer-pointer-delay-seconds'
 const SPEECH_VOICE_URI_STORAGE_KEY = 'abagames-speech-voice-uri'
+const SUPER_REWARD_VIDEOS_STORAGE_KEY = 'abagames-super-reward-videos'
+const COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY = 'abagames-counting-super-reward-enabled'
+const REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY =
+  'abagames-reverse-counting-super-reward-enabled'
+const LETTER_LISTENING_SUPER_REWARD_ENABLED_STORAGE_KEY =
+  'abagames-letter-listening-super-reward-enabled'
 
 export const ALL_ALPHABET_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+const MAX_SUPER_REWARD_VIDEOS = 30
+const MIN_SUPER_REWARD_DURATION_SECONDS = 1
+const MAX_SUPER_REWARD_DURATION_SECONDS = 300
+const DEFAULT_SUPER_REWARD_DURATION_SECONDS = 15
+
+export type SuperRewardVideoSetting = {
+  id: string
+  youtubeUrl: string
+  startSeconds: number
+  durationSeconds: number
+}
 
 const MIN_COUNTING_MAX_OBJECTS = 1
 const MAX_COUNTING_MAX_OBJECTS = 10
@@ -72,6 +89,23 @@ function clampAnswerPointerDelaySeconds(value: number): number {
   )
 }
 
+function clampTimestampSeconds(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0
+  }
+  return Math.max(0, Math.floor(value))
+}
+
+function clampSuperRewardDurationSeconds(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_SUPER_REWARD_DURATION_SECONDS
+  }
+  return Math.max(
+    MIN_SUPER_REWARD_DURATION_SECONDS,
+    Math.min(MAX_SUPER_REWARD_DURATION_SECONDS, Math.floor(value)),
+  )
+}
+
 function getStoredBoolean(key: string, defaultValue: boolean): boolean {
   if (typeof window === 'undefined') {
     return defaultValue
@@ -115,6 +149,88 @@ function setStoredDelaySeconds(key: string, value: number): void {
   }
 
   window.localStorage.setItem(key, String(clampAnswerPointerDelaySeconds(value)))
+}
+
+function createSuperRewardVideoId(): string {
+  return `video-${Date.now()}-${Math.round(Math.random() * 1_000_000)}`
+}
+
+function normalizeSuperRewardVideo(raw: unknown): SuperRewardVideoSetting | null {
+  if (typeof raw !== 'object' || raw === null) {
+    return null
+  }
+
+  const candidate = raw as Partial<SuperRewardVideoSetting>
+  const id =
+    typeof candidate.id === 'string' && candidate.id.trim() !== ''
+      ? candidate.id
+      : createSuperRewardVideoId()
+  const youtubeUrl = typeof candidate.youtubeUrl === 'string' ? candidate.youtubeUrl.trim() : ''
+  const startSeconds = clampTimestampSeconds(Number(candidate.startSeconds ?? 0))
+  const durationSeconds = clampSuperRewardDurationSeconds(Number(candidate.durationSeconds))
+
+  return {
+    id,
+    youtubeUrl,
+    startSeconds,
+    durationSeconds,
+  }
+}
+
+function parseStoredSuperRewardVideos(raw: string | null): SuperRewardVideoSetting[] {
+  if (raw === null) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    const normalized = parsed
+      .map((entry) => normalizeSuperRewardVideo(entry))
+      .filter((entry): entry is SuperRewardVideoSetting => entry !== null)
+      .slice(0, MAX_SUPER_REWARD_VIDEOS)
+    const deduped = new Map<string, SuperRewardVideoSetting>()
+    normalized.forEach((entry) => {
+      deduped.set(entry.id, entry)
+    })
+    return [...deduped.values()]
+  } catch {
+    return []
+  }
+}
+
+function normalizeSuperRewardVideoSettings(
+  videos: SuperRewardVideoSetting[],
+): SuperRewardVideoSetting[] {
+  const deduped = new Map<string, SuperRewardVideoSetting>()
+
+  videos.forEach((video) => {
+    const normalized = normalizeSuperRewardVideo(video)
+    if (!normalized) {
+      return
+    }
+    deduped.set(normalized.id, normalized)
+  })
+
+  return [...deduped.values()].slice(0, MAX_SUPER_REWARD_VIDEOS)
+}
+
+export function createDefaultSuperRewardVideoSetting(): SuperRewardVideoSetting {
+  return {
+    id: createSuperRewardVideoId(),
+    youtubeUrl: '',
+    startSeconds: 0,
+    durationSeconds: DEFAULT_SUPER_REWARD_DURATION_SECONDS,
+  }
+}
+
+export const superRewardDurationSettingsRange = {
+  min: MIN_SUPER_REWARD_DURATION_SECONDS,
+  max: MAX_SUPER_REWARD_DURATION_SECONDS,
+  defaultValue: DEFAULT_SUPER_REWARD_DURATION_SECONDS,
 }
 
 export function getStoredCountingMaxObjects(): number {
@@ -325,6 +441,47 @@ export function getStoredLetterListeningAnswerPointerDelaySeconds(): number {
 
 export function setStoredLetterListeningAnswerPointerDelaySeconds(value: number): void {
   setStoredDelaySeconds(LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredSuperRewardVideos(): SuperRewardVideoSetting[] {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  return parseStoredSuperRewardVideos(window.localStorage.getItem(SUPER_REWARD_VIDEOS_STORAGE_KEY))
+}
+
+export function setStoredSuperRewardVideos(videos: SuperRewardVideoSetting[]): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const normalized = normalizeSuperRewardVideoSettings(videos)
+  window.localStorage.setItem(SUPER_REWARD_VIDEOS_STORAGE_KEY, JSON.stringify(normalized))
+}
+
+export function getStoredCountingSuperRewardEnabled(): boolean {
+  return getStoredBoolean(COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredCountingSuperRewardEnabled(enabled: boolean): void {
+  setStoredBoolean(COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredReverseCountingSuperRewardEnabled(): boolean {
+  return getStoredBoolean(REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredReverseCountingSuperRewardEnabled(enabled: boolean): void {
+  setStoredBoolean(REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredLetterListeningSuperRewardEnabled(): boolean {
+  return getStoredBoolean(LETTER_LISTENING_SUPER_REWARD_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredLetterListeningSuperRewardEnabled(enabled: boolean): void {
+  setStoredBoolean(LETTER_LISTENING_SUPER_REWARD_ENABLED_STORAGE_KEY, enabled)
 }
 
 const MIN_ALLOWED_LETTERS = 5
