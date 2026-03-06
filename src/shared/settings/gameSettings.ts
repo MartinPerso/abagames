@@ -28,6 +28,12 @@ const LETTER_LISTENING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY =
 const SPEECH_VOICE_URI_STORAGE_KEY = 'abagames-speech-voice-uri'
 const SUPER_REWARD_VIDEOS_STORAGE_KEY = 'abagames-super-reward-videos'
 const SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY = 'abagames-super-reward-first-try-streak'
+const COUNTING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY =
+  'abagames-counting-super-reward-first-try-streak'
+const REVERSE_COUNTING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY =
+  'abagames-reverse-counting-super-reward-first-try-streak'
+const LETTER_LISTENING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY =
+  'abagames-letter-listening-super-reward-first-try-streak'
 const COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY = 'abagames-counting-super-reward-enabled'
 const REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY =
   'abagames-reverse-counting-super-reward-enabled'
@@ -553,28 +559,64 @@ export function setStoredSuperRewardVideos(videos: SuperRewardVideoSetting[]): v
   window.localStorage.setItem(SUPER_REWARD_VIDEOS_STORAGE_KEY, JSON.stringify(normalized))
 }
 
-export function getStoredSuperRewardFirstTryStreak(): number {
+function getStoredSuperRewardFirstTryStreakByKey(key: string): number {
   if (typeof window === 'undefined') {
     return DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK
   }
 
-  const raw = window.localStorage.getItem(SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY)
-  if (raw === null) {
-    return DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK
+  const raw = window.localStorage.getItem(key)
+  if (raw !== null) {
+    const parsed = Number(raw)
+    return clampSuperRewardFirstTryStreak(parsed)
   }
 
-  const parsed = Number(raw)
-  return clampSuperRewardFirstTryStreak(parsed)
+  // Backward compatibility with the former global setting.
+  const legacyRaw = window.localStorage.getItem(SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY)
+  if (legacyRaw === null) {
+    return DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK
+  }
+  return clampSuperRewardFirstTryStreak(Number(legacyRaw))
 }
 
-export function setStoredSuperRewardFirstTryStreak(value: number): void {
+function setStoredSuperRewardFirstTryStreakByKey(key: string, value: number): void {
   if (typeof window === 'undefined') {
     return
   }
 
-  window.localStorage.setItem(
-    SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
-    String(clampSuperRewardFirstTryStreak(value)),
+  window.localStorage.setItem(key, String(clampSuperRewardFirstTryStreak(value)))
+}
+
+export function getStoredCountingSuperRewardFirstTryStreak(): number {
+  return getStoredSuperRewardFirstTryStreakByKey(COUNTING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY)
+}
+
+export function setStoredCountingSuperRewardFirstTryStreak(value: number): void {
+  setStoredSuperRewardFirstTryStreakByKey(COUNTING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY, value)
+}
+
+export function getStoredReverseCountingSuperRewardFirstTryStreak(): number {
+  return getStoredSuperRewardFirstTryStreakByKey(
+    REVERSE_COUNTING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+  )
+}
+
+export function setStoredReverseCountingSuperRewardFirstTryStreak(value: number): void {
+  setStoredSuperRewardFirstTryStreakByKey(
+    REVERSE_COUNTING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+    value,
+  )
+}
+
+export function getStoredLetterListeningSuperRewardFirstTryStreak(): number {
+  return getStoredSuperRewardFirstTryStreakByKey(
+    LETTER_LISTENING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+  )
+}
+
+export function setStoredLetterListeningSuperRewardFirstTryStreak(value: number): void {
+  setStoredSuperRewardFirstTryStreakByKey(
+    LETTER_LISTENING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+    value,
   )
 }
 

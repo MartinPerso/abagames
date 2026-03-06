@@ -20,6 +20,7 @@ import {
   getStoredLetterListeningAnswerPointerDelaySeconds,
   getStoredLetterListeningAnswerPointerEnabled,
   getStoredLetterListeningAnswerRevealDelaySeconds,
+  getStoredLetterListeningSuperRewardFirstTryStreak,
   getStoredLetterListeningSuperRewardEnabled,
   getStoredSpeechVoiceUri,
   getStoredSuperRewardVideos,
@@ -532,6 +533,7 @@ export function LetterListeningGamePage() {
   const answerPointerDelayMs = getStoredLetterListeningAnswerPointerDelaySeconds() * 1000
   const answerRevealDelayMs = getStoredLetterListeningAnswerRevealDelaySeconds() * 1000
   const superRewardEnabled = getStoredLetterListeningSuperRewardEnabled()
+  const superRewardFirstTryStreakTarget = getStoredLetterListeningSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
     .map((video) => toPlayableSuperRewardVideo(video))
     .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
@@ -552,6 +554,7 @@ export function LetterListeningGamePage() {
   const [wrongLetters, setWrongLetters] = useState<string[]>([])
   const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
   const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
+  const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const answerRevealTimerRef = useRef<number | null>(null)
@@ -802,8 +805,13 @@ export function LetterListeningGamePage() {
     speakSelectedLetter(letter)
 
     if (isCorrectAnswer(round, letter)) {
+      const isFirstTryCorrect = wrongLetters.length === 0
+      const nextFirstTryCorrectStreak = isFirstTryCorrect ? firstTryCorrectStreak + 1 : 0
       const shouldOfferSuperReward =
-        superRewardEnabled && wrongLetters.length === 0 && playableSuperRewardVideos.length > 0
+        superRewardEnabled &&
+        isFirstTryCorrect &&
+        playableSuperRewardVideos.length > 0 &&
+        nextFirstTryCorrectStreak >= superRewardFirstTryStreakTarget
       setSelectedLetter(letter)
       setIsLocked(true)
       setShowAnswerPointer(false)
@@ -816,13 +824,17 @@ export function LetterListeningGamePage() {
         playSuccessJingle()
         speakBravo()
         if (shouldOfferSuperReward) {
+          setFirstTryCorrectStreak(0)
           launchSuperRewardVideo()
+          return
         }
+        setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
       }, SUCCESS_SEQUENCE_DELAY_MS)
       return
     }
 
     setWrongLetters((current) => (current.includes(letter) ? current : [...current, letter]))
+    setFirstTryCorrectStreak(0)
     setFeedback('wrong')
     clearActiveTimer()
     timerRef.current = window.setTimeout(() => {

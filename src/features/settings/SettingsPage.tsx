@@ -32,8 +32,11 @@ import {
   getStoredLetterListeningAnswerRevealDelaySeconds,
   getStoredLetterListeningAllowedLettersForSettings,
   getStoredLetterListeningSuperRewardEnabled,
+  getStoredLetterListeningSuperRewardFirstTryStreak,
   getStoredSuperRewardVideos,
+  getStoredCountingSuperRewardFirstTryStreak,
   getStoredCountingSuperRewardEnabled,
+  getStoredReverseCountingSuperRewardFirstTryStreak,
   getStoredReverseCountingSuperRewardEnabled,
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
@@ -43,6 +46,7 @@ import {
   getStoredSpeechVoiceUri,
   reverseCountingSettingsRange,
   superRewardDurationSettingsRange,
+  superRewardFirstTryStreakSettingsRange,
   setStoredCountingAnswerPointerDelaySeconds,
   setStoredCountingAnswerPointerEnabled,
   setStoredCountingAnswerRevealDelaySeconds,
@@ -56,7 +60,10 @@ import {
   setStoredLetterListeningAllowedLetters,
   setStoredLetterListeningSuperRewardEnabled,
   setStoredSuperRewardVideos,
+  setStoredCountingSuperRewardFirstTryStreak,
   setStoredCountingSuperRewardEnabled,
+  setStoredLetterListeningSuperRewardFirstTryStreak,
+  setStoredReverseCountingSuperRewardFirstTryStreak,
   setStoredReverseCountingSuperRewardEnabled,
   setStoredReverseCountingAnswerPointerDelaySeconds,
   setStoredReverseCountingAnswerPointerEnabled,
@@ -96,6 +103,8 @@ export function SettingsPage() {
   const [countingSuperRewardEnabled, setCountingSuperRewardEnabled] = useState<boolean>(() =>
     getStoredCountingSuperRewardEnabled(),
   )
+  const [countingSuperRewardFirstTryStreak, setCountingSuperRewardFirstTryStreak] =
+    useState<number>(() => getStoredCountingSuperRewardFirstTryStreak())
   const [reverseCountingMaxObjects, setReverseCountingMaxObjects] = useState<number>(() =>
     getStoredReverseCountingMaxObjects(),
   )
@@ -114,6 +123,9 @@ export function SettingsPage() {
   const [reverseSuperRewardEnabled, setReverseSuperRewardEnabled] = useState<boolean>(() =>
     getStoredReverseCountingSuperRewardEnabled(),
   )
+  const [reverseSuperRewardFirstTryStreak, setReverseSuperRewardFirstTryStreak] = useState<number>(
+    () => getStoredReverseCountingSuperRewardFirstTryStreak(),
+  )
   const [letterAnswerPointerEnabled, setLetterAnswerPointerEnabled] = useState<boolean>(() =>
     getStoredLetterListeningAnswerPointerEnabled(),
   )
@@ -128,6 +140,9 @@ export function SettingsPage() {
   )
   const [letterSuperRewardEnabled, setLetterSuperRewardEnabled] = useState<boolean>(() =>
     getStoredLetterListeningSuperRewardEnabled(),
+  )
+  const [letterSuperRewardFirstTryStreak, setLetterSuperRewardFirstTryStreak] = useState<number>(
+    () => getStoredLetterListeningSuperRewardFirstTryStreak(),
   )
   const [superRewardVideos, setSuperRewardVideos] = useState<SuperRewardVideoSetting[]>(() =>
     getStoredSuperRewardVideos(),
@@ -305,6 +320,21 @@ export function SettingsPage() {
 
   function handleAddSuperRewardVideo() {
     persistSuperRewardVideos([...superRewardVideos, createDefaultSuperRewardVideoSetting()])
+  }
+
+  function handleCountingSuperRewardFirstTryStreakChange(nextValue: number) {
+    setCountingSuperRewardFirstTryStreak(nextValue)
+    setStoredCountingSuperRewardFirstTryStreak(nextValue)
+  }
+
+  function handleReverseSuperRewardFirstTryStreakChange(nextValue: number) {
+    setReverseSuperRewardFirstTryStreak(nextValue)
+    setStoredReverseCountingSuperRewardFirstTryStreak(nextValue)
+  }
+
+  function handleLetterSuperRewardFirstTryStreakChange(nextValue: number) {
+    setLetterSuperRewardFirstTryStreak(nextValue)
+    setStoredLetterListeningSuperRewardFirstTryStreak(nextValue)
   }
 
   function handleRemoveSuperRewardVideo(videoId: string) {
@@ -577,6 +607,25 @@ export function SettingsPage() {
             disabled={!hasAtLeastOneValidSuperRewardVideo}
           />
         </label>
+        <label className="field-label" htmlFor="counting-super-reward-first-try-streak">
+          {text.superRewardFirstTryStreakLabel}
+        </label>
+        <div className={`range-row ${!countingSuperRewardEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="counting-super-reward-first-try-streak"
+            type="range"
+            min={superRewardFirstTryStreakSettingsRange.min}
+            max={superRewardFirstTryStreakSettingsRange.max}
+            value={countingSuperRewardFirstTryStreak}
+            onChange={(event) =>
+              handleCountingSuperRewardFirstTryStreakChange(Number(event.target.value))
+            }
+            disabled={!countingSuperRewardEnabled || !hasAtLeastOneValidSuperRewardVideo}
+          />
+          <output htmlFor="counting-super-reward-first-try-streak">
+            {countingSuperRewardFirstTryStreak}
+          </output>
+        </div>
 
         <label className="field-label" htmlFor="counting-answer-pointer-delay">
           {text.answerPointerDelayLabel}
@@ -659,6 +708,25 @@ export function SettingsPage() {
             disabled={!hasAtLeastOneValidSuperRewardVideo}
           />
         </label>
+        <label className="field-label" htmlFor="reverse-super-reward-first-try-streak">
+          {text.superRewardFirstTryStreakLabel}
+        </label>
+        <div className={`range-row ${!reverseSuperRewardEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="reverse-super-reward-first-try-streak"
+            type="range"
+            min={superRewardFirstTryStreakSettingsRange.min}
+            max={superRewardFirstTryStreakSettingsRange.max}
+            value={reverseSuperRewardFirstTryStreak}
+            onChange={(event) =>
+              handleReverseSuperRewardFirstTryStreakChange(Number(event.target.value))
+            }
+            disabled={!reverseSuperRewardEnabled || !hasAtLeastOneValidSuperRewardVideo}
+          />
+          <output htmlFor="reverse-super-reward-first-try-streak">
+            {reverseSuperRewardFirstTryStreak}
+          </output>
+        </div>
 
         <label className="field-label" htmlFor="reverse-answer-pointer-delay">
           {text.answerPointerDelayLabel}
@@ -750,6 +818,25 @@ export function SettingsPage() {
             disabled={!hasAtLeastOneValidSuperRewardVideo}
           />
         </label>
+        <label className="field-label" htmlFor="letter-super-reward-first-try-streak">
+          {text.superRewardFirstTryStreakLabel}
+        </label>
+        <div className={`range-row ${!letterSuperRewardEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="letter-super-reward-first-try-streak"
+            type="range"
+            min={superRewardFirstTryStreakSettingsRange.min}
+            max={superRewardFirstTryStreakSettingsRange.max}
+            value={letterSuperRewardFirstTryStreak}
+            onChange={(event) =>
+              handleLetterSuperRewardFirstTryStreakChange(Number(event.target.value))
+            }
+            disabled={!letterSuperRewardEnabled || !hasAtLeastOneValidSuperRewardVideo}
+          />
+          <output htmlFor="letter-super-reward-first-try-streak">
+            {letterSuperRewardFirstTryStreak}
+          </output>
+        </div>
 
         <label className="field-label" htmlFor="letter-answer-pointer-delay">
           {text.answerPointerDelayLabel}

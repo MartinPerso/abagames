@@ -24,6 +24,7 @@ import {
   getStoredCountingAnswerRevealDelaySeconds,
   getStoredCountingDiceHintEnabled,
   getStoredCountingMaxObjects,
+  getStoredCountingSuperRewardFirstTryStreak,
   getStoredSpeechVoiceUri,
   getStoredSuperRewardVideos,
 } from '../../../shared/settings/gameSettings'
@@ -238,6 +239,7 @@ export function CountingGamePage() {
   const answerRevealDelayMs = getStoredCountingAnswerRevealDelaySeconds() * 1000
   const diceHintEnabled = getStoredCountingDiceHintEnabled()
   const superRewardEnabled = getStoredCountingSuperRewardEnabled()
+  const superRewardFirstTryStreakTarget = getStoredCountingSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
     .map((video) => toPlayableSuperRewardVideo(video))
     .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
@@ -259,6 +261,7 @@ export function CountingGamePage() {
   const [wrongAnswers, setWrongAnswers] = useState<number[]>([])
   const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
   const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
+  const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
   const answerTimerRef = useRef<number | null>(null)
   const hintStartTimerRef = useRef<number | null>(null)
   const hintStepTimerRef = useRef<number | null>(null)
@@ -545,8 +548,13 @@ export function CountingGamePage() {
     speakHintCount(answer)
 
     if (isCorrectAnswer(round, answer)) {
+      const isFirstTryCorrect = wrongAnswers.length === 0
+      const nextFirstTryCorrectStreak = isFirstTryCorrect ? firstTryCorrectStreak + 1 : 0
       const shouldOfferSuperReward =
-        superRewardEnabled && wrongAnswers.length === 0 && playableSuperRewardVideos.length > 0
+        superRewardEnabled &&
+        isFirstTryCorrect &&
+        playableSuperRewardVideos.length > 0 &&
+        nextFirstTryCorrectStreak >= superRewardFirstTryStreakTarget
       setSelectedAnswer(answer)
       setIsLocked(true)
       setActiveHintSpriteIndex(null)
@@ -562,9 +570,11 @@ export function CountingGamePage() {
         playRewardSfx(round.item)
         speakBravo()
         if (shouldOfferSuperReward) {
+          setFirstTryCorrectStreak(0)
           launchSuperRewardVideo()
           return
         }
+        setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
         answerTimerRef.current = window.setTimeout(() => {
           answerTimerRef.current = null
           moveToNextRound()
@@ -574,6 +584,7 @@ export function CountingGamePage() {
     }
 
     setWrongAnswers((current) => (current.includes(answer) ? current : [...current, answer]))
+    setFirstTryCorrectStreak(0)
     setFeedback('wrong')
     clearAnswerTimer()
     answerTimerRef.current = window.setTimeout(() => {

@@ -15,6 +15,7 @@ import {
   getStoredReverseCountingAnswerRevealDelaySeconds,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
+  getStoredReverseCountingSuperRewardFirstTryStreak,
   getStoredReverseCountingSuperRewardEnabled,
   getStoredSpeechVoiceUri,
   getStoredSuperRewardVideos,
@@ -221,6 +222,7 @@ export function ReverseCountingGamePage() {
   const answerRevealDelayMs = getStoredReverseCountingAnswerRevealDelaySeconds() * 1000
   const diceHintEnabled = getStoredReverseCountingDiceHintEnabled()
   const superRewardEnabled = getStoredReverseCountingSuperRewardEnabled()
+  const superRewardFirstTryStreakTarget = getStoredReverseCountingSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
     .map((video) => toPlayableSuperRewardVideo(video))
     .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
@@ -240,6 +242,7 @@ export function ReverseCountingGamePage() {
   const [wrongChoiceIds, setWrongChoiceIds] = useState<string[]>([])
   const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
   const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
+  const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const answerRevealTimerRef = useRef<number | null>(null)
@@ -489,8 +492,13 @@ export function ReverseCountingGamePage() {
     }
 
     if (isCorrectAnswer(round, choiceId)) {
+      const isFirstTryCorrect = wrongChoiceIds.length === 0
+      const nextFirstTryCorrectStreak = isFirstTryCorrect ? firstTryCorrectStreak + 1 : 0
       const shouldOfferSuperReward =
-        superRewardEnabled && wrongChoiceIds.length === 0 && playableSuperRewardVideos.length > 0
+        superRewardEnabled &&
+        isFirstTryCorrect &&
+        playableSuperRewardVideos.length > 0 &&
+        nextFirstTryCorrectStreak >= superRewardFirstTryStreakTarget
       setSelectedChoiceId(choiceId)
       setIsLocked(true)
       setShowAnswerPointer(false)
@@ -508,9 +516,11 @@ export function ReverseCountingGamePage() {
         }
         speakBravo()
         if (shouldOfferSuperReward) {
+          setFirstTryCorrectStreak(0)
           launchSuperRewardVideo()
           return
         }
+        setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
         timerRef.current = window.setTimeout(() => {
           timerRef.current = null
           moveToNextRound()
@@ -520,6 +530,7 @@ export function ReverseCountingGamePage() {
     }
 
     setWrongChoiceIds((current) => (current.includes(choiceId) ? current : [...current, choiceId]))
+    setFirstTryCorrectStreak(0)
     setFeedback('wrong')
     clearActiveTimer()
     timerRef.current = window.setTimeout(() => {
