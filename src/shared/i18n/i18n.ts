@@ -152,6 +152,7 @@ type SettingsText = {
   countingHintRepeatDelayLabel: string
   answerPointerEnabledLabel: string
   answerPointerDelayLabel: string
+  answerButtonsDelayLabel: string
   diceHintEnabledLabel: string
   reverseCountingMaxObjectsLabel: string
   letterListeningAllowedLettersLabel: string
@@ -161,6 +162,7 @@ type SettingsText = {
   superRewardSectionTitle: string
   superRewardDescription: string
   superRewardEnabledLabel: string
+  superRewardFirstTryStreakLabel: string
   superRewardVideosLabel: string
   superRewardVideoUrlLabel: string
   superRewardVideoStartLabel: string
@@ -185,6 +187,7 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     countingHintRepeatDelayLabel: "Répéter l'indice toutes les (secondes)",
     answerPointerEnabledLabel: 'Montrer la bonne réponse automatiquement',
     answerPointerDelayLabel: "Montrer l'animation après (secondes)",
+    answerButtonsDelayLabel: "Afficher les réponses après (secondes)",
     diceHintEnabledLabel: 'Montrer un dé à côté du chiffre',
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
@@ -195,6 +198,8 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     superRewardDescription:
       'Ajoutez des vidéos YouTube pour les bonnes réponses du premier coup. Fermeture auto.',
     superRewardEnabledLabel: 'Activer la super récompense vidéo (1er essai)',
+    superRewardFirstTryStreakLabel:
+      'Afficher la super récompense après (bonnes réponses consécutives au 1er essai)',
     superRewardVideosLabel: 'Vidéos',
     superRewardVideoUrlLabel: 'URL YouTube',
     superRewardVideoStartLabel: 'Début (s)',
@@ -218,6 +223,7 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     countingHintRepeatDelayLabel: 'Repeat hint every (seconds)',
     answerPointerEnabledLabel: 'Show the correct answer automatically',
     answerPointerDelayLabel: 'Show the animation after (seconds)',
+    answerButtonsDelayLabel: 'Show answer buttons after (seconds)',
     diceHintEnabledLabel: 'Show a die next to the number',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
     letterListeningAllowedLettersLabel: 'Letters used in the game',
@@ -227,6 +233,8 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     superRewardSectionTitle: 'Super video reward',
     superRewardDescription: 'Add YouTube videos for first-try correct answers. Auto-close enabled.',
     superRewardEnabledLabel: 'Enable super video reward (first try)',
+    superRewardFirstTryStreakLabel:
+      'Show super reward after (consecutive first-try correct answers)',
     superRewardVideosLabel: 'Videos',
     superRewardVideoUrlLabel: 'YouTube URL',
     superRewardVideoStartLabel: 'Start (s)',

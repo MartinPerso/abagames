@@ -19,6 +19,7 @@ import {
   getStoredLetterListeningAllowedLetters,
   getStoredLetterListeningAnswerPointerDelaySeconds,
   getStoredLetterListeningAnswerPointerEnabled,
+  getStoredLetterListeningAnswerRevealDelaySeconds,
   getStoredLetterListeningSuperRewardEnabled,
   getStoredSpeechVoiceUri,
   getStoredSuperRewardVideos,
@@ -529,6 +530,7 @@ export function LetterListeningGamePage() {
   const language = parseLanguageParam(searchParams.get('lang'))
   const answerPointerEnabled = getStoredLetterListeningAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredLetterListeningAnswerPointerDelaySeconds() * 1000
+  const answerRevealDelayMs = getStoredLetterListeningAnswerRevealDelaySeconds() * 1000
   const superRewardEnabled = getStoredLetterListeningSuperRewardEnabled()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
     .map((video) => toPlayableSuperRewardVideo(video))
@@ -544,12 +546,15 @@ export function LetterListeningGamePage() {
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
+  const [areAnswersVisible, setAreAnswersVisible] = useState(answerRevealDelayMs <= 0)
+  const [animateAnswerReveal, setAnimateAnswerReveal] = useState(false)
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
   const [wrongLetters, setWrongLetters] = useState<string[]>([])
   const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
   const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
+  const answerRevealTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
   const superRewardCloseTimerRef = useRef<number | null>(null)
 
@@ -564,6 +569,13 @@ export function LetterListeningGamePage() {
     if (answerPointerTimerRef.current !== null) {
       window.clearTimeout(answerPointerTimerRef.current)
       answerPointerTimerRef.current = null
+    }
+  }
+
+  function clearAnswerRevealTimer() {
+    if (answerRevealTimerRef.current !== null) {
+      window.clearTimeout(answerRevealTimerRef.current)
+      answerRevealTimerRef.current = null
     }
   }
 
@@ -698,11 +710,33 @@ export function LetterListeningGamePage() {
         window.clearTimeout(timerRef.current)
       }
       clearAnswerPointerTimer()
+      clearAnswerRevealTimer()
       clearSpeechTimer()
       clearSuperRewardCloseTimer()
       stopSpeech()
     }
   }, [stopSpeech])
+
+  useEffect(() => {
+    clearAnswerRevealTimer()
+    if (answerRevealDelayMs <= 0) {
+      setAreAnswersVisible(true)
+      setAnimateAnswerReveal(false)
+      return
+    }
+
+    setAreAnswersVisible(false)
+    setAnimateAnswerReveal(false)
+    answerRevealTimerRef.current = window.setTimeout(() => {
+      answerRevealTimerRef.current = null
+      setAreAnswersVisible(true)
+      setAnimateAnswerReveal(true)
+    }, answerRevealDelayMs)
+
+    return () => {
+      clearAnswerRevealTimer()
+    }
+  }, [answerRevealDelayMs, round.roundIndex, roundIndex])
 
   useEffect(() => {
     if (!answerPointerEnabled || isLocked || feedback === 'correct') {
@@ -928,23 +962,23 @@ export function LetterListeningGamePage() {
         className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
         aria-label={text.answerLabel}
       >
-        <div className="answer-grid">
+        <div className={`answer-grid ${animateAnswerReveal ? 'is-revealing' : ''}`}>
           {round.options.map((letter) => (
             <button
               key={letter}
               type="button"
-              className={`answer-button ${
+              className={`answer-button ${!areAnswersVisible ? 'is-pre-reveal' : ''} ${
                 selectedLetter === letter && letter === round.targetLetter ? 'is-selected-correct' : ''
               } ${
                 wrongLetters.includes(letter) ? 'is-selected-wrong' : ''
               } ${
                 feedback === 'correct' && letter === round.targetLetter ? 'is-correct-answer' : ''
-              } ${feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? 'is-pointer-target' : ''}`}
+              } ${feedback !== 'correct' && showAnswerPointer && areAnswersVisible && letter === round.targetLetter ? 'is-pointer-target' : ''}`}
               onClick={() => handleAnswer(letter)}
-              disabled={isLocked}
+              disabled={isLocked || !areAnswersVisible}
             >
               <span className="answer-letter">{letter}</span>
-              {feedback !== 'correct' && showAnswerPointer && letter === round.targetLetter ? (
+              {feedback !== 'correct' && showAnswerPointer && areAnswersVisible && letter === round.targetLetter ? (
                 <span className="answer-pointer" aria-hidden="true">
                   👉
                 </span>

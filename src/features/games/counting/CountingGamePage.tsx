@@ -21,6 +21,7 @@ import {
   getStoredCountingSuperRewardEnabled,
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
+  getStoredCountingAnswerRevealDelaySeconds,
   getStoredCountingDiceHintEnabled,
   getStoredCountingMaxObjects,
   getStoredSpeechVoiceUri,
@@ -234,6 +235,7 @@ export function CountingGamePage() {
   const hintRepeatDelayMs = getStoredCountingHintRepeatDelaySeconds() * 1000
   const answerPointerEnabled = getStoredCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredCountingAnswerPointerDelaySeconds() * 1000
+  const answerRevealDelayMs = getStoredCountingAnswerRevealDelaySeconds() * 1000
   const diceHintEnabled = getStoredCountingDiceHintEnabled()
   const superRewardEnabled = getStoredCountingSuperRewardEnabled()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
@@ -251,6 +253,8 @@ export function CountingGamePage() {
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [activeHintSpriteIndex, setActiveHintSpriteIndex] = useState<number | null>(null)
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
+  const [areAnswersVisible, setAreAnswersVisible] = useState(answerRevealDelayMs <= 0)
+  const [animateAnswerReveal, setAnimateAnswerReveal] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [wrongAnswers, setWrongAnswers] = useState<number[]>([])
   const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
@@ -260,6 +264,7 @@ export function CountingGamePage() {
   const hintStepTimerRef = useRef<number | null>(null)
   const hintRepeatTimerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
+  const answerRevealTimerRef = useRef<number | null>(null)
   const superRewardCloseTimerRef = useRef<number | null>(null)
 
   const itemPositions = useMemo(
@@ -292,6 +297,13 @@ export function CountingGamePage() {
     if (answerPointerTimerRef.current !== null) {
       window.clearTimeout(answerPointerTimerRef.current)
       answerPointerTimerRef.current = null
+    }
+  }
+
+  function clearAnswerRevealTimer() {
+    if (answerRevealTimerRef.current !== null) {
+      window.clearTimeout(answerRevealTimerRef.current)
+      answerRevealTimerRef.current = null
     }
   }
 
@@ -392,6 +404,7 @@ export function CountingGamePage() {
       clearAnswerTimer()
       clearHintTimers()
       clearAnswerPointerTimer()
+      clearAnswerRevealTimer()
       clearSuperRewardCloseTimer()
       stopSpeech()
     }
@@ -439,6 +452,27 @@ export function CountingGamePage() {
     speakHintCount,
     stopSpeech,
   ])
+
+  useEffect(() => {
+    clearAnswerRevealTimer()
+    if (answerRevealDelayMs <= 0) {
+      setAreAnswersVisible(true)
+      setAnimateAnswerReveal(false)
+      return
+    }
+
+    setAreAnswersVisible(false)
+    setAnimateAnswerReveal(false)
+    answerRevealTimerRef.current = window.setTimeout(() => {
+      answerRevealTimerRef.current = null
+      setAreAnswersVisible(true)
+      setAnimateAnswerReveal(true)
+    }, answerRevealDelayMs)
+
+    return () => {
+      clearAnswerRevealTimer()
+    }
+  }, [answerRevealDelayMs, round.roundIndex, roundIndex])
 
   useEffect(() => {
     if (!answerPointerEnabled || isLocked || feedback === 'correct') {
@@ -620,20 +654,20 @@ export function CountingGamePage() {
         className={`answers ${feedback === 'correct' ? 'is-correct' : ''} ${feedback === 'wrong' ? 'is-wrong' : ''}`}
         aria-label={text.answerLabel}
       >
-        <div className="answer-grid">
+        <div className={`answer-grid ${animateAnswerReveal ? 'is-revealing' : ''}`}>
           {answerOptions.map((value) => (
             <button
               key={value}
               type="button"
-              className={`answer-button ${selectedAnswer === value && value === round.count ? 'is-selected-correct' : ''} ${wrongAnswers.includes(value) ? 'is-selected-wrong' : ''} ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && value === round.count ? 'is-pointer-target' : ''}`}
+              className={`answer-button ${!areAnswersVisible ? 'is-pre-reveal' : ''} ${selectedAnswer === value && value === round.count ? 'is-selected-correct' : ''} ${wrongAnswers.includes(value) ? 'is-selected-wrong' : ''} ${feedback === 'correct' && value === round.count ? 'is-correct-answer' : ''} ${feedback !== 'correct' && showAnswerPointer && areAnswersVisible && value === round.count ? 'is-pointer-target' : ''}`}
               onClick={() => handleAnswer(value)}
-              disabled={isLocked}
+              disabled={isLocked || !areAnswersVisible}
             >
               <span className="answer-content">
                 <span className="answer-value">{value}</span>
                 {diceHintEnabled ? <DiceHint value={value} className="answer-dice-hint" /> : null}
               </span>
-              {feedback !== 'correct' && showAnswerPointer && value === round.count ? (
+              {feedback !== 'correct' && showAnswerPointer && areAnswersVisible && value === round.count ? (
                 <span className="answer-pointer" aria-hidden="true">
                   👉
                 </span>

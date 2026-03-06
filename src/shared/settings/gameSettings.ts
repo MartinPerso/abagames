@@ -19,8 +19,15 @@ const REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
   'abagames-reverse-counting-answer-pointer-delay-seconds'
 const LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
   'abagames-letter-listening-answer-pointer-delay-seconds'
+const COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-counting-answer-reveal-delay-seconds'
+const REVERSE_COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-reverse-counting-answer-reveal-delay-seconds'
+const LETTER_LISTENING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-letter-listening-answer-reveal-delay-seconds'
 const SPEECH_VOICE_URI_STORAGE_KEY = 'abagames-speech-voice-uri'
 const SUPER_REWARD_VIDEOS_STORAGE_KEY = 'abagames-super-reward-videos'
+const SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY = 'abagames-super-reward-first-try-streak'
 const COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY = 'abagames-counting-super-reward-enabled'
 const REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY =
   'abagames-reverse-counting-super-reward-enabled'
@@ -32,6 +39,9 @@ const MAX_SUPER_REWARD_VIDEOS = 30
 const MIN_SUPER_REWARD_DURATION_SECONDS = 1
 const MAX_SUPER_REWARD_DURATION_SECONDS = 300
 const DEFAULT_SUPER_REWARD_DURATION_SECONDS = 15
+const MIN_SUPER_REWARD_FIRST_TRY_STREAK = 1
+const MAX_SUPER_REWARD_FIRST_TRY_STREAK = 10
+const DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK = 1
 
 export type SuperRewardVideoSetting = {
   id: string
@@ -56,6 +66,9 @@ const DEFAULT_COUNTING_HINT_REPEAT_DELAY_SECONDS = 10
 const MIN_ANSWER_POINTER_DELAY_SECONDS = 5
 const MAX_ANSWER_POINTER_DELAY_SECONDS = 20
 const DEFAULT_ANSWER_POINTER_DELAY_SECONDS = 10
+const MIN_ANSWER_REVEAL_DELAY_SECONDS = 0
+const MAX_ANSWER_REVEAL_DELAY_SECONDS = 10
+const DEFAULT_ANSWER_REVEAL_DELAY_SECONDS = 2
 
 function clampCountingMaxObjects(value: number): number {
   return Math.max(MIN_COUNTING_MAX_OBJECTS, Math.min(MAX_COUNTING_MAX_OBJECTS, value))
@@ -89,6 +102,13 @@ function clampAnswerPointerDelaySeconds(value: number): number {
   )
 }
 
+function clampAnswerRevealDelaySeconds(value: number): number {
+  return Math.max(
+    MIN_ANSWER_REVEAL_DELAY_SECONDS,
+    Math.min(MAX_ANSWER_REVEAL_DELAY_SECONDS, value),
+  )
+}
+
 function clampTimestampSeconds(value: number): number {
   if (!Number.isFinite(value)) {
     return 0
@@ -103,6 +123,17 @@ function clampSuperRewardDurationSeconds(value: number): number {
   return Math.max(
     MIN_SUPER_REWARD_DURATION_SECONDS,
     Math.min(MAX_SUPER_REWARD_DURATION_SECONDS, Math.floor(value)),
+  )
+}
+
+function clampSuperRewardFirstTryStreak(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK
+  }
+
+  return Math.max(
+    MIN_SUPER_REWARD_FIRST_TRY_STREAK,
+    Math.min(MAX_SUPER_REWARD_FIRST_TRY_STREAK, Math.floor(value)),
   )
 }
 
@@ -149,6 +180,32 @@ function setStoredDelaySeconds(key: string, value: number): void {
   }
 
   window.localStorage.setItem(key, String(clampAnswerPointerDelaySeconds(value)))
+}
+
+function getStoredAnswerRevealDelaySeconds(key: string): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_ANSWER_REVEAL_DELAY_SECONDS
+  }
+
+  const raw = window.localStorage.getItem(key)
+  if (raw === null) {
+    return DEFAULT_ANSWER_REVEAL_DELAY_SECONDS
+  }
+
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_ANSWER_REVEAL_DELAY_SECONDS
+  }
+
+  return clampAnswerRevealDelaySeconds(Math.floor(parsed))
+}
+
+function setStoredAnswerRevealDelaySeconds(key: string, value: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(key, String(clampAnswerRevealDelaySeconds(value)))
 }
 
 function createSuperRewardVideoId(): string {
@@ -231,6 +288,12 @@ export const superRewardDurationSettingsRange = {
   min: MIN_SUPER_REWARD_DURATION_SECONDS,
   max: MAX_SUPER_REWARD_DURATION_SECONDS,
   defaultValue: DEFAULT_SUPER_REWARD_DURATION_SECONDS,
+}
+
+export const superRewardFirstTryStreakSettingsRange = {
+  min: MIN_SUPER_REWARD_FIRST_TRY_STREAK,
+  max: MAX_SUPER_REWARD_FIRST_TRY_STREAK,
+  defaultValue: DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK,
 }
 
 export function getStoredCountingMaxObjects(): number {
@@ -379,6 +442,12 @@ export const answerPointerDelaySettingsRange = {
   defaultValue: DEFAULT_ANSWER_POINTER_DELAY_SECONDS,
 }
 
+export const answerRevealDelaySettingsRange = {
+  min: MIN_ANSWER_REVEAL_DELAY_SECONDS,
+  max: MAX_ANSWER_REVEAL_DELAY_SECONDS,
+  defaultValue: DEFAULT_ANSWER_REVEAL_DELAY_SECONDS,
+}
+
 export function getStoredCountingAnswerPointerEnabled(): boolean {
   return getStoredBoolean(COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY, true)
 }
@@ -443,6 +512,30 @@ export function setStoredLetterListeningAnswerPointerDelaySeconds(value: number)
   setStoredDelaySeconds(LETTER_LISTENING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
 }
 
+export function getStoredCountingAnswerRevealDelaySeconds(): number {
+  return getStoredAnswerRevealDelaySeconds(COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredCountingAnswerRevealDelaySeconds(value: number): void {
+  setStoredAnswerRevealDelaySeconds(COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredReverseCountingAnswerRevealDelaySeconds(): number {
+  return getStoredAnswerRevealDelaySeconds(REVERSE_COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredReverseCountingAnswerRevealDelaySeconds(value: number): void {
+  setStoredAnswerRevealDelaySeconds(REVERSE_COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredLetterListeningAnswerRevealDelaySeconds(): number {
+  return getStoredAnswerRevealDelaySeconds(LETTER_LISTENING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredLetterListeningAnswerRevealDelaySeconds(value: number): void {
+  setStoredAnswerRevealDelaySeconds(LETTER_LISTENING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
 export function getStoredSuperRewardVideos(): SuperRewardVideoSetting[] {
   if (typeof window === 'undefined') {
     return []
@@ -458,6 +551,31 @@ export function setStoredSuperRewardVideos(videos: SuperRewardVideoSetting[]): v
 
   const normalized = normalizeSuperRewardVideoSettings(videos)
   window.localStorage.setItem(SUPER_REWARD_VIDEOS_STORAGE_KEY, JSON.stringify(normalized))
+}
+
+export function getStoredSuperRewardFirstTryStreak(): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK
+  }
+
+  const raw = window.localStorage.getItem(SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK
+  }
+
+  const parsed = Number(raw)
+  return clampSuperRewardFirstTryStreak(parsed)
+}
+
+export function setStoredSuperRewardFirstTryStreak(value: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(
+    SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+    String(clampSuperRewardFirstTryStreak(value)),
+  )
 }
 
 export function getStoredCountingSuperRewardEnabled(): boolean {

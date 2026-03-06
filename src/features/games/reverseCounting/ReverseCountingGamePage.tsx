@@ -12,6 +12,7 @@ import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx
 import {
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
+  getStoredReverseCountingAnswerRevealDelaySeconds,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredReverseCountingSuperRewardEnabled,
@@ -217,6 +218,7 @@ export function ReverseCountingGamePage() {
   const maxObjects = getStoredReverseCountingMaxObjects()
   const answerPointerEnabled = getStoredReverseCountingAnswerPointerEnabled()
   const answerPointerDelayMs = getStoredReverseCountingAnswerPointerDelaySeconds() * 1000
+  const answerRevealDelayMs = getStoredReverseCountingAnswerRevealDelaySeconds() * 1000
   const diceHintEnabled = getStoredReverseCountingDiceHintEnabled()
   const superRewardEnabled = getStoredReverseCountingSuperRewardEnabled()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
@@ -232,12 +234,15 @@ export function ReverseCountingGamePage() {
   const [isLocked, setIsLocked] = useState(false)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const [showAnswerPointer, setShowAnswerPointer] = useState(false)
+  const [areChoicesVisible, setAreChoicesVisible] = useState(answerRevealDelayMs <= 0)
+  const [animateChoiceReveal, setAnimateChoiceReveal] = useState(false)
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
   const [wrongChoiceIds, setWrongChoiceIds] = useState<string[]>([])
   const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
   const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
+  const answerRevealTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
   const superRewardCloseTimerRef = useRef<number | null>(null)
 
@@ -252,6 +257,13 @@ export function ReverseCountingGamePage() {
     if (answerPointerTimerRef.current !== null) {
       window.clearTimeout(answerPointerTimerRef.current)
       answerPointerTimerRef.current = null
+    }
+  }
+
+  function clearAnswerRevealTimer() {
+    if (answerRevealTimerRef.current !== null) {
+      window.clearTimeout(answerRevealTimerRef.current)
+      answerRevealTimerRef.current = null
     }
   }
 
@@ -371,6 +383,7 @@ export function ReverseCountingGamePage() {
     return () => {
       clearActiveTimer()
       clearAnswerPointerTimer()
+      clearAnswerRevealTimer()
       clearSpeechTimer()
       clearSuperRewardCloseTimer()
       stopSpeech()
@@ -387,6 +400,27 @@ export function ReverseCountingGamePage() {
       clearSpeechTimer()
     }
   }, [round.roundIndex, round.targetCount, speakTargetCount])
+
+  useEffect(() => {
+    clearAnswerRevealTimer()
+    if (answerRevealDelayMs <= 0) {
+      setAreChoicesVisible(true)
+      setAnimateChoiceReveal(false)
+      return
+    }
+
+    setAreChoicesVisible(false)
+    setAnimateChoiceReveal(false)
+    answerRevealTimerRef.current = window.setTimeout(() => {
+      answerRevealTimerRef.current = null
+      setAreChoicesVisible(true)
+      setAnimateChoiceReveal(true)
+    }, answerRevealDelayMs)
+
+    return () => {
+      clearAnswerRevealTimer()
+    }
+  }, [answerRevealDelayMs, round.roundIndex, roundIndex])
 
   useEffect(() => {
     if (!answerPointerEnabled || isLocked || feedback === 'correct') {
@@ -558,7 +592,9 @@ export function ReverseCountingGamePage() {
         ) : null}
       </section>
 
-      <section className={`choice-grid ${feedback === 'wrong' ? 'is-wrong' : ''}`}>
+      <section
+        className={`choice-grid ${feedback === 'wrong' ? 'is-wrong' : ''} ${animateChoiceReveal ? 'is-revealing' : ''}`}
+      >
         {round.choices.map((choice) => {
           const isCorrectChoice = choice.id === round.correctChoiceId
           const isHighlighted = feedback === 'correct' && isCorrectChoice
@@ -570,12 +606,12 @@ export function ReverseCountingGamePage() {
             <button
               key={choice.id}
               type="button"
-              className={`choice-card ${isSelectedCorrect ? 'is-selected-correct' : ''} ${isSelectedWrong ? 'is-selected-wrong' : ''} ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? 'is-pointer-target' : ''}`}
+              className={`choice-card ${!areChoicesVisible ? 'is-pre-reveal' : ''} ${isSelectedCorrect ? 'is-selected-correct' : ''} ${isSelectedWrong ? 'is-selected-wrong' : ''} ${isHighlighted ? 'is-correct' : ''} ${feedback !== 'correct' && showAnswerPointer && areChoicesVisible && isCorrectChoice ? 'is-pointer-target' : ''}`}
               onClick={() => handleChoice(choice.id)}
-              disabled={isLocked}
+              disabled={isLocked || !areChoicesVisible}
               aria-label={`${choice.count} ${itemLabels[choice.item]}`}
             >
-              {feedback !== 'correct' && showAnswerPointer && isCorrectChoice ? (
+              {feedback !== 'correct' && showAnswerPointer && areChoicesVisible && isCorrectChoice ? (
                 <span className="answer-pointer" aria-hidden="true">
                   👉
                 </span>

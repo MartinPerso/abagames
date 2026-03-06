@@ -119,6 +119,46 @@
   gap: 12px;
 }
 
+.answer-grid.is-revealing .answer-button {
+  animation: counting-answer-reveal 0.38s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(2) {
+  animation-delay: 0.03s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(3) {
+  animation-delay: 0.06s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(5) {
+  animation-delay: 0.12s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(6) {
+  animation-delay: 0.15s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(7) {
+  animation-delay: 0.18s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(8) {
+  animation-delay: 0.21s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(9) {
+  animation-delay: 0.24s;
+}
+
+.answer-grid.is-revealing .answer-button:nth-child(10) {
+  animation-delay: 0.27s;
+}
+
 .answer-button {
   flex: 1 1 0;
   min-width: 0;
@@ -133,6 +173,12 @@
 
 .answer-button:disabled {
   opacity: 0.7;
+}
+
+.answer-grid .answer-button.is-pre-reveal {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .counting-page .answer-grid .answer-button {
@@ -551,6 +597,21 @@
   }
   75% {
     transform: translateX(-2px);
+  }
+}
+
+@keyframes counting-answer-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.95) rotate(var(--tilt));
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(0, -2px, 0) scale(1.03) rotate(var(--tilt));
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(var(--tilt));
   }
 }
 

@@ -15,7 +15,9 @@ import {
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
   type SuperRewardVideoSetting,
   answerPointerDelaySettingsRange,
+  answerRevealDelaySettingsRange,
   createDefaultSuperRewardVideoSetting,
+  getStoredCountingAnswerRevealDelaySeconds,
   countingHintFirstDelaySettingsRange,
   countingHintRepeatDelaySettingsRange,
   countingSettingsRange,
@@ -27,6 +29,7 @@ import {
   getStoredCountingMaxObjects,
   getStoredLetterListeningAnswerPointerDelaySeconds,
   getStoredLetterListeningAnswerPointerEnabled,
+  getStoredLetterListeningAnswerRevealDelaySeconds,
   getStoredLetterListeningAllowedLettersForSettings,
   getStoredLetterListeningSuperRewardEnabled,
   getStoredSuperRewardVideos,
@@ -34,6 +37,7 @@ import {
   getStoredReverseCountingSuperRewardEnabled,
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
+  getStoredReverseCountingAnswerRevealDelaySeconds,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredSpeechVoiceUri,
@@ -41,12 +45,14 @@ import {
   superRewardDurationSettingsRange,
   setStoredCountingAnswerPointerDelaySeconds,
   setStoredCountingAnswerPointerEnabled,
+  setStoredCountingAnswerRevealDelaySeconds,
   setStoredCountingDiceHintEnabled,
   setStoredCountingHintFirstDelaySeconds,
   setStoredCountingHintRepeatDelaySeconds,
   setStoredCountingMaxObjects,
   setStoredLetterListeningAnswerPointerDelaySeconds,
   setStoredLetterListeningAnswerPointerEnabled,
+  setStoredLetterListeningAnswerRevealDelaySeconds,
   setStoredLetterListeningAllowedLetters,
   setStoredLetterListeningSuperRewardEnabled,
   setStoredSuperRewardVideos,
@@ -54,6 +60,7 @@ import {
   setStoredReverseCountingSuperRewardEnabled,
   setStoredReverseCountingAnswerPointerDelaySeconds,
   setStoredReverseCountingAnswerPointerEnabled,
+  setStoredReverseCountingAnswerRevealDelaySeconds,
   setStoredReverseCountingDiceHintEnabled,
   setStoredReverseCountingMaxObjects,
   setStoredSpeechVoiceUri,
@@ -77,6 +84,9 @@ export function SettingsPage() {
   )
   const [countingAnswerPointerDelaySeconds, setCountingAnswerPointerDelaySeconds] =
     useState<number>(() => getStoredCountingAnswerPointerDelaySeconds())
+  const [countingAnswerRevealDelaySeconds, setCountingAnswerRevealDelaySeconds] = useState<number>(
+    () => getStoredCountingAnswerRevealDelaySeconds(),
+  )
   const [countingHintFirstDelaySeconds, setCountingHintFirstDelaySeconds] = useState<number>(() =>
     getStoredCountingHintFirstDelaySeconds(),
   )
@@ -98,6 +108,9 @@ export function SettingsPage() {
   const [reverseAnswerPointerDelaySeconds, setReverseAnswerPointerDelaySeconds] = useState<number>(
     () => getStoredReverseCountingAnswerPointerDelaySeconds(),
   )
+  const [reverseAnswerRevealDelaySeconds, setReverseAnswerRevealDelaySeconds] = useState<number>(
+    () => getStoredReverseCountingAnswerRevealDelaySeconds(),
+  )
   const [reverseSuperRewardEnabled, setReverseSuperRewardEnabled] = useState<boolean>(() =>
     getStoredReverseCountingSuperRewardEnabled(),
   )
@@ -106,6 +119,9 @@ export function SettingsPage() {
   )
   const [letterAnswerPointerDelaySeconds, setLetterAnswerPointerDelaySeconds] = useState<number>(
     () => getStoredLetterListeningAnswerPointerDelaySeconds(),
+  )
+  const [letterAnswerRevealDelaySeconds, setLetterAnswerRevealDelaySeconds] = useState<number>(
+    () => getStoredLetterListeningAnswerRevealDelaySeconds(),
   )
   const [letterListeningLetters, setLetterListeningLetters] = useState<Set<string>>(
     () => new Set(getStoredLetterListeningAllowedLettersForSettings()),
@@ -212,6 +228,11 @@ export function SettingsPage() {
     setStoredCountingAnswerPointerDelaySeconds(nextValue)
   }
 
+  function handleCountingAnswerRevealDelayChange(nextValue: number) {
+    setCountingAnswerRevealDelaySeconds(nextValue)
+    setStoredCountingAnswerRevealDelaySeconds(nextValue)
+  }
+
   function handleCountingHintFirstDelayChange(nextValue: number) {
     setCountingHintFirstDelaySeconds(nextValue)
     setStoredCountingHintFirstDelaySeconds(nextValue)
@@ -247,6 +268,11 @@ export function SettingsPage() {
     setStoredReverseCountingAnswerPointerDelaySeconds(nextValue)
   }
 
+  function handleReverseAnswerRevealDelayChange(nextValue: number) {
+    setReverseAnswerRevealDelaySeconds(nextValue)
+    setStoredReverseCountingAnswerRevealDelaySeconds(nextValue)
+  }
+
   function handleReverseSuperRewardEnabledChange(enabled: boolean) {
     setReverseSuperRewardEnabled(enabled)
     setStoredReverseCountingSuperRewardEnabled(enabled)
@@ -260,6 +286,11 @@ export function SettingsPage() {
   function handleLetterAnswerPointerDelayChange(nextValue: number) {
     setLetterAnswerPointerDelaySeconds(nextValue)
     setStoredLetterListeningAnswerPointerDelaySeconds(nextValue)
+  }
+
+  function handleLetterAnswerRevealDelayChange(nextValue: number) {
+    setLetterAnswerRevealDelaySeconds(nextValue)
+    setStoredLetterListeningAnswerRevealDelaySeconds(nextValue)
   }
 
   function handleLetterSuperRewardEnabledChange(enabled: boolean) {
@@ -564,6 +595,21 @@ export function SettingsPage() {
             {countingAnswerPointerDelaySeconds}s
           </output>
         </div>
+
+        <label className="field-label" htmlFor="counting-answer-reveal-delay">
+          {text.answerButtonsDelayLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="counting-answer-reveal-delay"
+            type="range"
+            min={answerRevealDelaySettingsRange.min}
+            max={answerRevealDelaySettingsRange.max}
+            value={countingAnswerRevealDelaySeconds}
+            onChange={(event) => handleCountingAnswerRevealDelayChange(Number(event.target.value))}
+          />
+          <output htmlFor="counting-answer-reveal-delay">{countingAnswerRevealDelaySeconds}s</output>
+        </div>
       </section>
 
       <section className="settings-card">
@@ -628,6 +674,21 @@ export function SettingsPage() {
             disabled={!reverseAnswerPointerEnabled}
           />
           <output htmlFor="reverse-answer-pointer-delay">{reverseAnswerPointerDelaySeconds}s</output>
+        </div>
+
+        <label className="field-label" htmlFor="reverse-answer-reveal-delay">
+          {text.answerButtonsDelayLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="reverse-answer-reveal-delay"
+            type="range"
+            min={answerRevealDelaySettingsRange.min}
+            max={answerRevealDelaySettingsRange.max}
+            value={reverseAnswerRevealDelaySeconds}
+            onChange={(event) => handleReverseAnswerRevealDelayChange(Number(event.target.value))}
+          />
+          <output htmlFor="reverse-answer-reveal-delay">{reverseAnswerRevealDelaySeconds}s</output>
         </div>
       </section>
 
@@ -704,6 +765,21 @@ export function SettingsPage() {
             disabled={!letterAnswerPointerEnabled}
           />
           <output htmlFor="letter-answer-pointer-delay">{letterAnswerPointerDelaySeconds}s</output>
+        </div>
+
+        <label className="field-label" htmlFor="letter-answer-reveal-delay">
+          {text.answerButtonsDelayLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="letter-answer-reveal-delay"
+            type="range"
+            min={answerRevealDelaySettingsRange.min}
+            max={answerRevealDelaySettingsRange.max}
+            value={letterAnswerRevealDelaySeconds}
+            onChange={(event) => handleLetterAnswerRevealDelayChange(Number(event.target.value))}
+          />
+          <output htmlFor="letter-answer-reveal-delay">{letterAnswerRevealDelaySeconds}s</output>
         </div>
       </section>
     </main>
