@@ -1,5 +1,6 @@
 .dice-hint {
   --dice-size: 1.18em;
+  --dice-pip-size: 0.2em;
   --dice-border: rgba(18, 38, 58, 0.24);
   --dice-pip: currentColor;
   display: inline-flex;
@@ -19,8 +20,8 @@
 
 .dice-hint-pip {
   position: absolute;
-  width: 0.2em;
-  height: 0.2em;
+  width: var(--dice-pip-size);
+  height: var(--dice-pip-size);
   border-radius: 50%;
   background: var(--dice-pip);
   transform: translate(-50%, -50%);

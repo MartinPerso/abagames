@@ -222,11 +222,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2em;
+  gap: 0.3em;
 }
 
 .counting-page .answer-grid .answer-button .answer-dice-hint {
-  --dice-size: 0.62em;
+  --dice-size: 1.02em;
+  --dice-pip-size: 0.25em;
 }
 
 .counting-page .answer-grid .answer-button:nth-child(odd) {
