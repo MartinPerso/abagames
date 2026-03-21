@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import './SuperRewardVideoModal.css'
 
 export type SuperRewardVideoPlayback =
@@ -18,40 +17,15 @@ type SuperRewardVideoModalProps = {
   playback: SuperRewardVideoPlayback | null
   title: string
   closeLabel: string
-  tapToPlayLabel: string
   onClose: () => void
-}
-
-function isIOSLikeDevice(): boolean {
-  if (typeof navigator === 'undefined') {
-    return false
-  }
-
-  const ua = navigator.userAgent
-  const iOSPlatform = /iPad|iPhone|iPod/.test(ua)
-  const iPadDesktopUA = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
-  return iOSPlatform || iPadDesktopUA
 }
 
 export function SuperRewardVideoModal({
   playback,
   title,
   closeLabel,
-  tapToPlayLabel,
   onClose,
 }: SuperRewardVideoModalProps) {
-  const [playAttempt, setPlayAttempt] = useState(0)
-  const [showTapOverlay, setShowTapOverlay] = useState(false)
-  const isOpen = playback !== null
-
-  useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-    setPlayAttempt(0)
-    setShowTapOverlay(isIOSLikeDevice())
-  }, [isOpen, playback])
-
   if (!playback) {
     return null
   }
@@ -77,22 +51,9 @@ export function SuperRewardVideoModal({
           </button>
         </div>
         <div className="super-reward-player">
-          {showTapOverlay ? (
-            <button
-              type="button"
-              className="super-reward-tap-overlay"
-              onClick={() => {
-                setPlayAttempt((current) => current + 1)
-                setShowTapOverlay(false)
-              }}
-              aria-label={tapToPlayLabel}
-            >
-              {tapToPlayLabel}
-            </button>
-          ) : null}
           {playback.kind === 'youtube' ? (
             <iframe
-              key={`${playback.iframeKey}-${playAttempt}`}
+              key={playback.iframeKey}
               src={playback.embedUrl}
               title={title}
               allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
@@ -101,7 +62,7 @@ export function SuperRewardVideoModal({
             />
           ) : (
             <video
-              key={`${playback.videoKey}-${playAttempt}`}
+              key={playback.videoKey}
               src={playback.videoUrl}
               autoPlay
               controls

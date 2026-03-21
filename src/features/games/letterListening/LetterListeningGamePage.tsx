@@ -1061,7 +1061,6 @@ export function LetterListeningGamePage() {
         playback={activeSuperRewardPlayback}
         title={superRewardText.modalTitle}
         closeLabel={superRewardText.closeLabel}
-        tapToPlayLabel={superRewardText.tapToPlayLabel}
         onClose={closeSuperRewardVideo}
       />
     </main>
