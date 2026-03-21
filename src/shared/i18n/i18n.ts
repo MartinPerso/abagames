@@ -164,7 +164,20 @@ type SettingsText = {
   superRewardEnabledLabel: string
   superRewardFirstTryStreakLabel: string
   superRewardVideosLabel: string
+  superRewardVideoSourceLabel: string
+  superRewardVideoSourceYouTubeOption: string
+  superRewardVideoSourceLocalOption: string
   superRewardVideoUrlLabel: string
+  superRewardLocalVideoLabel: string
+  superRewardLocalVideoChooseLabel: string
+  superRewardLocalVideoReplaceLabel: string
+  superRewardLocalVideoMissingHint: string
+  superRewardLocalVideoTooLargeHint: string
+  superRewardLocalVideoTotalLimitHint: string
+  superRewardLocalVideoSaveErrorHint: string
+  superRewardLocalVideoStorageUsageLabel: string
+  superRewardLocalVideoPersistenceGrantedHint: string
+  superRewardLocalVideoPersistenceNotGrantedHint: string
   superRewardVideoStartLabel: string
   superRewardVideoDurationLabel: string
   superRewardAddVideoLabel: string
@@ -201,7 +214,24 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     superRewardFirstTryStreakLabel:
       'Afficher la super récompense après (bonnes réponses consécutives au 1er essai)',
     superRewardVideosLabel: 'Vidéos',
+    superRewardVideoSourceLabel: 'Source',
+    superRewardVideoSourceYouTubeOption: 'YouTube',
+    superRewardVideoSourceLocalOption: 'Appareil',
     superRewardVideoUrlLabel: 'URL YouTube',
+    superRewardLocalVideoLabel: 'Vidéo locale',
+    superRewardLocalVideoChooseLabel: 'Choisir une vidéo',
+    superRewardLocalVideoReplaceLabel: 'Remplacer la vidéo',
+    superRewardLocalVideoMissingHint: "Aucune vidéo locale n'est enregistrée pour cette entrée.",
+    superRewardLocalVideoTooLargeHint: 'La vidéo dépasse la taille maximale autorisée.',
+    superRewardLocalVideoTotalLimitHint:
+      'Le stockage local des vidéos est plein. Supprimez une vidéo existante.',
+    superRewardLocalVideoSaveErrorHint:
+      "Impossible d'enregistrer cette vidéo localement sur cet appareil.",
+    superRewardLocalVideoStorageUsageLabel: 'Stockage local vidéo utilisé',
+    superRewardLocalVideoPersistenceGrantedHint:
+      'Stockage persistant activé pour améliorer la conservation locale.',
+    superRewardLocalVideoPersistenceNotGrantedHint:
+      "Le stockage persistant n'a pas été accordé par le navigateur.",
     superRewardVideoStartLabel: 'Début (s)',
     superRewardVideoDurationLabel: 'Durée (s)',
     superRewardAddVideoLabel: 'Ajouter une vidéo',
@@ -236,7 +266,24 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     superRewardFirstTryStreakLabel:
       'Show super reward after (consecutive first-try correct answers)',
     superRewardVideosLabel: 'Videos',
+    superRewardVideoSourceLabel: 'Source',
+    superRewardVideoSourceYouTubeOption: 'YouTube',
+    superRewardVideoSourceLocalOption: 'Device',
     superRewardVideoUrlLabel: 'YouTube URL',
+    superRewardLocalVideoLabel: 'Local video',
+    superRewardLocalVideoChooseLabel: 'Choose video',
+    superRewardLocalVideoReplaceLabel: 'Replace video',
+    superRewardLocalVideoMissingHint: 'No local video is stored for this entry.',
+    superRewardLocalVideoTooLargeHint: 'The video is too large for the per-file limit.',
+    superRewardLocalVideoTotalLimitHint:
+      'Local video storage is full. Remove an existing video first.',
+    superRewardLocalVideoSaveErrorHint:
+      'Unable to store this video locally on this device.',
+    superRewardLocalVideoStorageUsageLabel: 'Local video storage used',
+    superRewardLocalVideoPersistenceGrantedHint:
+      'Persistent storage is enabled to improve local retention.',
+    superRewardLocalVideoPersistenceNotGrantedHint:
+      'The browser did not grant persistent storage.',
     superRewardVideoStartLabel: 'Start (s)',
     superRewardVideoDurationLabel: 'Duration (s)',
     superRewardAddVideoLabel: 'Add video',

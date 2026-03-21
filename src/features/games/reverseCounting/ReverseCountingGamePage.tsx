@@ -21,8 +21,12 @@ import {
   getStoredSuperRewardVideos,
 } from '../../../shared/settings/gameSettings'
 import { toPlayableSuperRewardVideo } from '../../../shared/rewards/superRewardVideo'
+import { getStoredLocalRewardVideoBlob } from '../../../shared/storage/localRewardVideoStore'
 import { DiceHint } from '../../../shared/ui/DiceHint'
-import { SuperRewardVideoModal } from '../../../shared/ui/SuperRewardVideoModal'
+import {
+  SuperRewardVideoModal,
+  type SuperRewardVideoPlayback,
+} from '../../../shared/ui/SuperRewardVideoModal'
 import {
   type CountingItem,
   createRound,
@@ -240,14 +244,16 @@ export function ReverseCountingGamePage() {
   const [animateChoiceReveal, setAnimateChoiceReveal] = useState(false)
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
   const [wrongChoiceIds, setWrongChoiceIds] = useState<string[]>([])
-  const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
-  const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
+  const [activeSuperRewardPlayback, setActiveSuperRewardPlayback] =
+    useState<SuperRewardVideoPlayback | null>(null)
   const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const answerRevealTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
   const superRewardCloseTimerRef = useRef<number | null>(null)
+  const activeLocalRewardUrlRef = useRef<string | null>(null)
+  const superRewardLaunchTokenRef = useRef(0)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -282,6 +288,15 @@ export function ReverseCountingGamePage() {
       window.clearTimeout(superRewardCloseTimerRef.current)
       superRewardCloseTimerRef.current = null
     }
+  }
+
+  function clearActiveLocalRewardUrl() {
+    if (!activeLocalRewardUrlRef.current) {
+      return
+    }
+
+    URL.revokeObjectURL(activeLocalRewardUrlRef.current)
+    activeLocalRewardUrlRef.current = null
   }
 
   const stopSpeech = useCallback(() => {
@@ -389,6 +404,7 @@ export function ReverseCountingGamePage() {
       clearAnswerRevealTimer()
       clearSpeechTimer()
       clearSuperRewardCloseTimer()
+      clearActiveLocalRewardUrl()
       stopSpeech()
     }
   }, [stopSpeech])
@@ -443,7 +459,9 @@ export function ReverseCountingGamePage() {
 
   function moveToNextRound() {
     const nextIndex = roundIndex + 1
+    superRewardLaunchTokenRef.current += 1
     clearSuperRewardCloseTimer()
+    clearActiveLocalRewardUrl()
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, maxObjects))
     setFeedback('idle')
@@ -452,31 +470,69 @@ export function ReverseCountingGamePage() {
     setShowAnswerPointer(false)
     setSelectedChoiceId(null)
     setWrongChoiceIds([])
-    setActiveSuperRewardEmbedUrl(null)
-    setActiveSuperRewardIframeKey('')
+    setActiveSuperRewardPlayback(null)
   }
 
-  function launchSuperRewardVideo() {
+  async function launchSuperRewardVideo() {
     if (playableSuperRewardVideos.length === 0) {
       moveToNextRound()
       return
     }
 
+    const launchToken = superRewardLaunchTokenRef.current + 1
+    superRewardLaunchTokenRef.current = launchToken
     const chosenIndex = randomIntInclusive(0, playableSuperRewardVideos.length - 1)
     const chosenVideo = playableSuperRewardVideos[chosenIndex]
 
     clearSuperRewardCloseTimer()
-    setActiveSuperRewardEmbedUrl(chosenVideo.embedUrl)
-    setActiveSuperRewardIframeKey(`reward-${round.roundIndex}-${Date.now()}`)
-    superRewardCloseTimerRef.current = window.setTimeout(() => {
-      closeSuperRewardVideo()
-    }, chosenVideo.durationMs)
+    try {
+      if (chosenVideo.source === 'youtube') {
+        clearActiveLocalRewardUrl()
+        setActiveSuperRewardPlayback({
+          kind: 'youtube',
+          embedUrl: chosenVideo.embedUrl,
+          iframeKey: `reward-${round.roundIndex}-${Date.now()}`,
+        })
+      } else {
+        const storedBlob = await getStoredLocalRewardVideoBlob(chosenVideo.localVideoId)
+        if (!storedBlob) {
+          if (superRewardLaunchTokenRef.current === launchToken) {
+            moveToNextRound()
+          }
+          return
+        }
+
+        const objectUrl = URL.createObjectURL(storedBlob)
+        if (superRewardLaunchTokenRef.current !== launchToken) {
+          URL.revokeObjectURL(objectUrl)
+          return
+        }
+
+        clearActiveLocalRewardUrl()
+        activeLocalRewardUrlRef.current = objectUrl
+        setActiveSuperRewardPlayback({
+          kind: 'local',
+          videoKey: `reward-${round.roundIndex}-${Date.now()}`,
+          videoUrl: objectUrl,
+          startSeconds: chosenVideo.startSeconds,
+        })
+      }
+
+      superRewardCloseTimerRef.current = window.setTimeout(() => {
+        closeSuperRewardVideo()
+      }, chosenVideo.durationMs)
+    } catch {
+      if (superRewardLaunchTokenRef.current === launchToken) {
+        moveToNextRound()
+      }
+    }
   }
 
   function closeSuperRewardVideo() {
+    superRewardLaunchTokenRef.current += 1
     clearSuperRewardCloseTimer()
-    setActiveSuperRewardEmbedUrl(null)
-    setActiveSuperRewardIframeKey('')
+    clearActiveLocalRewardUrl()
+    setActiveSuperRewardPlayback(null)
     moveToNextRound()
   }
 
@@ -517,7 +573,7 @@ export function ReverseCountingGamePage() {
         speakBravo()
         if (shouldOfferSuperReward) {
           setFirstTryCorrectStreak(0)
-          launchSuperRewardVideo()
+          void launchSuperRewardVideo()
           return
         }
         setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
@@ -668,9 +724,7 @@ export function ReverseCountingGamePage() {
       </section>
 
       <SuperRewardVideoModal
-        isOpen={activeSuperRewardEmbedUrl !== null}
-        iframeKey={activeSuperRewardIframeKey}
-        embedUrl={activeSuperRewardEmbedUrl ?? ''}
+        playback={activeSuperRewardPlayback}
         title={superRewardText.modalTitle}
         closeLabel={superRewardText.closeLabel}
         tapToPlayLabel={superRewardText.tapToPlayLabel}

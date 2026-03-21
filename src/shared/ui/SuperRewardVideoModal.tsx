@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
 import './SuperRewardVideoModal.css'
 
+export type SuperRewardVideoPlayback =
+  | {
+      kind: 'youtube'
+      iframeKey: string
+      embedUrl: string
+    }
+  | {
+      kind: 'local'
+      videoKey: string
+      videoUrl: string
+      startSeconds: number
+    }
+
 type SuperRewardVideoModalProps = {
-  isOpen: boolean
-  iframeKey: string
-  embedUrl: string
+  playback: SuperRewardVideoPlayback | null
   title: string
   closeLabel: string
   tapToPlayLabel: string
@@ -23,9 +34,7 @@ function isIOSLikeDevice(): boolean {
 }
 
 export function SuperRewardVideoModal({
-  isOpen,
-  iframeKey,
-  embedUrl,
+  playback,
   title,
   closeLabel,
   tapToPlayLabel,
@@ -33,6 +42,7 @@ export function SuperRewardVideoModal({
 }: SuperRewardVideoModalProps) {
   const [playAttempt, setPlayAttempt] = useState(0)
   const [showTapOverlay, setShowTapOverlay] = useState(false)
+  const isOpen = playback !== null
 
   useEffect(() => {
     if (!isOpen) {
@@ -40,9 +50,9 @@ export function SuperRewardVideoModal({
     }
     setPlayAttempt(0)
     setShowTapOverlay(isIOSLikeDevice())
-  }, [embedUrl, isOpen])
+  }, [isOpen, playback])
 
-  if (!isOpen) {
+  if (!playback) {
     return null
   }
 
@@ -80,14 +90,37 @@ export function SuperRewardVideoModal({
               {tapToPlayLabel}
             </button>
           ) : null}
-          <iframe
-            key={`${iframeKey}-${playAttempt}`}
-            src={embedUrl}
-            title={title}
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
+          {playback.kind === 'youtube' ? (
+            <iframe
+              key={`${playback.iframeKey}-${playAttempt}`}
+              src={playback.embedUrl}
+              title={title}
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          ) : (
+            <video
+              key={`${playback.videoKey}-${playAttempt}`}
+              src={playback.videoUrl}
+              autoPlay
+              controls
+              playsInline
+              preload="auto"
+              onLoadedMetadata={(event) => {
+                if (playback.startSeconds <= 0) {
+                  return
+                }
+
+                const player = event.currentTarget
+                try {
+                  player.currentTime = playback.startSeconds
+                } catch {
+                  // Ignore browsers that delay seeking until later buffered ranges.
+                }
+              }}
+            />
+          )}
         </div>
         <button type="button" className="super-reward-done" onClick={onClose}>
           {closeLabel}

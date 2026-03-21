@@ -49,9 +49,14 @@ const MIN_SUPER_REWARD_FIRST_TRY_STREAK = 1
 const MAX_SUPER_REWARD_FIRST_TRY_STREAK = 10
 const DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK = 1
 
+export type SuperRewardVideoSource = 'youtube' | 'local'
+
 export type SuperRewardVideoSetting = {
   id: string
+  source: SuperRewardVideoSource
   youtubeUrl: string
+  localVideoName: string
+  localVideoSizeBytes: number
   startSeconds: number
   durationSeconds: number
 }
@@ -223,18 +228,31 @@ function normalizeSuperRewardVideo(raw: unknown): SuperRewardVideoSetting | null
     return null
   }
 
-  const candidate = raw as Partial<SuperRewardVideoSetting>
+  const candidate = raw as Partial<SuperRewardVideoSetting> & {
+    source?: unknown
+    localVideoName?: unknown
+    localVideoSizeBytes?: unknown
+  }
   const id =
     typeof candidate.id === 'string' && candidate.id.trim() !== ''
       ? candidate.id
       : createSuperRewardVideoId()
+  const source = candidate.source === 'local' ? 'local' : 'youtube'
   const youtubeUrl = typeof candidate.youtubeUrl === 'string' ? candidate.youtubeUrl.trim() : ''
+  const localVideoName =
+    typeof candidate.localVideoName === 'string' ? candidate.localVideoName.trim() : ''
+  const localVideoSizeBytes = Number.isFinite(candidate.localVideoSizeBytes)
+    ? Math.max(0, Math.floor(Number(candidate.localVideoSizeBytes)))
+    : 0
   const startSeconds = clampTimestampSeconds(Number(candidate.startSeconds ?? 0))
   const durationSeconds = clampSuperRewardDurationSeconds(Number(candidate.durationSeconds))
 
   return {
     id,
+    source,
     youtubeUrl,
+    localVideoName,
+    localVideoSizeBytes,
     startSeconds,
     durationSeconds,
   }
@@ -284,7 +302,10 @@ function normalizeSuperRewardVideoSettings(
 export function createDefaultSuperRewardVideoSetting(): SuperRewardVideoSetting {
   return {
     id: createSuperRewardVideoId(),
+    source: 'youtube',
     youtubeUrl: '',
+    localVideoName: '',
+    localVideoSizeBytes: 0,
     startSeconds: 0,
     durationSeconds: DEFAULT_SUPER_REWARD_DURATION_SECONDS,
   }

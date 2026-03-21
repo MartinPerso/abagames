@@ -13,6 +13,7 @@ import {
 import {
   ALL_ALPHABET_LETTERS,
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  type SuperRewardVideoSource,
   type SuperRewardVideoSetting,
   answerPointerDelaySettingsRange,
   answerRevealDelaySettingsRange,
@@ -73,7 +74,21 @@ import {
   setStoredSpeechVoiceUri,
 } from '../../shared/settings/gameSettings'
 import { extractYouTubeVideoId } from '../../shared/rewards/superRewardVideo'
+import {
+  checkLocalRewardVideoCapacity,
+  cleanupUnusedStoredLocalRewardVideos,
+  deleteStoredLocalRewardVideo,
+  getTotalLocalRewardVideoBytes,
+  localRewardVideoLimits,
+  requestPersistentStorageIfAvailable,
+  setStoredLocalRewardVideoBlob,
+} from '../../shared/storage/localRewardVideoStore'
 import './SettingsPage.css'
+
+function formatBytesAsMegabytes(value: number): string {
+  const mb = value / (1024 * 1024)
+  return `${mb.toFixed(mb >= 100 ? 0 : 1)} MB`
+}
 
 export function SettingsPage() {
   const [searchParams] = useSearchParams()
@@ -147,6 +162,10 @@ export function SettingsPage() {
   const [superRewardVideos, setSuperRewardVideos] = useState<SuperRewardVideoSetting[]>(() =>
     getStoredSuperRewardVideos(),
   )
+  const [localVideoErrorById, setLocalVideoErrorById] = useState<Record<string, string>>({})
+  const [savingLocalVideoId, setSavingLocalVideoId] = useState<string | null>(null)
+  const [localVideoStorageBytes, setLocalVideoStorageBytes] = useState<number>(0)
+  const [isPersistentStorageGranted, setIsPersistentStorageGranted] = useState<boolean | null>(null)
   const [speechVoiceUri, setSpeechVoiceUri] = useState<string>(() => getStoredSpeechVoiceUri())
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([])
   const text = settingsTextByLanguage[language]
@@ -159,7 +178,10 @@ export function SettingsPage() {
     ? speechVoiceUri
     : ''
   const hasAtLeastOneValidSuperRewardVideo = superRewardVideos.some(
-    (video) => extractYouTubeVideoId(video.youtubeUrl) !== null,
+    (video) =>
+      video.source === 'local'
+        ? video.localVideoSizeBytes > 0
+        : extractYouTubeVideoId(video.youtubeUrl) !== null,
   )
 
   useEffect(() => {
@@ -190,6 +212,58 @@ export function SettingsPage() {
       synth.removeEventListener('voiceschanged', updateVoices)
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void requestPersistentStorageIfAvailable()
+      .then((isGranted) => {
+        if (cancelled) {
+          return
+        }
+
+        if (typeof isGranted === 'boolean') {
+          setIsPersistentStorageGranted(isGranted)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsPersistentStorageGranted(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const validLocalVideoIds = new Set(
+      superRewardVideos.filter((video) => video.source === 'local').map((video) => video.id),
+    )
+
+    void cleanupUnusedStoredLocalRewardVideos(validLocalVideoIds)
+      .catch(() => {
+        // Cleanup is best-effort for stale local files.
+      })
+      .finally(() => {
+        void getTotalLocalRewardVideoBytes()
+          .then((totalBytes) => {
+            if (!cancelled) {
+              setLocalVideoStorageBytes(totalBytes)
+            }
+          })
+          .catch(() => {
+            if (!cancelled) {
+              setLocalVideoStorageBytes(0)
+            }
+          })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [superRewardVideos])
 
   function handleLanguageChange(nextLanguage: Language) {
     setLanguage(nextLanguage)
@@ -337,8 +411,72 @@ export function SettingsPage() {
     setStoredLetterListeningSuperRewardFirstTryStreak(nextValue)
   }
 
+  function clearLocalVideoError(videoId: string) {
+    setLocalVideoErrorById((current) => {
+      if (!current[videoId]) {
+        return current
+      }
+
+      const next = { ...current }
+      delete next[videoId]
+      return next
+    })
+  }
+
+  function setLocalVideoError(videoId: string, errorMessage: string) {
+    setLocalVideoErrorById((current) => ({
+      ...current,
+      [videoId]: errorMessage,
+    }))
+  }
+
   function handleRemoveSuperRewardVideo(videoId: string) {
+    const targetVideo = superRewardVideos.find((video) => video.id === videoId)
+    if (targetVideo?.source === 'local') {
+      void deleteStoredLocalRewardVideo(videoId).catch(() => {
+        // No-op: if storage cleanup fails, the app still removes the entry.
+      })
+    }
+
+    clearLocalVideoError(videoId)
     persistSuperRewardVideos(superRewardVideos.filter((video) => video.id !== videoId))
+  }
+
+  function handleSuperRewardVideoSourceChange(videoId: string, source: SuperRewardVideoSource) {
+    const currentVideo = superRewardVideos.find((video) => video.id === videoId)
+    if (!currentVideo || currentVideo.source === source) {
+      return
+    }
+
+    if (currentVideo.source === 'local' && source === 'youtube') {
+      void deleteStoredLocalRewardVideo(videoId).catch(() => {
+        // Keep UI responsive even if local cleanup fails.
+      })
+    }
+
+    clearLocalVideoError(videoId)
+    persistSuperRewardVideos(
+      superRewardVideos.map((video) => {
+        if (video.id !== videoId) {
+          return video
+        }
+
+        if (source === 'youtube') {
+          return {
+            ...video,
+            source,
+            localVideoName: '',
+            localVideoSizeBytes: 0,
+          }
+        }
+
+        return {
+          ...video,
+          source,
+          youtubeUrl: '',
+        }
+      }),
+    )
   }
 
   function handleSuperRewardVideoUrlChange(videoId: string, youtubeUrl: string) {
@@ -384,6 +522,55 @@ export function SettingsPage() {
           : video,
       ),
     )
+  }
+
+  async function handleSuperRewardLocalVideoFileChange(
+    videoId: string,
+    selectedFile: File | null,
+  ): Promise<void> {
+    if (!selectedFile) {
+      return
+    }
+
+    setSavingLocalVideoId(videoId)
+    clearLocalVideoError(videoId)
+
+    try {
+      const isGranted = await requestPersistentStorageIfAvailable()
+      if (typeof isGranted === 'boolean') {
+        setIsPersistentStorageGranted(isGranted)
+      }
+
+      const capacity = await checkLocalRewardVideoCapacity(selectedFile.size, videoId)
+      if (!capacity.ok) {
+        if (capacity.reason === 'single-video-too-large') {
+          setLocalVideoError(videoId, text.superRewardLocalVideoTooLargeHint)
+        } else {
+          setLocalVideoError(videoId, text.superRewardLocalVideoTotalLimitHint)
+        }
+        return
+      }
+
+      await setStoredLocalRewardVideoBlob(videoId, selectedFile)
+      setLocalVideoStorageBytes(capacity.totalBytesAfterSave)
+      const latestVideos = getStoredSuperRewardVideos()
+      persistSuperRewardVideos(
+        latestVideos.map((video) =>
+          video.id === videoId
+            ? {
+                ...video,
+                source: 'local',
+                localVideoName: selectedFile.name,
+                localVideoSizeBytes: selectedFile.size,
+              }
+            : video,
+        ),
+      )
+    } catch {
+      setLocalVideoError(videoId, text.superRewardLocalVideoSaveErrorHint)
+    } finally {
+      setSavingLocalVideoId(null)
+    }
   }
 
   function handleLetterListeningLetterToggle(letter: string) {
@@ -458,6 +645,15 @@ export function SettingsPage() {
         <h2>{text.superRewardSectionTitle}</h2>
         <p className="settings-hint">{text.superRewardDescription}</p>
         <label className="field-label">{text.superRewardVideosLabel}</label>
+        <p className="settings-hint">
+          {`${text.superRewardLocalVideoStorageUsageLabel}: ${formatBytesAsMegabytes(localVideoStorageBytes)} / ${formatBytesAsMegabytes(localRewardVideoLimits.maxTotalBytes)}`}
+        </p>
+        {isPersistentStorageGranted === true ? (
+          <p className="settings-hint">{text.superRewardLocalVideoPersistenceGrantedHint}</p>
+        ) : null}
+        {isPersistentStorageGranted === false ? (
+          <p className="settings-hint">{text.superRewardLocalVideoPersistenceNotGrantedHint}</p>
+        ) : null}
         {superRewardVideos.length === 0 ? (
           <p className="settings-hint">{text.superRewardNoVideosHint}</p>
         ) : null}
@@ -465,20 +661,65 @@ export function SettingsPage() {
           {superRewardVideos.map((video) => {
             const hasUrl = video.youtubeUrl.trim().length > 0
             const hasValidYouTubeUrl = extractYouTubeVideoId(video.youtubeUrl) !== null
+            const hasStoredLocalVideo = video.localVideoSizeBytes > 0
+            const localErrorMessage = localVideoErrorById[video.id] ?? null
+            const localPickerLabel = hasStoredLocalVideo
+              ? text.superRewardLocalVideoReplaceLabel
+              : text.superRewardLocalVideoChooseLabel
             return (
               <div key={video.id} className="super-reward-item">
-                <label className="field-label super-reward-url">
-                  <span>{text.superRewardVideoUrlLabel}</span>
-                  <input
-                    type="text"
-                    className="settings-text-input"
-                    value={video.youtubeUrl}
-                    placeholder="https://www.youtube.com/watch?v=..."
+                <label className="field-label super-reward-source">
+                  <span>{text.superRewardVideoSourceLabel}</span>
+                  <select
+                    className="settings-select"
+                    value={video.source}
                     onChange={(event) =>
-                      handleSuperRewardVideoUrlChange(video.id, event.target.value)
+                      handleSuperRewardVideoSourceChange(
+                        video.id,
+                        event.target.value as SuperRewardVideoSource,
+                      )
                     }
-                  />
+                  >
+                    <option value="youtube">{text.superRewardVideoSourceYouTubeOption}</option>
+                    <option value="local">{text.superRewardVideoSourceLocalOption}</option>
+                  </select>
                 </label>
+
+                {video.source === 'youtube' ? (
+                  <label className="field-label super-reward-url">
+                    <span>{text.superRewardVideoUrlLabel}</span>
+                    <input
+                      type="text"
+                      className="settings-text-input"
+                      value={video.youtubeUrl}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      onChange={(event) =>
+                        handleSuperRewardVideoUrlChange(video.id, event.target.value)
+                      }
+                    />
+                  </label>
+                ) : (
+                  <label className="field-label super-reward-local-picker">
+                    <span>{text.superRewardLocalVideoLabel}</span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      className="settings-text-input super-reward-file-input"
+                      disabled={savingLocalVideoId === video.id}
+                      aria-label={localPickerLabel}
+                      onChange={(event) => {
+                        const selectedFile = event.target.files?.[0] ?? null
+                        void handleSuperRewardLocalVideoFileChange(video.id, selectedFile)
+                        event.currentTarget.value = ''
+                      }}
+                    />
+                    {hasStoredLocalVideo ? (
+                      <small className="settings-hint super-reward-local-meta">
+                        {`${video.localVideoName} (${formatBytesAsMegabytes(video.localVideoSizeBytes)})`}
+                      </small>
+                    ) : null}
+                  </label>
+                )}
 
                 <label className="field-label super-reward-number-field">
                   <span>{text.superRewardVideoStartLabel}</span>
@@ -515,8 +756,14 @@ export function SettingsPage() {
                   {text.superRewardRemoveVideoLabel}
                 </button>
 
-                {hasUrl && !hasValidYouTubeUrl ? (
+                {video.source === 'youtube' && hasUrl && !hasValidYouTubeUrl ? (
                   <p className="super-reward-invalid-hint">{text.superRewardInvalidVideoHint}</p>
+                ) : null}
+                {video.source === 'local' && !hasStoredLocalVideo ? (
+                  <p className="super-reward-invalid-hint">{text.superRewardLocalVideoMissingHint}</p>
+                ) : null}
+                {localErrorMessage ? (
+                  <p className="super-reward-invalid-hint">{localErrorMessage}</p>
                 ) : null}
               </div>
             )

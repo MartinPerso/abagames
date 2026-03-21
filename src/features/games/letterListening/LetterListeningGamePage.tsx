@@ -26,8 +26,12 @@ import {
   getStoredSuperRewardVideos,
 } from '../../../shared/settings/gameSettings'
 import { toPlayableSuperRewardVideo } from '../../../shared/rewards/superRewardVideo'
+import { getStoredLocalRewardVideoBlob } from '../../../shared/storage/localRewardVideoStore'
 import { createRound, isCorrectAnswer } from './gameLogic'
-import { SuperRewardVideoModal } from '../../../shared/ui/SuperRewardVideoModal'
+import {
+  SuperRewardVideoModal,
+  type SuperRewardVideoPlayback,
+} from '../../../shared/ui/SuperRewardVideoModal'
 import './LetterListeningGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -552,14 +556,16 @@ export function LetterListeningGamePage() {
   const [animateAnswerReveal, setAnimateAnswerReveal] = useState(false)
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
   const [wrongLetters, setWrongLetters] = useState<string[]>([])
-  const [activeSuperRewardEmbedUrl, setActiveSuperRewardEmbedUrl] = useState<string | null>(null)
-  const [activeSuperRewardIframeKey, setActiveSuperRewardIframeKey] = useState<string>('')
+  const [activeSuperRewardPlayback, setActiveSuperRewardPlayback] =
+    useState<SuperRewardVideoPlayback | null>(null)
   const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
   const timerRef = useRef<number | null>(null)
   const answerPointerTimerRef = useRef<number | null>(null)
   const answerRevealTimerRef = useRef<number | null>(null)
   const speechTimerRef = useRef<number | null>(null)
   const superRewardCloseTimerRef = useRef<number | null>(null)
+  const activeLocalRewardUrlRef = useRef<string | null>(null)
+  const superRewardLaunchTokenRef = useRef(0)
 
   function clearActiveTimer() {
     if (timerRef.current !== null) {
@@ -594,6 +600,15 @@ export function LetterListeningGamePage() {
       window.clearTimeout(superRewardCloseTimerRef.current)
       superRewardCloseTimerRef.current = null
     }
+  }
+
+  function clearActiveLocalRewardUrl() {
+    if (!activeLocalRewardUrlRef.current) {
+      return
+    }
+
+    URL.revokeObjectURL(activeLocalRewardUrlRef.current)
+    activeLocalRewardUrlRef.current = null
   }
 
   const stopSpeech = useCallback(() => {
@@ -716,6 +731,7 @@ export function LetterListeningGamePage() {
       clearAnswerRevealTimer()
       clearSpeechTimer()
       clearSuperRewardCloseTimer()
+      clearActiveLocalRewardUrl()
       stopSpeech()
     }
   }, [stopSpeech])
@@ -759,7 +775,9 @@ export function LetterListeningGamePage() {
 
   function moveToNextRound() {
     const nextIndex = roundIndex + 1
+    superRewardLaunchTokenRef.current += 1
     clearSuperRewardCloseTimer()
+    clearActiveLocalRewardUrl()
     setRoundIndex(nextIndex)
     setRound(createRound(nextIndex, getStoredLetterListeningAllowedLetters()))
     setFeedback('idle')
@@ -768,31 +786,69 @@ export function LetterListeningGamePage() {
     setShowAnswerPointer(false)
     setSelectedLetter(null)
     setWrongLetters([])
-    setActiveSuperRewardEmbedUrl(null)
-    setActiveSuperRewardIframeKey('')
+    setActiveSuperRewardPlayback(null)
   }
 
-  function launchSuperRewardVideo() {
+  async function launchSuperRewardVideo() {
     if (playableSuperRewardVideos.length === 0) {
       moveToNextRound()
       return
     }
 
+    const launchToken = superRewardLaunchTokenRef.current + 1
+    superRewardLaunchTokenRef.current = launchToken
     const chosenIndex = randomIntInclusive(0, playableSuperRewardVideos.length - 1)
     const chosenVideo = playableSuperRewardVideos[chosenIndex]
 
     clearSuperRewardCloseTimer()
-    setActiveSuperRewardEmbedUrl(chosenVideo.embedUrl)
-    setActiveSuperRewardIframeKey(`reward-${round.roundIndex}-${Date.now()}`)
-    superRewardCloseTimerRef.current = window.setTimeout(() => {
-      closeSuperRewardVideo()
-    }, chosenVideo.durationMs)
+    try {
+      if (chosenVideo.source === 'youtube') {
+        clearActiveLocalRewardUrl()
+        setActiveSuperRewardPlayback({
+          kind: 'youtube',
+          embedUrl: chosenVideo.embedUrl,
+          iframeKey: `reward-${round.roundIndex}-${Date.now()}`,
+        })
+      } else {
+        const storedBlob = await getStoredLocalRewardVideoBlob(chosenVideo.localVideoId)
+        if (!storedBlob) {
+          if (superRewardLaunchTokenRef.current === launchToken) {
+            moveToNextRound()
+          }
+          return
+        }
+
+        const objectUrl = URL.createObjectURL(storedBlob)
+        if (superRewardLaunchTokenRef.current !== launchToken) {
+          URL.revokeObjectURL(objectUrl)
+          return
+        }
+
+        clearActiveLocalRewardUrl()
+        activeLocalRewardUrlRef.current = objectUrl
+        setActiveSuperRewardPlayback({
+          kind: 'local',
+          videoKey: `reward-${round.roundIndex}-${Date.now()}`,
+          videoUrl: objectUrl,
+          startSeconds: chosenVideo.startSeconds,
+        })
+      }
+
+      superRewardCloseTimerRef.current = window.setTimeout(() => {
+        closeSuperRewardVideo()
+      }, chosenVideo.durationMs)
+    } catch {
+      if (superRewardLaunchTokenRef.current === launchToken) {
+        moveToNextRound()
+      }
+    }
   }
 
   function closeSuperRewardVideo() {
+    superRewardLaunchTokenRef.current += 1
     clearSuperRewardCloseTimer()
-    setActiveSuperRewardEmbedUrl(null)
-    setActiveSuperRewardIframeKey('')
+    clearActiveLocalRewardUrl()
+    setActiveSuperRewardPlayback(null)
     moveToNextRound()
   }
 
@@ -825,7 +881,7 @@ export function LetterListeningGamePage() {
         speakBravo()
         if (shouldOfferSuperReward) {
           setFirstTryCorrectStreak(0)
-          launchSuperRewardVideo()
+          void launchSuperRewardVideo()
           return
         }
         setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
@@ -866,7 +922,7 @@ export function LetterListeningGamePage() {
     } as CSSProperties
   }, [round.targetLetter])
   const shouldShowColoringReward =
-    feedback === 'correct' && activeSuperRewardEmbedUrl === null
+    feedback === 'correct' && activeSuperRewardPlayback === null
 
   function playSuccessJingle() {
     if (typeof window === 'undefined') {
@@ -1001,9 +1057,7 @@ export function LetterListeningGamePage() {
       </section>
 
       <SuperRewardVideoModal
-        isOpen={activeSuperRewardEmbedUrl !== null}
-        iframeKey={activeSuperRewardIframeKey}
-        embedUrl={activeSuperRewardEmbedUrl ?? ''}
+        playback={activeSuperRewardPlayback}
         title={superRewardText.modalTitle}
         closeLabel={superRewardText.closeLabel}
         tapToPlayLabel={superRewardText.tapToPlayLabel}

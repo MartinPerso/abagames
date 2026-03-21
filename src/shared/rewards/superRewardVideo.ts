@@ -1,15 +1,29 @@
 export type SuperRewardVideoInput = {
+  id: string
+  source: 'youtube' | 'local'
   youtubeUrl: string
   startSeconds: number
   durationSeconds: number
 }
 
-export type PlayableSuperRewardVideo = {
+type PlayableYouTubeSuperRewardVideo = {
+  source: 'youtube'
   videoId: string
   startSeconds: number
   durationMs: number
   embedUrl: string
 }
+
+type PlayableLocalSuperRewardVideo = {
+  source: 'local'
+  localVideoId: string
+  startSeconds: number
+  durationMs: number
+}
+
+export type PlayableSuperRewardVideo =
+  | PlayableYouTubeSuperRewardVideo
+  | PlayableLocalSuperRewardVideo
 
 const YOUTUBE_VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/
 const DEFAULT_DURATION_SECONDS = 15
@@ -108,15 +122,30 @@ export function createYouTubeEmbedUrl(videoId: string, startSeconds: number): st
 export function toPlayableSuperRewardVideo(
   video: SuperRewardVideoInput,
 ): PlayableSuperRewardVideo | null {
+  const startSeconds = sanitizeStartSeconds(video.startSeconds)
+  const durationSeconds = sanitizeDurationSeconds(video.durationSeconds)
+
+  if (video.source === 'local') {
+    const localVideoId = video.id.trim()
+    if (localVideoId === '') {
+      return null
+    }
+
+    return {
+      source: 'local',
+      localVideoId,
+      startSeconds,
+      durationMs: durationSeconds * 1000,
+    }
+  }
+
   const videoId = extractYouTubeVideoId(video.youtubeUrl)
   if (!videoId) {
     return null
   }
 
-  const startSeconds = sanitizeStartSeconds(video.startSeconds)
-  const durationSeconds = sanitizeDurationSeconds(video.durationSeconds)
-
   return {
+    source: 'youtube',
     videoId,
     startSeconds,
     durationMs: durationSeconds * 1000,
