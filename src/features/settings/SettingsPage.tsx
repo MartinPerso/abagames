@@ -179,9 +179,10 @@ export function SettingsPage() {
     : ''
   const hasAtLeastOneValidSuperRewardVideo = superRewardVideos.some(
     (video) =>
-      video.source === 'local'
+      video.enabled &&
+      (video.source === 'local'
         ? video.localVideoSizeBytes > 0
-        : extractYouTubeVideoId(video.youtubeUrl) !== null,
+        : extractYouTubeVideoId(video.youtubeUrl) !== null),
   )
 
   useEffect(() => {
@@ -487,6 +488,12 @@ export function SettingsPage() {
     )
   }
 
+  function handleSuperRewardVideoEnabledChange(videoId: string, enabled: boolean) {
+    persistSuperRewardVideos(
+      superRewardVideos.map((video) => (video.id === videoId ? { ...video, enabled } : video)),
+    )
+  }
+
   function handleSuperRewardVideoStartChange(videoId: string, startSecondsRaw: string) {
     const parsed = Number(startSecondsRaw)
     const startSeconds = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0
@@ -668,6 +675,16 @@ export function SettingsPage() {
               : text.superRewardLocalVideoChooseLabel
             return (
               <div key={video.id} className="super-reward-item">
+                <label className="toggle-row super-reward-enabled-toggle">
+                  <span>{text.superRewardVideoEnabledLabel}</span>
+                  <input
+                    type="checkbox"
+                    checked={video.enabled}
+                    onChange={(event) =>
+                      handleSuperRewardVideoEnabledChange(video.id, event.target.checked)
+                    }
+                  />
+                </label>
                 <label className="field-label super-reward-source">
                   <span>{text.superRewardVideoSourceLabel}</span>
                   <select

@@ -539,6 +539,7 @@ export function LetterListeningGamePage() {
   const superRewardEnabled = getStoredLetterListeningSuperRewardEnabled()
   const superRewardFirstTryStreakTarget = getStoredLetterListeningSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
+    .filter((video) => video.enabled)
     .map((video) => toPlayableSuperRewardVideo(video))
     .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
   const text = letterListeningGameTextByLanguage[language]

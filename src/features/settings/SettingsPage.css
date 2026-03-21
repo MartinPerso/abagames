@@ -185,6 +185,10 @@
   gap: 6px;
 }
 
+.super-reward-enabled-toggle {
+  grid-column: 1 / -1;
+}
+
 .super-reward-file-input {
   cursor: pointer;
 }

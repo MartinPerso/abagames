@@ -164,6 +164,7 @@ type SettingsText = {
   superRewardEnabledLabel: string
   superRewardFirstTryStreakLabel: string
   superRewardVideosLabel: string
+  superRewardVideoEnabledLabel: string
   superRewardVideoSourceLabel: string
   superRewardVideoSourceYouTubeOption: string
   superRewardVideoSourceLocalOption: string
@@ -214,6 +215,7 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     superRewardFirstTryStreakLabel:
       'Afficher la super récompense après (bonnes réponses consécutives au 1er essai)',
     superRewardVideosLabel: 'Vidéos',
+    superRewardVideoEnabledLabel: 'Activer cette vidéo',
     superRewardVideoSourceLabel: 'Source',
     superRewardVideoSourceYouTubeOption: 'YouTube',
     superRewardVideoSourceLocalOption: 'Appareil',
@@ -266,6 +268,7 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     superRewardFirstTryStreakLabel:
       'Show super reward after (consecutive first-try correct answers)',
     superRewardVideosLabel: 'Videos',
+    superRewardVideoEnabledLabel: 'Enable this video',
     superRewardVideoSourceLabel: 'Source',
     superRewardVideoSourceYouTubeOption: 'YouTube',
     superRewardVideoSourceLocalOption: 'Device',

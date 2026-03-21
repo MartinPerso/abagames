@@ -53,6 +53,7 @@ export type SuperRewardVideoSource = 'youtube' | 'local'
 
 export type SuperRewardVideoSetting = {
   id: string
+  enabled: boolean
   source: SuperRewardVideoSource
   youtubeUrl: string
   localVideoName: string
@@ -237,6 +238,7 @@ function normalizeSuperRewardVideo(raw: unknown): SuperRewardVideoSetting | null
     typeof candidate.id === 'string' && candidate.id.trim() !== ''
       ? candidate.id
       : createSuperRewardVideoId()
+  const enabled = typeof candidate.enabled === 'boolean' ? candidate.enabled : true
   const source = candidate.source === 'local' ? 'local' : 'youtube'
   const youtubeUrl = typeof candidate.youtubeUrl === 'string' ? candidate.youtubeUrl.trim() : ''
   const localVideoName =
@@ -249,6 +251,7 @@ function normalizeSuperRewardVideo(raw: unknown): SuperRewardVideoSetting | null
 
   return {
     id,
+    enabled,
     source,
     youtubeUrl,
     localVideoName,
@@ -302,6 +305,7 @@ function normalizeSuperRewardVideoSettings(
 export function createDefaultSuperRewardVideoSetting(): SuperRewardVideoSetting {
   return {
     id: createSuperRewardVideoId(),
+    enabled: true,
     source: 'youtube',
     youtubeUrl: '',
     localVideoName: '',

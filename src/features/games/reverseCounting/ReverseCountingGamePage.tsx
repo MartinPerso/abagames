@@ -228,6 +228,7 @@ export function ReverseCountingGamePage() {
   const superRewardEnabled = getStoredReverseCountingSuperRewardEnabled()
   const superRewardFirstTryStreakTarget = getStoredReverseCountingSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
+    .filter((video) => video.enabled)
     .map((video) => toPlayableSuperRewardVideo(video))
     .filter((video): video is NonNullable<ReturnType<typeof toPlayableSuperRewardVideo>> => video !== null)
   const text = inverseCountingGameTextByLanguage[language]
