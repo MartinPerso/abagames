@@ -49,6 +49,11 @@ export const letterListeningGameNameByLanguage: Record<Language, string> = {
   en: 'Letter Game',
 }
 
+export const groupsGameNameByLanguage: Record<Language, string> = {
+  fr: 'Jeu des Groupes',
+  en: 'Groups Game',
+}
+
 type CountingGameText = {
   answerLabel: string
   soundOn: string
@@ -87,6 +92,28 @@ export const inverseCountingGameTextByLanguage: Record<Language, InverseCounting
   },
   en: {
     answerLabel: 'Find the matching group',
+    bravoAlert: 'Great',
+    speechPrefix: 'The number ',
+    replayLabel: 'Play number again',
+  },
+}
+
+type GroupsGameText = {
+  answerLabel: string
+  bravoAlert: string
+  speechPrefix: string
+  replayLabel: string
+}
+
+export const groupsGameTextByLanguage: Record<Language, GroupsGameText> = {
+  fr: {
+    answerLabel: 'Touche le groupe qui a le bon nombre',
+    bravoAlert: 'Bravo',
+    speechPrefix: 'Le chiffre ',
+    replayLabel: 'Réécouter le chiffre',
+  },
+  en: {
+    answerLabel: 'Tap the group with the right number',
     bravoAlert: 'Great',
     speechPrefix: 'The number ',
     replayLabel: 'Play number again',
@@ -155,6 +182,14 @@ type SettingsText = {
   answerButtonsDelayLabel: string
   diceHintEnabledLabel: string
   reverseCountingMaxObjectsLabel: string
+  groupsCountLabel: string
+  groupsMaxObjectsLabel: string
+  groupsMinGapLabel: string
+  groupsMinGapHint: string
+  groupsItemModeLabel: string
+  groupsItemModeSameOption: string
+  groupsItemModeDifferentOption: string
+  groupsItemModeRandomOption: string
   letterListeningAllowedLettersLabel: string
   letterListeningAllLetters: string
   letterListeningNoLetters: string
@@ -204,6 +239,15 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     answerButtonsDelayLabel: "Afficher les réponses après (secondes)",
     diceHintEnabledLabel: 'Montrer un dé à côté du chiffre',
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
+    groupsCountLabel: 'Nombre de groupes proposés',
+    groupsMaxObjectsLabel: "Nombre d'objets maximum",
+    groupsMinGapLabel: 'Écart minimum entre les groupes',
+    groupsMinGapHint:
+      "L'écart est réduit automatiquement quand le nombre d'objets maximum ne permet pas de le respecter.",
+    groupsItemModeLabel: 'Véhicules des groupes',
+    groupsItemModeSameOption: 'Le même partout',
+    groupsItemModeDifferentOption: 'Un véhicule différent par groupe',
+    groupsItemModeRandomOption: 'Au hasard à chaque tour',
     letterListeningAllowedLettersLabel: 'Lettres possibles dans le jeu',
     letterListeningAllLetters: 'Toutes',
     letterListeningNoLetters: 'Aucune',
@@ -258,6 +302,15 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     answerButtonsDelayLabel: 'Show answer buttons after (seconds)',
     diceHintEnabledLabel: 'Show a die next to the number',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
+    groupsCountLabel: 'Number of groups shown',
+    groupsMaxObjectsLabel: 'Maximum number of objects',
+    groupsMinGapLabel: 'Minimum gap between groups',
+    groupsMinGapHint:
+      'The gap is reduced automatically when the maximum number of objects cannot accommodate it.',
+    groupsItemModeLabel: 'Vehicles in the groups',
+    groupsItemModeSameOption: 'Same everywhere',
+    groupsItemModeDifferentOption: 'A different vehicle per group',
+    groupsItemModeRandomOption: 'Random each round',
     letterListeningAllowedLettersLabel: 'Letters used in the game',
     letterListeningAllLetters: 'All',
     letterListeningNoLetters: 'None',

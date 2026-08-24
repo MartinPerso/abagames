@@ -225,6 +225,11 @@ All games should remain short, simple, and restartable.
 - React + TypeScript webapp scaffolded with Vite.
 - Home page with FR/EN language switch and entry to the first game.
 - First game implemented: count items from 1 to 5 (fire truck, police car, ambulance, boat, plane).
+- Quantity game: hear a target number, pick the matching group among three.
+- Groups game: hear a target number, pick the matching group among 2 to 4 groups.
+  Configurable number of groups, maximum count, minimum gap between quantities, and whether the groups
+  show the same vehicle or one vehicle each.
+- Letter game: hear a letter, pick it, then color it with a finger.
 - Immediate reinforcement on correct answers: short animation + characteristic reward sounds.
 - Stateless behavior: leaving a game and returning starts a fresh session.
 - French is the default language when no language has been selected yet.

@@ -9,6 +9,7 @@ import {
   parseLanguageParam,
   setStoredLanguage,
   settingsTextByLanguage,
+  groupsGameNameByLanguage,
 } from '../../shared/i18n/i18n'
 import {
   ALL_ALPHABET_LETTERS,
@@ -45,6 +46,16 @@ import {
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredSpeechVoiceUri,
+  getStoredGroupsAnswerPointerDelaySeconds,
+  getStoredGroupsAnswerPointerEnabled,
+  getStoredGroupsAnswerRevealDelaySeconds,
+  getStoredGroupsCount,
+  getStoredGroupsDiceHintEnabled,
+  getStoredGroupsItemMode,
+  getStoredGroupsMaxObjects,
+  getStoredGroupsMinGap,
+  getStoredGroupsSuperRewardEnabled,
+  getStoredGroupsSuperRewardFirstTryStreak,
   reverseCountingSettingsRange,
   superRewardDurationSettingsRange,
   superRewardFirstTryStreakSettingsRange,
@@ -72,7 +83,21 @@ import {
   setStoredReverseCountingDiceHintEnabled,
   setStoredReverseCountingMaxObjects,
   setStoredSpeechVoiceUri,
+  setStoredGroupsAnswerPointerDelaySeconds,
+  setStoredGroupsAnswerPointerEnabled,
+  setStoredGroupsAnswerRevealDelaySeconds,
+  setStoredGroupsCount,
+  setStoredGroupsDiceHintEnabled,
+  setStoredGroupsItemMode,
+  setStoredGroupsMaxObjects,
+  setStoredGroupsMinGap,
+  setStoredGroupsSuperRewardEnabled,
+  setStoredGroupsSuperRewardFirstTryStreak,
+  groupsCountSettingsRange,
+  groupsMinGapSettingsRange,
+  groupsSettingsRange,
 } from '../../shared/settings/gameSettings'
+import type { GroupsItemMode } from '../games/groups/gameLogic'
 import { extractYouTubeVideoId } from '../../shared/rewards/superRewardVideo'
 import {
   checkLocalRewardVideoCapacity,
@@ -141,6 +166,29 @@ export function SettingsPage() {
   const [reverseSuperRewardFirstTryStreak, setReverseSuperRewardFirstTryStreak] = useState<number>(
     () => getStoredReverseCountingSuperRewardFirstTryStreak(),
   )
+  const [groupsCount, setGroupsCount] = useState<number>(() => getStoredGroupsCount())
+  const [groupsMaxObjects, setGroupsMaxObjects] = useState<number>(() =>
+    getStoredGroupsMaxObjects(),
+  )
+  const [groupsMinGap, setGroupsMinGap] = useState<number>(() => getStoredGroupsMinGap())
+  const [groupsItemMode, setGroupsItemMode] = useState<GroupsItemMode>(() =>
+    getStoredGroupsItemMode(),
+  )
+  const [groupsAnswerPointerEnabled, setGroupsAnswerPointerEnabled] = useState<boolean>(() =>
+    getStoredGroupsAnswerPointerEnabled(),
+  )
+  const [groupsDiceHintEnabled, setGroupsDiceHintEnabled] = useState<boolean>(() =>
+    getStoredGroupsDiceHintEnabled(),
+  )
+  const [groupsAnswerPointerDelaySeconds, setGroupsAnswerPointerDelaySeconds] =
+    useState<number>(() => getStoredGroupsAnswerPointerDelaySeconds())
+  const [groupsAnswerRevealDelaySeconds, setGroupsAnswerRevealDelaySeconds] =
+    useState<number>(() => getStoredGroupsAnswerRevealDelaySeconds())
+  const [groupsSuperRewardEnabled, setGroupsSuperRewardEnabled] = useState<boolean>(() =>
+    getStoredGroupsSuperRewardEnabled(),
+  )
+  const [groupsSuperRewardFirstTryStreak, setGroupsSuperRewardFirstTryStreak] =
+    useState<number>(() => getStoredGroupsSuperRewardFirstTryStreak())
   const [letterAnswerPointerEnabled, setLetterAnswerPointerEnabled] = useState<boolean>(() =>
     getStoredLetterListeningAnswerPointerEnabled(),
   )
@@ -405,6 +453,56 @@ export function SettingsPage() {
   function handleReverseSuperRewardFirstTryStreakChange(nextValue: number) {
     setReverseSuperRewardFirstTryStreak(nextValue)
     setStoredReverseCountingSuperRewardFirstTryStreak(nextValue)
+  }
+
+  function handleGroupsCountChange(nextValue: number) {
+    setGroupsCount(nextValue)
+    setStoredGroupsCount(nextValue)
+  }
+
+  function handleGroupsMaxObjectsChange(nextValue: number) {
+    setGroupsMaxObjects(nextValue)
+    setStoredGroupsMaxObjects(nextValue)
+  }
+
+  function handleGroupsMinGapChange(nextValue: number) {
+    setGroupsMinGap(nextValue)
+    setStoredGroupsMinGap(nextValue)
+  }
+
+  function handleGroupsItemModeChange(nextValue: GroupsItemMode) {
+    setGroupsItemMode(nextValue)
+    setStoredGroupsItemMode(nextValue)
+  }
+
+  function handleGroupsAnswerPointerEnabledChange(enabled: boolean) {
+    setGroupsAnswerPointerEnabled(enabled)
+    setStoredGroupsAnswerPointerEnabled(enabled)
+  }
+
+  function handleGroupsDiceHintEnabledChange(enabled: boolean) {
+    setGroupsDiceHintEnabled(enabled)
+    setStoredGroupsDiceHintEnabled(enabled)
+  }
+
+  function handleGroupsAnswerPointerDelayChange(nextValue: number) {
+    setGroupsAnswerPointerDelaySeconds(nextValue)
+    setStoredGroupsAnswerPointerDelaySeconds(nextValue)
+  }
+
+  function handleGroupsAnswerRevealDelayChange(nextValue: number) {
+    setGroupsAnswerRevealDelaySeconds(nextValue)
+    setStoredGroupsAnswerRevealDelaySeconds(nextValue)
+  }
+
+  function handleGroupsSuperRewardEnabledChange(enabled: boolean) {
+    setGroupsSuperRewardEnabled(enabled)
+    setStoredGroupsSuperRewardEnabled(enabled)
+  }
+
+  function handleGroupsSuperRewardFirstTryStreakChange(nextValue: number) {
+    setGroupsSuperRewardFirstTryStreak(nextValue)
+    setStoredGroupsSuperRewardFirstTryStreak(nextValue)
   }
 
   function handleLetterSuperRewardFirstTryStreakChange(nextValue: number) {
@@ -1021,6 +1119,156 @@ export function SettingsPage() {
             onChange={(event) => handleReverseAnswerRevealDelayChange(Number(event.target.value))}
           />
           <output htmlFor="reverse-answer-reveal-delay">{reverseAnswerRevealDelaySeconds}s</output>
+        </div>
+      </section>
+
+      <section className="settings-card">
+        <h2>{groupsGameNameByLanguage[language]}</h2>
+        <label className="field-label" htmlFor="groups-count">
+          {text.groupsCountLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="groups-count"
+            type="range"
+            min={groupsCountSettingsRange.min}
+            max={groupsCountSettingsRange.max}
+            value={groupsCount}
+            onChange={(event) => handleGroupsCountChange(Number(event.target.value))}
+          />
+          <output htmlFor="groups-count">{groupsCount}</output>
+        </div>
+
+        <label className="field-label" htmlFor="groups-max-objects">
+          {text.groupsMaxObjectsLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="groups-max-objects"
+            type="range"
+            min={groupsSettingsRange.min}
+            max={groupsSettingsRange.max}
+            value={groupsMaxObjects}
+            onChange={(event) => handleGroupsMaxObjectsChange(Number(event.target.value))}
+          />
+          <output htmlFor="groups-max-objects">{groupsMaxObjects}</output>
+        </div>
+
+        <label className="field-label" htmlFor="groups-min-gap">
+          {text.groupsMinGapLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="groups-min-gap"
+            type="range"
+            min={groupsMinGapSettingsRange.min}
+            max={groupsMinGapSettingsRange.max}
+            value={groupsMinGap}
+            onChange={(event) => handleGroupsMinGapChange(Number(event.target.value))}
+          />
+          <output htmlFor="groups-min-gap">{groupsMinGap}</output>
+        </div>
+        <p className="settings-hint">{text.groupsMinGapHint}</p>
+
+        <label className="field-label" htmlFor="groups-item-mode">
+          {text.groupsItemModeLabel}
+        </label>
+        <select
+          id="groups-item-mode"
+          className="settings-select"
+          value={groupsItemMode}
+          onChange={(event) =>
+            handleGroupsItemModeChange(event.target.value as GroupsItemMode)
+          }
+        >
+          <option value="same">{text.groupsItemModeSameOption}</option>
+          <option value="different">{text.groupsItemModeDifferentOption}</option>
+          <option value="random">{text.groupsItemModeRandomOption}</option>
+        </select>
+
+        <label className="toggle-row" htmlFor="groups-answer-pointer-enabled">
+          <span>{text.answerPointerEnabledLabel}</span>
+          <input
+            id="groups-answer-pointer-enabled"
+            type="checkbox"
+            checked={groupsAnswerPointerEnabled}
+            onChange={(event) => handleGroupsAnswerPointerEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="toggle-row" htmlFor="groups-dice-hint-enabled">
+          <span>{text.diceHintEnabledLabel}</span>
+          <input
+            id="groups-dice-hint-enabled"
+            type="checkbox"
+            checked={groupsDiceHintEnabled}
+            onChange={(event) => handleGroupsDiceHintEnabledChange(event.target.checked)}
+          />
+        </label>
+
+        <label className="toggle-row" htmlFor="groups-super-reward-enabled">
+          <span>{text.superRewardEnabledLabel}</span>
+          <input
+            id="groups-super-reward-enabled"
+            type="checkbox"
+            checked={groupsSuperRewardEnabled}
+            onChange={(event) => handleGroupsSuperRewardEnabledChange(event.target.checked)}
+            disabled={!hasAtLeastOneValidSuperRewardVideo}
+          />
+        </label>
+        <label className="field-label" htmlFor="groups-super-reward-first-try-streak">
+          {text.superRewardFirstTryStreakLabel}
+        </label>
+        <div className={`range-row ${!groupsSuperRewardEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="groups-super-reward-first-try-streak"
+            type="range"
+            min={superRewardFirstTryStreakSettingsRange.min}
+            max={superRewardFirstTryStreakSettingsRange.max}
+            value={groupsSuperRewardFirstTryStreak}
+            onChange={(event) =>
+              handleGroupsSuperRewardFirstTryStreakChange(Number(event.target.value))
+            }
+            disabled={!groupsSuperRewardEnabled || !hasAtLeastOneValidSuperRewardVideo}
+          />
+          <output htmlFor="groups-super-reward-first-try-streak">
+            {groupsSuperRewardFirstTryStreak}
+          </output>
+        </div>
+
+        <label className="field-label" htmlFor="groups-answer-pointer-delay">
+          {text.answerPointerDelayLabel}
+        </label>
+        <div className={`range-row ${!groupsAnswerPointerEnabled ? 'is-disabled' : ''}`}>
+          <input
+            id="groups-answer-pointer-delay"
+            type="range"
+            min={answerPointerDelaySettingsRange.min}
+            max={answerPointerDelaySettingsRange.max}
+            value={groupsAnswerPointerDelaySeconds}
+            onChange={(event) => handleGroupsAnswerPointerDelayChange(Number(event.target.value))}
+            disabled={!groupsAnswerPointerEnabled}
+          />
+          <output htmlFor="groups-answer-pointer-delay">
+            {groupsAnswerPointerDelaySeconds}s
+          </output>
+        </div>
+
+        <label className="field-label" htmlFor="groups-answer-reveal-delay">
+          {text.answerButtonsDelayLabel}
+        </label>
+        <div className="range-row">
+          <input
+            id="groups-answer-reveal-delay"
+            type="range"
+            min={answerRevealDelaySettingsRange.min}
+            max={answerRevealDelaySettingsRange.max}
+            value={groupsAnswerRevealDelaySeconds}
+            onChange={(event) => handleGroupsAnswerRevealDelayChange(Number(event.target.value))}
+          />
+          <output htmlFor="groups-answer-reveal-delay">
+            {groupsAnswerRevealDelaySeconds}s
+          </output>
         </div>
       </section>
 
