@@ -14,6 +14,7 @@ import {
 import {
   ALL_ALPHABET_LETTERS,
   COUNTING_HINT_FIRST_DELAY_NEVER_SECONDS,
+  type ColoringRewardMode,
   type SuperRewardVideoSource,
   type SuperRewardVideoSetting,
   answerPointerDelaySettingsRange,
@@ -25,6 +26,7 @@ import {
   countingSettingsRange,
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
+  getStoredCountingColoringRewardMode,
   getStoredCountingDiceHintEnabled,
   getStoredCountingHintFirstDelaySeconds,
   getStoredCountingHintRepeatDelaySeconds,
@@ -43,12 +45,14 @@ import {
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingAnswerRevealDelaySeconds,
+  getStoredReverseCountingColoringRewardMode,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredSpeechVoiceUri,
   getStoredGroupsAnswerPointerDelaySeconds,
   getStoredGroupsAnswerPointerEnabled,
   getStoredGroupsAnswerRevealDelaySeconds,
+  getStoredGroupsColoringRewardMode,
   getStoredGroupsCount,
   getStoredGroupsDiceHintEnabled,
   getStoredGroupsItemMode,
@@ -62,6 +66,7 @@ import {
   setStoredCountingAnswerPointerDelaySeconds,
   setStoredCountingAnswerPointerEnabled,
   setStoredCountingAnswerRevealDelaySeconds,
+  setStoredCountingColoringRewardMode,
   setStoredCountingDiceHintEnabled,
   setStoredCountingHintFirstDelaySeconds,
   setStoredCountingHintRepeatDelaySeconds,
@@ -80,6 +85,7 @@ import {
   setStoredReverseCountingAnswerPointerDelaySeconds,
   setStoredReverseCountingAnswerPointerEnabled,
   setStoredReverseCountingAnswerRevealDelaySeconds,
+  setStoredReverseCountingColoringRewardMode,
   setStoredReverseCountingDiceHintEnabled,
   setStoredReverseCountingMaxObjects,
   setStoredSpeechVoiceUri,
@@ -87,6 +93,7 @@ import {
   setStoredGroupsAnswerPointerEnabled,
   setStoredGroupsAnswerRevealDelaySeconds,
   setStoredGroupsCount,
+  setStoredGroupsColoringRewardMode,
   setStoredGroupsDiceHintEnabled,
   setStoredGroupsItemMode,
   setStoredGroupsMaxObjects,
@@ -129,6 +136,9 @@ export function SettingsPage() {
   const [countingDiceHintEnabled, setCountingDiceHintEnabled] = useState<boolean>(() =>
     getStoredCountingDiceHintEnabled(),
   )
+  const [countingColoringRewardMode, setCountingColoringRewardMode] = useState<ColoringRewardMode>(
+    () => getStoredCountingColoringRewardMode(),
+  )
   const [countingAnswerPointerDelaySeconds, setCountingAnswerPointerDelaySeconds] =
     useState<number>(() => getStoredCountingAnswerPointerDelaySeconds())
   const [countingAnswerRevealDelaySeconds, setCountingAnswerRevealDelaySeconds] = useState<number>(
@@ -153,6 +163,9 @@ export function SettingsPage() {
   )
   const [reverseDiceHintEnabled, setReverseDiceHintEnabled] = useState<boolean>(() =>
     getStoredReverseCountingDiceHintEnabled(),
+  )
+  const [reverseColoringRewardMode, setReverseColoringRewardMode] = useState<ColoringRewardMode>(
+    () => getStoredReverseCountingColoringRewardMode(),
   )
   const [reverseAnswerPointerDelaySeconds, setReverseAnswerPointerDelaySeconds] = useState<number>(
     () => getStoredReverseCountingAnswerPointerDelaySeconds(),
@@ -179,6 +192,9 @@ export function SettingsPage() {
   )
   const [groupsDiceHintEnabled, setGroupsDiceHintEnabled] = useState<boolean>(() =>
     getStoredGroupsDiceHintEnabled(),
+  )
+  const [groupsColoringRewardMode, setGroupsColoringRewardMode] = useState<ColoringRewardMode>(
+    () => getStoredGroupsColoringRewardMode(),
   )
   const [groupsAnswerPointerDelaySeconds, setGroupsAnswerPointerDelaySeconds] =
     useState<number>(() => getStoredGroupsAnswerPointerDelaySeconds())
@@ -361,6 +377,11 @@ export function SettingsPage() {
     setStoredCountingDiceHintEnabled(enabled)
   }
 
+  function handleCountingColoringRewardModeChange(mode: ColoringRewardMode) {
+    setCountingColoringRewardMode(mode)
+    setStoredCountingColoringRewardMode(mode)
+  }
+
   function handleCountingAnswerPointerDelayChange(nextValue: number) {
     setCountingAnswerPointerDelaySeconds(nextValue)
     setStoredCountingAnswerPointerDelaySeconds(nextValue)
@@ -399,6 +420,11 @@ export function SettingsPage() {
   function handleReverseDiceHintEnabledChange(enabled: boolean) {
     setReverseDiceHintEnabled(enabled)
     setStoredReverseCountingDiceHintEnabled(enabled)
+  }
+
+  function handleReverseColoringRewardModeChange(mode: ColoringRewardMode) {
+    setReverseColoringRewardMode(mode)
+    setStoredReverseCountingColoringRewardMode(mode)
   }
 
   function handleReverseAnswerPointerDelayChange(nextValue: number) {
@@ -483,6 +509,11 @@ export function SettingsPage() {
   function handleGroupsDiceHintEnabledChange(enabled: boolean) {
     setGroupsDiceHintEnabled(enabled)
     setStoredGroupsDiceHintEnabled(enabled)
+  }
+
+  function handleGroupsColoringRewardModeChange(mode: ColoringRewardMode) {
+    setGroupsColoringRewardMode(mode)
+    setStoredGroupsColoringRewardMode(mode)
   }
 
   function handleGroupsAnswerPointerDelayChange(nextValue: number) {
@@ -959,6 +990,22 @@ export function SettingsPage() {
           />
         </label>
 
+        <label className="field-label" htmlFor="counting-coloring-reward-mode">
+          {text.coloringRewardModeLabel}
+        </label>
+        <select
+          id="counting-coloring-reward-mode"
+          className="settings-select"
+          value={countingColoringRewardMode}
+          onChange={(event) =>
+            handleCountingColoringRewardModeChange(event.target.value as ColoringRewardMode)
+          }
+        >
+          <option value="off">{text.coloringRewardModeOffOption}</option>
+          <option value="after">{text.coloringRewardModeAfterOption}</option>
+          <option value="instead">{text.coloringRewardModeInsteadOption}</option>
+        </select>
+
         <label className="toggle-row" htmlFor="counting-super-reward-enabled">
           <span>{text.superRewardEnabledLabel}</span>
           <input
@@ -1059,6 +1106,22 @@ export function SettingsPage() {
             onChange={(event) => handleReverseDiceHintEnabledChange(event.target.checked)}
           />
         </label>
+
+        <label className="field-label" htmlFor="reverse-coloring-reward-mode">
+          {text.coloringRewardModeLabel}
+        </label>
+        <select
+          id="reverse-coloring-reward-mode"
+          className="settings-select"
+          value={reverseColoringRewardMode}
+          onChange={(event) =>
+            handleReverseColoringRewardModeChange(event.target.value as ColoringRewardMode)
+          }
+        >
+          <option value="off">{text.coloringRewardModeOffOption}</option>
+          <option value="after">{text.coloringRewardModeAfterOption}</option>
+          <option value="instead">{text.coloringRewardModeInsteadOption}</option>
+        </select>
 
         <label className="toggle-row" htmlFor="reverse-super-reward-enabled">
           <span>{text.superRewardEnabledLabel}</span>
@@ -1205,6 +1268,22 @@ export function SettingsPage() {
             onChange={(event) => handleGroupsDiceHintEnabledChange(event.target.checked)}
           />
         </label>
+
+        <label className="field-label" htmlFor="groups-coloring-reward-mode">
+          {text.coloringRewardModeLabel}
+        </label>
+        <select
+          id="groups-coloring-reward-mode"
+          className="settings-select"
+          value={groupsColoringRewardMode}
+          onChange={(event) =>
+            handleGroupsColoringRewardModeChange(event.target.value as ColoringRewardMode)
+          }
+        >
+          <option value="off">{text.coloringRewardModeOffOption}</option>
+          <option value="after">{text.coloringRewardModeAfterOption}</option>
+          <option value="instead">{text.coloringRewardModeInsteadOption}</option>
+        </select>
 
         <label className="toggle-row" htmlFor="groups-super-reward-enabled">
           <span>{text.superRewardEnabledLabel}</span>

@@ -58,6 +58,7 @@ type CountingGameText = {
   answerLabel: string
   soundOn: string
   soundOff: string
+  coloringInstructionLabel: string
   bravoAlert: string
 }
 
@@ -66,18 +67,21 @@ export const countingGameTextByLanguage: Record<Language, CountingGameText> = {
     answerLabel: 'Choisis un chiffre',
     soundOn: 'Son activé',
     soundOff: 'Son coupé',
+    coloringInstructionLabel: 'Colorie le chiffre avec ton doigt',
     bravoAlert: 'Bravo',
   },
   en: {
     answerLabel: 'Choose a number',
     soundOn: 'Sound on',
     soundOff: 'Sound off',
+    coloringInstructionLabel: 'Color the number with your finger',
     bravoAlert: 'Great',
   },
 }
 
 type InverseCountingGameText = {
   answerLabel: string
+  coloringInstructionLabel: string
   bravoAlert: string
   speechPrefix: string
   replayLabel: string
@@ -86,12 +90,14 @@ type InverseCountingGameText = {
 export const inverseCountingGameTextByLanguage: Record<Language, InverseCountingGameText> = {
   fr: {
     answerLabel: 'Trouve le bon groupe',
+    coloringInstructionLabel: 'Colorie le chiffre avec ton doigt',
     bravoAlert: 'Bravo',
     speechPrefix: 'Le chiffre ',
     replayLabel: 'Réécouter le chiffre',
   },
   en: {
     answerLabel: 'Find the matching group',
+    coloringInstructionLabel: 'Color the number with your finger',
     bravoAlert: 'Great',
     speechPrefix: 'The number ',
     replayLabel: 'Play number again',
@@ -100,6 +106,7 @@ export const inverseCountingGameTextByLanguage: Record<Language, InverseCounting
 
 type GroupsGameText = {
   answerLabel: string
+  coloringInstructionLabel: string
   bravoAlert: string
   speechPrefix: string
   replayLabel: string
@@ -108,12 +115,14 @@ type GroupsGameText = {
 export const groupsGameTextByLanguage: Record<Language, GroupsGameText> = {
   fr: {
     answerLabel: 'Touche le groupe qui a le bon nombre',
+    coloringInstructionLabel: 'Colorie le chiffre avec ton doigt',
     bravoAlert: 'Bravo',
     speechPrefix: 'Le chiffre ',
     replayLabel: 'Réécouter le chiffre',
   },
   en: {
     answerLabel: 'Tap the group with the right number',
+    coloringInstructionLabel: 'Color the number with your finger',
     bravoAlert: 'Great',
     speechPrefix: 'The number ',
     replayLabel: 'Play number again',
@@ -181,6 +190,10 @@ type SettingsText = {
   answerPointerDelayLabel: string
   answerButtonsDelayLabel: string
   diceHintEnabledLabel: string
+  coloringRewardModeLabel: string
+  coloringRewardModeOffOption: string
+  coloringRewardModeAfterOption: string
+  coloringRewardModeInsteadOption: string
   reverseCountingMaxObjectsLabel: string
   groupsCountLabel: string
   groupsMaxObjectsLabel: string
@@ -238,6 +251,10 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     answerPointerDelayLabel: "Montrer l'animation après (secondes)",
     answerButtonsDelayLabel: "Afficher les réponses après (secondes)",
     diceHintEnabledLabel: 'Montrer un dé à côté du chiffre',
+    coloringRewardModeLabel: 'Récompense après une bonne réponse',
+    coloringRewardModeOffOption: 'Objets animés seulement',
+    coloringRewardModeAfterOption: 'Objets animés puis coloriage du chiffre',
+    coloringRewardModeInsteadOption: 'Coloriage du chiffre seulement',
     reverseCountingMaxObjectsLabel: "Nombre d'objets maximum",
     groupsCountLabel: 'Nombre de groupes proposés',
     groupsMaxObjectsLabel: "Nombre d'objets maximum",
@@ -301,6 +318,10 @@ export const settingsTextByLanguage: Record<Language, SettingsText> = {
     answerPointerDelayLabel: 'Show the animation after (seconds)',
     answerButtonsDelayLabel: 'Show answer buttons after (seconds)',
     diceHintEnabledLabel: 'Show a die next to the number',
+    coloringRewardModeLabel: 'Reward after a correct answer',
+    coloringRewardModeOffOption: 'Animated objects only',
+    coloringRewardModeAfterOption: 'Animated objects then number coloring',
+    coloringRewardModeInsteadOption: 'Number coloring only',
     reverseCountingMaxObjectsLabel: 'Maximum number of objects',
     groupsCountLabel: 'Number of groups shown',
     groupsMaxObjectsLabel: 'Maximum number of objects',

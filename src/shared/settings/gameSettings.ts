@@ -55,6 +55,10 @@ const GROUPS_DICE_HINT_ENABLED_STORAGE_KEY = 'abagames-groups-dice-hint-enabled'
 const GROUPS_SUPER_REWARD_ENABLED_STORAGE_KEY = 'abagames-groups-super-reward-enabled'
 const GROUPS_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY =
   'abagames-groups-super-reward-first-try-streak'
+const COUNTING_COLORING_REWARD_MODE_STORAGE_KEY = 'abagames-counting-coloring-reward-mode'
+const REVERSE_COUNTING_COLORING_REWARD_MODE_STORAGE_KEY =
+  'abagames-reverse-counting-coloring-reward-mode'
+const GROUPS_COLORING_REWARD_MODE_STORAGE_KEY = 'abagames-groups-coloring-reward-mode'
 
 export const ALL_ALPHABET_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const MAX_SUPER_REWARD_VIDEOS = 30
@@ -66,6 +70,16 @@ const MAX_SUPER_REWARD_FIRST_TRY_STREAK = 10
 const DEFAULT_SUPER_REWARD_FIRST_TRY_STREAK = 1
 
 export type SuperRewardVideoSource = 'youtube' | 'local'
+
+/**
+ * How the digit coloring activity is offered as a reward for a correct answer:
+ * - `off`: only the animated objects and their sound,
+ * - `after`: the animation and its sound, then the coloring,
+ * - `instead`: the coloring alone, without the animation nor its sound.
+ */
+export type ColoringRewardMode = 'off' | 'after' | 'instead'
+
+export const COLORING_REWARD_MODES: ColoringRewardMode[] = ['off', 'after', 'instead']
 
 export type SuperRewardVideoSetting = {
   id: string
@@ -873,6 +887,47 @@ export function getStoredGroupsSuperRewardEnabled(): boolean {
 
 export function setStoredGroupsSuperRewardEnabled(enabled: boolean): void {
   setStoredBoolean(GROUPS_SUPER_REWARD_ENABLED_STORAGE_KEY, enabled)
+}
+
+function getStoredColoringRewardMode(key: string): ColoringRewardMode {
+  if (typeof window === 'undefined') {
+    return 'off'
+  }
+
+  const raw = window.localStorage.getItem(key)
+  return COLORING_REWARD_MODES.find((mode) => mode === raw) ?? 'off'
+}
+
+function setStoredColoringRewardMode(key: string, mode: ColoringRewardMode): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(key, mode)
+}
+
+export function getStoredCountingColoringRewardMode(): ColoringRewardMode {
+  return getStoredColoringRewardMode(COUNTING_COLORING_REWARD_MODE_STORAGE_KEY)
+}
+
+export function setStoredCountingColoringRewardMode(mode: ColoringRewardMode): void {
+  setStoredColoringRewardMode(COUNTING_COLORING_REWARD_MODE_STORAGE_KEY, mode)
+}
+
+export function getStoredReverseCountingColoringRewardMode(): ColoringRewardMode {
+  return getStoredColoringRewardMode(REVERSE_COUNTING_COLORING_REWARD_MODE_STORAGE_KEY)
+}
+
+export function setStoredReverseCountingColoringRewardMode(mode: ColoringRewardMode): void {
+  setStoredColoringRewardMode(REVERSE_COUNTING_COLORING_REWARD_MODE_STORAGE_KEY, mode)
+}
+
+export function getStoredGroupsColoringRewardMode(): ColoringRewardMode {
+  return getStoredColoringRewardMode(GROUPS_COLORING_REWARD_MODE_STORAGE_KEY)
+}
+
+export function setStoredGroupsColoringRewardMode(mode: ColoringRewardMode): void {
+  setStoredColoringRewardMode(GROUPS_COLORING_REWARD_MODE_STORAGE_KEY, mode)
 }
 
 export function getStoredLetterListeningSuperRewardEnabled(): boolean {

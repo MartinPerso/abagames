@@ -7,7 +7,12 @@ import {
   parseLanguageParam,
   superRewardUiTextByLanguage,
 } from '../../../shared/i18n/i18n'
-import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
+import {
+  playRewardSfx,
+  playSuccessJingle,
+  triggerLightVibration,
+  REWARD_SFX_DURATION_MS,
+} from '../../../shared/audio/sfx'
 import {
   type CountingItem,
   createRound,
@@ -22,6 +27,7 @@ import {
   getStoredCountingAnswerPointerDelaySeconds,
   getStoredCountingAnswerPointerEnabled,
   getStoredCountingAnswerRevealDelaySeconds,
+  getStoredCountingColoringRewardMode,
   getStoredCountingDiceHintEnabled,
   getStoredCountingMaxObjects,
   getStoredCountingSuperRewardFirstTryStreak,
@@ -35,6 +41,10 @@ import {
   SuperRewardVideoModal,
   type SuperRewardVideoPlayback,
 } from '../../../shared/ui/SuperRewardVideoModal'
+import {
+  COLORING_REWARD_RESULT_VISIBLE_MS,
+  GlyphColoringReward,
+} from '../../../shared/ui/GlyphColoringReward'
 import './CountingGamePage.css'
 
 type FeedbackState = 'idle' | 'correct' | 'wrong'
@@ -242,6 +252,7 @@ export function CountingGamePage() {
   const answerPointerDelayMs = getStoredCountingAnswerPointerDelaySeconds() * 1000
   const answerRevealDelayMs = getStoredCountingAnswerRevealDelaySeconds() * 1000
   const diceHintEnabled = getStoredCountingDiceHintEnabled()
+  const coloringRewardMode = getStoredCountingColoringRewardMode()
   const superRewardEnabled = getStoredCountingSuperRewardEnabled()
   const superRewardFirstTryStreakTarget = getStoredCountingSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
@@ -264,6 +275,7 @@ export function CountingGamePage() {
   const [animateAnswerReveal, setAnimateAnswerReveal] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [wrongAnswers, setWrongAnswers] = useState<number[]>([])
+  const [isColoringRewardActive, setIsColoringRewardActive] = useState(false)
   const [activeSuperRewardPlayback, setActiveSuperRewardPlayback] =
     useState<SuperRewardVideoPlayback | null>(null)
   const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
@@ -531,6 +543,7 @@ export function CountingGamePage() {
     setShowAnswerPointer(false)
     setSelectedAnswer(null)
     setWrongAnswers([])
+    setIsColoringRewardActive(false)
     setActiveSuperRewardPlayback(null)
   }
 
@@ -622,18 +635,30 @@ export function CountingGamePage() {
       clearAnswerPointerTimer()
       answerTimerRef.current = window.setTimeout(() => {
         answerTimerRef.current = null
-        setConfettiParticles(createConfettiParticles(400))
         setFeedback('correct')
-        playRewardSfx(round.item)
         speakBravo()
+        // The flying objects and their sound are skipped when the coloring replaces them.
+        if (shouldOfferSuperReward || coloringRewardMode !== 'instead') {
+          setConfettiParticles(createConfettiParticles(400))
+          playRewardSfx(round.item)
+        }
         if (shouldOfferSuperReward) {
           setFirstTryCorrectStreak(0)
           void launchSuperRewardVideo()
           return
         }
         setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
+        if (coloringRewardMode === 'instead') {
+          setIsColoringRewardActive(true)
+          return
+        }
         answerTimerRef.current = window.setTimeout(() => {
           answerTimerRef.current = null
+          if (coloringRewardMode === 'after') {
+            setConfettiParticles([])
+            setIsColoringRewardActive(true)
+            return
+          }
           moveToNextRound()
         }, REWARD_SFX_DURATION_MS)
       }, SUCCESS_SEQUENCE_DELAY_MS)
@@ -649,12 +674,28 @@ export function CountingGamePage() {
       setFeedback('idle')
     }, 700)
   }
+
+  function handleColoringRewardCompleted() {
+    clearAnswerTimer()
+    setConfettiParticles(createConfettiParticles(400))
+    playSuccessJingle()
+    triggerLightVibration()
+    speakBravo()
+    answerTimerRef.current = window.setTimeout(() => {
+      answerTimerRef.current = null
+      moveToNextRound()
+    }, COLORING_REWARD_RESULT_VISIBLE_MS)
+  }
+
+  // The objects only fly away when the coloring is not the sole reward.
+  const isObjectCelebrationActive =
+    feedback === 'correct' && !isColoringRewardActive && coloringRewardMode !== 'instead'
   const celebrationMotions = useMemo(() => {
-    if (feedback !== 'correct') {
+    if (!isObjectCelebrationActive) {
       return []
     }
     return createCelebrationMotions(round.count)
-  }, [feedback, round.count])
+  }, [isObjectCelebrationActive, round.count])
 
   return (
     <main className="app-shell counting-page">
@@ -669,33 +710,45 @@ export function CountingGamePage() {
 
       <div className="question-content">
         <section className="counting-stage" aria-label={itemLabels[round.item]}>
-          <div
-            className={`${sceneClassByItem[round.item]} ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-          >
-            {itemPositions.map((position, index) => {
-              const isHinting = feedback !== 'correct' && activeHintSpriteIndex === index
-              return (
-                <div
-                  key={`${round.roundIndex}-${round.item}-${index}`}
-                  className={`item-sprite ${feedback === 'correct' ? 'is-celebrating' : ''} ${isHinting ? 'is-hinting' : ''}`}
-                  style={{
-                    left: `${position.left}%`,
-                    top: `${position.top}%`,
-                    width: `${position.size}%`,
-                    height: `${position.size}%`,
-                    zIndex: isHinting ? 8 : undefined,
-                    animationDuration:
-                      feedback === 'correct' ? `${REWARD_SFX_DURATION_MS}ms` : undefined,
-                    ...(feedback === 'correct' ? celebrationMotions[index] : {}),
-                  }}
-                  aria-hidden="true"
-                >
-                  <img src={imageByItem[round.item]} alt="" className="item-image" />
-                </div>
-              )
-            })}
-          </div>
-          {feedback === 'correct' && confettiParticles.length > 0 ? (
+          {isColoringRewardActive ? (
+            <div className="counting-coloring">
+              <p className="counting-coloring-label">{text.coloringInstructionLabel}</p>
+              <GlyphColoringReward
+                glyph={String(round.count)}
+                instructionLabel={text.coloringInstructionLabel}
+                onComplete={handleColoringRewardCompleted}
+              />
+            </div>
+          ) : (
+            <div
+              className={`${sceneClassByItem[round.item]} ${isObjectCelebrationActive ? 'is-celebrating' : ''}`}
+            >
+              {itemPositions.map((position, index) => {
+                const isHinting = feedback !== 'correct' && activeHintSpriteIndex === index
+                return (
+                  <div
+                    key={`${round.roundIndex}-${round.item}-${index}`}
+                    className={`item-sprite ${isObjectCelebrationActive ? 'is-celebrating' : ''} ${isHinting ? 'is-hinting' : ''}`}
+                    style={{
+                      left: `${position.left}%`,
+                      top: `${position.top}%`,
+                      width: `${position.size}%`,
+                      height: `${position.size}%`,
+                      zIndex: isHinting ? 8 : undefined,
+                      animationDuration: isObjectCelebrationActive
+                        ? `${REWARD_SFX_DURATION_MS}ms`
+                        : undefined,
+                      ...(isObjectCelebrationActive ? celebrationMotions[index] : {}),
+                    }}
+                    aria-hidden="true"
+                  >
+                    <img src={imageByItem[round.item]} alt="" className="item-image" />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {confettiParticles.length > 0 ? (
             <div className="micro-confetti" aria-hidden="true">
               {confettiParticles.map((particle) => {
                 const style = {

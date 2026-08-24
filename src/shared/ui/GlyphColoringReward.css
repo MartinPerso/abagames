@@ -1,0 +1,73 @@
+.glyph-reward {
+  --glyph-reward-progress-height: 12px;
+  /* Progress bar plus the gap above it, kept out of the square stage. */
+  --glyph-reward-progress-row: calc(var(--glyph-reward-progress-height) + 10px);
+  container-type: size;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/*
+ * The stage stays square and fits the room the game page leaves: container units measure
+ * both axes of `.glyph-reward` (minus the progress bar row). Browsers without container
+ * units keep the viewport-based fallback declared just above each container-unit rule.
+ */
+.glyph-reward-stage {
+  flex: none;
+  width: min(100%, 360px, 46vh);
+  width: min(100cqw, calc(100cqh - var(--glyph-reward-progress-row)), 360px);
+  aspect-ratio: 1 / 1;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.54);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.72),
+    0 10px 26px rgba(18, 38, 58, 0.12);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.glyph-reward-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.reward-brush-stroke {
+  fill: none;
+  stroke: #ff7f50;
+  stroke-width: 19;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glyph-reward-progress {
+  flex: none;
+  width: min(100%, 360px, 46vh);
+  width: min(100cqw, calc(100cqh - var(--glyph-reward-progress-row)), 360px);
+  height: var(--glyph-reward-progress-height);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(18, 38, 58, 0.12);
+}
+
+.glyph-reward-progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f97316, #facc15, #7ed957);
+  transition: width 0.08s linear;
+}
+
+@media (max-width: 760px) {
+  .glyph-reward {
+    --glyph-reward-progress-height: 10px;
+  }
+}

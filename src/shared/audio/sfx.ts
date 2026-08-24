@@ -52,3 +52,48 @@ export function playRewardSfx(item: CountingItem): void {
     stopTimer = null
   }, REWARD_SFX_DURATION_MS)
 }
+
+export function playSuccessJingle(): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const AudioContextCtor = window.AudioContext
+  if (!AudioContextCtor) {
+    return
+  }
+
+  const context = new AudioContextCtor()
+  const now = context.currentTime
+  const notes = [659.25, 783.99, 987.77]
+
+  notes.forEach((frequency, index) => {
+    const osc = context.createOscillator()
+    const gain = context.createGain()
+    const start = now + index * 0.09
+    const end = start + 0.16
+
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(frequency, start)
+    gain.gain.setValueAtTime(0.0001, start)
+    gain.gain.exponentialRampToValueAtTime(0.14, start + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.0001, end)
+
+    osc.connect(gain)
+    gain.connect(context.destination)
+    osc.start(start)
+    osc.stop(end)
+  })
+
+  window.setTimeout(() => {
+    void context.close()
+  }, 500)
+}
+
+export function triggerLightVibration(): void {
+  if (typeof navigator === 'undefined' || !('vibrate' in navigator)) {
+    return
+  }
+
+  navigator.vibrate(24)
+}

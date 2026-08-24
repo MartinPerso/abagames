@@ -8,11 +8,17 @@ import {
   quantitySpeechLabelByLanguage,
   superRewardUiTextByLanguage,
 } from '../../../shared/i18n/i18n'
-import { playRewardSfx, REWARD_SFX_DURATION_MS } from '../../../shared/audio/sfx'
+import {
+  playRewardSfx,
+  playSuccessJingle,
+  triggerLightVibration,
+  REWARD_SFX_DURATION_MS,
+} from '../../../shared/audio/sfx'
 import {
   getStoredReverseCountingAnswerPointerDelaySeconds,
   getStoredReverseCountingAnswerPointerEnabled,
   getStoredReverseCountingAnswerRevealDelaySeconds,
+  getStoredReverseCountingColoringRewardMode,
   getStoredReverseCountingDiceHintEnabled,
   getStoredReverseCountingMaxObjects,
   getStoredReverseCountingSuperRewardFirstTryStreak,
@@ -27,6 +33,10 @@ import {
   SuperRewardVideoModal,
   type SuperRewardVideoPlayback,
 } from '../../../shared/ui/SuperRewardVideoModal'
+import {
+  COLORING_REWARD_RESULT_VISIBLE_MS,
+  GlyphColoringReward,
+} from '../../../shared/ui/GlyphColoringReward'
 import {
   type CountingItem,
   createRound,
@@ -225,6 +235,7 @@ export function ReverseCountingGamePage() {
   const answerPointerDelayMs = getStoredReverseCountingAnswerPointerDelaySeconds() * 1000
   const answerRevealDelayMs = getStoredReverseCountingAnswerRevealDelaySeconds() * 1000
   const diceHintEnabled = getStoredReverseCountingDiceHintEnabled()
+  const coloringRewardMode = getStoredReverseCountingColoringRewardMode()
   const superRewardEnabled = getStoredReverseCountingSuperRewardEnabled()
   const superRewardFirstTryStreakTarget = getStoredReverseCountingSuperRewardFirstTryStreak()
   const playableSuperRewardVideos = getStoredSuperRewardVideos()
@@ -245,6 +256,7 @@ export function ReverseCountingGamePage() {
   const [animateChoiceReveal, setAnimateChoiceReveal] = useState(false)
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
   const [wrongChoiceIds, setWrongChoiceIds] = useState<string[]>([])
+  const [isColoringRewardActive, setIsColoringRewardActive] = useState(false)
   const [activeSuperRewardPlayback, setActiveSuperRewardPlayback] =
     useState<SuperRewardVideoPlayback | null>(null)
   const [firstTryCorrectStreak, setFirstTryCorrectStreak] = useState(0)
@@ -471,6 +483,7 @@ export function ReverseCountingGamePage() {
     setShowAnswerPointer(false)
     setSelectedChoiceId(null)
     setWrongChoiceIds([])
+    setIsColoringRewardActive(false)
     setActiveSuperRewardPlayback(null)
   }
 
@@ -566,20 +579,32 @@ export function ReverseCountingGamePage() {
 
       timerRef.current = window.setTimeout(() => {
         timerRef.current = null
-        setConfettiParticles(createConfettiParticles(400))
         setFeedback('correct')
-        if (correctChoice) {
-          playRewardSfx(correctChoice.item)
-        }
         speakBravo()
+        // The flying number and the object sound are skipped when the coloring replaces them.
+        if (shouldOfferSuperReward || coloringRewardMode !== 'instead') {
+          setConfettiParticles(createConfettiParticles(400))
+          if (correctChoice) {
+            playRewardSfx(correctChoice.item)
+          }
+        }
         if (shouldOfferSuperReward) {
           setFirstTryCorrectStreak(0)
           void launchSuperRewardVideo()
           return
         }
         setFirstTryCorrectStreak(nextFirstTryCorrectStreak)
+        if (coloringRewardMode === 'instead') {
+          setIsColoringRewardActive(true)
+          return
+        }
         timerRef.current = window.setTimeout(() => {
           timerRef.current = null
+          if (coloringRewardMode === 'after') {
+            setConfettiParticles([])
+            setIsColoringRewardActive(true)
+            return
+          }
           moveToNextRound()
         }, REWARD_SFX_DURATION_MS)
       }, SUCCESS_SEQUENCE_DELAY_MS)
@@ -595,6 +620,22 @@ export function ReverseCountingGamePage() {
       setFeedback('idle')
     }, 700)
   }
+
+  function handleColoringRewardCompleted() {
+    clearActiveTimer()
+    setConfettiParticles(createConfettiParticles(400))
+    playSuccessJingle()
+    triggerLightVibration()
+    speakBravo()
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
+      moveToNextRound()
+    }, COLORING_REWARD_RESULT_VISIBLE_MS)
+  }
+
+  // The target number only flies away when the coloring is not the sole reward.
+  const isTargetCelebrationActive =
+    feedback === 'correct' && !isColoringRewardActive && coloringRewardMode !== 'instead'
   const targetToneStyle = useMemo<CSSProperties>(() => {
     const index = (round.targetCount - 1) % targetTonePalette.length
     const tone = targetTonePalette[index]
@@ -604,7 +645,7 @@ export function ReverseCountingGamePage() {
     } as CSSProperties
   }, [round.targetCount])
   const targetCelebrationStyle = useMemo<CSSProperties>(() => {
-    if (feedback !== 'correct') {
+    if (!isTargetCelebrationActive) {
       return {}
     }
     const motion = createTargetCelebrationMotion()
@@ -614,7 +655,7 @@ export function ReverseCountingGamePage() {
       animationName: motion.animationName,
       animationTimingFunction: motion.animationTimingFunction,
     } as CSSProperties
-  }, [feedback])
+  }, [isTargetCelebrationActive])
 
   const positionsByChoice = useMemo(() => {
     const map = new Map<string, ItemPosition[]>()
@@ -636,16 +677,28 @@ export function ReverseCountingGamePage() {
       </header>
 
       <section className="target-section" aria-live="polite" style={targetToneStyle}>
-        <p className="target-label">{text.answerLabel}</p>
-        <p
-          className={`target-number ${feedback === 'correct' ? 'is-celebrating' : ''}`}
-          style={targetCelebrationStyle}
-        >
-          <span className="target-number-content">
-            <span>{round.targetCount}</span>
-            {diceHintEnabled ? <DiceHint value={round.targetCount} className="target-dice-hint" /> : null}
-          </span>
+        <p className="target-label">
+          {isColoringRewardActive ? text.coloringInstructionLabel : text.answerLabel}
         </p>
+        {isColoringRewardActive ? (
+          <GlyphColoringReward
+            glyph={String(round.targetCount)}
+            instructionLabel={text.coloringInstructionLabel}
+            onComplete={handleColoringRewardCompleted}
+          />
+        ) : (
+          <p
+            className={`target-number ${isTargetCelebrationActive ? 'is-celebrating' : ''}`}
+            style={targetCelebrationStyle}
+          >
+            <span className="target-number-content">
+              <span>{round.targetCount}</span>
+              {diceHintEnabled ? (
+                <DiceHint value={round.targetCount} className="target-dice-hint" />
+              ) : null}
+            </span>
+          </p>
+        )}
         {feedback !== 'correct' ? (
           <button
             type="button"
@@ -704,7 +757,7 @@ export function ReverseCountingGamePage() {
             </button>
           )
         })}
-        {feedback === 'correct' && confettiParticles.length > 0 ? (
+        {confettiParticles.length > 0 ? (
           <div className="micro-confetti" aria-hidden="true">
             {confettiParticles.map((particle) => {
               const style = {

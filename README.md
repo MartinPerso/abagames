@@ -231,6 +231,7 @@ All games should remain short, simple, and restartable.
   show the same vehicle or one vehicle each.
 - Letter game: hear a letter, pick it, then color it with a finger.
 - Immediate reinforcement on correct answers: short animation + characteristic reward sounds.
+- Optional coloring reward: the number, quantity and groups games can offer a finger-coloring of the answered digit, either after the animated objects or instead of them (per-game setting).
 - Stateless behavior: leaving a game and returning starts a fresh session.
 - French is the default language when no language has been selected yet.
 
