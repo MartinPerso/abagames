@@ -74,7 +74,8 @@
 }
 
 .target-dice-hint {
-  --dice-size: 0.26em;
+  font-size: 0.26em;
+  --dice-size: 1em;
 }
 
 .target-number.is-celebrating {
