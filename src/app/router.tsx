@@ -2,6 +2,7 @@ import { createHashRouter } from 'react-router-dom'
 import { HomePage } from '../features/home/HomePage'
 import { CountingGamePage } from '../features/games/counting/CountingGamePage'
 import { ReverseCountingGamePage } from '../features/games/reverseCounting/ReverseCountingGamePage'
+import { GroupsGamePage } from '../features/games/groups/GroupsGamePage'
 import { LetterListeningGamePage } from '../features/games/letterListening/LetterListeningGamePage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 
@@ -17,6 +18,10 @@ export const router = createHashRouter([
   {
     path: '/games/reverse-counting',
     element: <ReverseCountingGamePage />,
+  },
+  {
+    path: '/games/groups',
+    element: <GroupsGamePage />,
   },
   {
     path: '/games/letter-listening',

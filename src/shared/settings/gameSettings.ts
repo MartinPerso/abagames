@@ -1,3 +1,5 @@
+import type { GroupsItemMode } from '../../features/games/groups/gameLogic'
+
 const COUNTING_MAX_OBJECTS_STORAGE_KEY = 'abagames-counting-max-objects'
 const REVERSE_COUNTING_MAX_OBJECTS_STORAGE_KEY = 'abagames-reverse-counting-max-objects'
 const LETTER_LISTENING_ALLOWED_LETTERS_STORAGE_KEY = 'abagames-letter-listening-allowed-letters'
@@ -39,6 +41,20 @@ const REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY =
   'abagames-reverse-counting-super-reward-enabled'
 const LETTER_LISTENING_SUPER_REWARD_ENABLED_STORAGE_KEY =
   'abagames-letter-listening-super-reward-enabled'
+const GROUPS_COUNT_STORAGE_KEY = 'abagames-groups-count'
+const GROUPS_MAX_OBJECTS_STORAGE_KEY = 'abagames-groups-max-objects'
+const GROUPS_MIN_GAP_STORAGE_KEY = 'abagames-groups-min-gap'
+const GROUPS_ITEM_MODE_STORAGE_KEY = 'abagames-groups-item-mode'
+const GROUPS_ANSWER_POINTER_ENABLED_STORAGE_KEY =
+  'abagames-groups-answer-pointer-enabled'
+const GROUPS_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-groups-answer-pointer-delay-seconds'
+const GROUPS_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY =
+  'abagames-groups-answer-reveal-delay-seconds'
+const GROUPS_DICE_HINT_ENABLED_STORAGE_KEY = 'abagames-groups-dice-hint-enabled'
+const GROUPS_SUPER_REWARD_ENABLED_STORAGE_KEY = 'abagames-groups-super-reward-enabled'
+const GROUPS_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY =
+  'abagames-groups-super-reward-first-try-streak'
 
 export const ALL_ALPHABET_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const MAX_SUPER_REWARD_VIDEOS = 30
@@ -81,6 +97,16 @@ const DEFAULT_ANSWER_POINTER_DELAY_SECONDS = 10
 const MIN_ANSWER_REVEAL_DELAY_SECONDS = 0
 const MAX_ANSWER_REVEAL_DELAY_SECONDS = 10
 const DEFAULT_ANSWER_REVEAL_DELAY_SECONDS = 2
+const MIN_GROUPS_COUNT = 2
+const MAX_GROUPS_COUNT = 4
+const DEFAULT_GROUPS_COUNT = 2
+const MIN_GROUPS_MAX_OBJECTS = 2
+const MAX_GROUPS_MAX_OBJECTS = 10
+const DEFAULT_GROUPS_MAX_OBJECTS = 5
+const MIN_GROUPS_MIN_GAP = 1
+const MAX_GROUPS_MIN_GAP = 3
+const DEFAULT_GROUPS_MIN_GAP = 1
+const DEFAULT_GROUPS_ITEM_MODE: GroupsItemMode = 'same'
 
 function clampCountingMaxObjects(value: number): number {
   return Math.max(MIN_COUNTING_MAX_OBJECTS, Math.min(MAX_COUNTING_MAX_OBJECTS, value))
@@ -91,6 +117,18 @@ function clampReverseCountingMaxObjects(value: number): number {
     MIN_REVERSE_COUNTING_MAX_OBJECTS,
     Math.min(MAX_REVERSE_COUNTING_MAX_OBJECTS, value),
   )
+}
+
+function clampGroupsCount(value: number): number {
+  return Math.max(MIN_GROUPS_COUNT, Math.min(MAX_GROUPS_COUNT, value))
+}
+
+function clampGroupsMaxObjects(value: number): number {
+  return Math.max(MIN_GROUPS_MAX_OBJECTS, Math.min(MAX_GROUPS_MAX_OBJECTS, value))
+}
+
+function clampGroupsMinGap(value: number): number {
+  return Math.max(MIN_GROUPS_MIN_GAP, Math.min(MAX_GROUPS_MIN_GAP, value))
 }
 
 function clampCountingHintFirstDelaySeconds(value: number): number {
@@ -397,6 +435,129 @@ export const reverseCountingSettingsRange = {
   defaultValue: DEFAULT_REVERSE_COUNTING_MAX_OBJECTS,
 }
 
+export function getStoredGroupsCount(): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_GROUPS_COUNT
+  }
+
+  const raw = window.localStorage.getItem(GROUPS_COUNT_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_GROUPS_COUNT
+  }
+  const parsed = Number(raw)
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_GROUPS_COUNT
+  }
+
+  return clampGroupsCount(Math.floor(parsed))
+}
+
+export function setStoredGroupsCount(nextValue: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(GROUPS_COUNT_STORAGE_KEY, String(clampGroupsCount(nextValue)))
+}
+
+export function getStoredGroupsMaxObjects(): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_GROUPS_MAX_OBJECTS
+  }
+
+  const raw = window.localStorage.getItem(GROUPS_MAX_OBJECTS_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_GROUPS_MAX_OBJECTS
+  }
+  const parsed = Number(raw)
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_GROUPS_MAX_OBJECTS
+  }
+
+  return clampGroupsMaxObjects(Math.floor(parsed))
+}
+
+export function setStoredGroupsMaxObjects(nextValue: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(
+    GROUPS_MAX_OBJECTS_STORAGE_KEY,
+    String(clampGroupsMaxObjects(nextValue)),
+  )
+}
+
+export function getStoredGroupsMinGap(): number {
+  if (typeof window === 'undefined') {
+    return DEFAULT_GROUPS_MIN_GAP
+  }
+
+  const raw = window.localStorage.getItem(GROUPS_MIN_GAP_STORAGE_KEY)
+  if (raw === null) {
+    return DEFAULT_GROUPS_MIN_GAP
+  }
+  const parsed = Number(raw)
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_GROUPS_MIN_GAP
+  }
+
+  return clampGroupsMinGap(Math.floor(parsed))
+}
+
+export function setStoredGroupsMinGap(nextValue: number): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(
+    GROUPS_MIN_GAP_STORAGE_KEY,
+    String(clampGroupsMinGap(nextValue)),
+  )
+}
+
+export function getStoredGroupsItemMode(): GroupsItemMode {
+  if (typeof window === 'undefined') {
+    return DEFAULT_GROUPS_ITEM_MODE
+  }
+
+  const raw = window.localStorage.getItem(GROUPS_ITEM_MODE_STORAGE_KEY)
+  if (raw === 'same' || raw === 'different' || raw === 'random') {
+    return raw
+  }
+
+  return DEFAULT_GROUPS_ITEM_MODE
+}
+
+export function setStoredGroupsItemMode(nextValue: GroupsItemMode): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(GROUPS_ITEM_MODE_STORAGE_KEY, nextValue)
+}
+
+export const groupsCountSettingsRange = {
+  min: MIN_GROUPS_COUNT,
+  max: MAX_GROUPS_COUNT,
+  defaultValue: DEFAULT_GROUPS_COUNT,
+}
+
+export const groupsSettingsRange = {
+  min: MIN_GROUPS_MAX_OBJECTS,
+  max: MAX_GROUPS_MAX_OBJECTS,
+  defaultValue: DEFAULT_GROUPS_MAX_OBJECTS,
+}
+
+export const groupsMinGapSettingsRange = {
+  min: MIN_GROUPS_MIN_GAP,
+  max: MAX_GROUPS_MIN_GAP,
+  defaultValue: DEFAULT_GROUPS_MIN_GAP,
+}
+
 export function getStoredCountingHintFirstDelaySeconds(): number {
   if (typeof window === 'undefined') {
     return DEFAULT_COUNTING_HINT_FIRST_DELAY_SECONDS
@@ -495,6 +656,14 @@ export function setStoredReverseCountingAnswerPointerEnabled(enabled: boolean): 
   setStoredBoolean(REVERSE_COUNTING_ANSWER_POINTER_ENABLED_STORAGE_KEY, enabled)
 }
 
+export function getStoredGroupsAnswerPointerEnabled(): boolean {
+  return getStoredBoolean(GROUPS_ANSWER_POINTER_ENABLED_STORAGE_KEY, true)
+}
+
+export function setStoredGroupsAnswerPointerEnabled(enabled: boolean): void {
+  setStoredBoolean(GROUPS_ANSWER_POINTER_ENABLED_STORAGE_KEY, enabled)
+}
+
 export function getStoredLetterListeningAnswerPointerEnabled(): boolean {
   return getStoredBoolean(LETTER_LISTENING_ANSWER_POINTER_ENABLED_STORAGE_KEY, true)
 }
@@ -519,6 +688,14 @@ export function setStoredReverseCountingDiceHintEnabled(enabled: boolean): void 
   setStoredBoolean(REVERSE_COUNTING_DICE_HINT_ENABLED_STORAGE_KEY, enabled)
 }
 
+export function getStoredGroupsDiceHintEnabled(): boolean {
+  return getStoredBoolean(GROUPS_DICE_HINT_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredGroupsDiceHintEnabled(enabled: boolean): void {
+  setStoredBoolean(GROUPS_DICE_HINT_ENABLED_STORAGE_KEY, enabled)
+}
+
 export function getStoredCountingAnswerPointerDelaySeconds(): number {
   return getStoredDelaySeconds(COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY)
 }
@@ -533,6 +710,14 @@ export function getStoredReverseCountingAnswerPointerDelaySeconds(): number {
 
 export function setStoredReverseCountingAnswerPointerDelaySeconds(value: number): void {
   setStoredDelaySeconds(REVERSE_COUNTING_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredGroupsAnswerPointerDelaySeconds(): number {
+  return getStoredDelaySeconds(GROUPS_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredGroupsAnswerPointerDelaySeconds(value: number): void {
+  setStoredDelaySeconds(GROUPS_ANSWER_POINTER_DELAY_SECONDS_STORAGE_KEY, value)
 }
 
 export function getStoredLetterListeningAnswerPointerDelaySeconds(): number {
@@ -557,6 +742,14 @@ export function getStoredReverseCountingAnswerRevealDelaySeconds(): number {
 
 export function setStoredReverseCountingAnswerRevealDelaySeconds(value: number): void {
   setStoredAnswerRevealDelaySeconds(REVERSE_COUNTING_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY, value)
+}
+
+export function getStoredGroupsAnswerRevealDelaySeconds(): number {
+  return getStoredAnswerRevealDelaySeconds(GROUPS_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY)
+}
+
+export function setStoredGroupsAnswerRevealDelaySeconds(value: number): void {
+  setStoredAnswerRevealDelaySeconds(GROUPS_ANSWER_REVEAL_DELAY_SECONDS_STORAGE_KEY, value)
 }
 
 export function getStoredLetterListeningAnswerRevealDelaySeconds(): number {
@@ -632,6 +825,19 @@ export function setStoredReverseCountingSuperRewardFirstTryStreak(value: number)
   )
 }
 
+export function getStoredGroupsSuperRewardFirstTryStreak(): number {
+  return getStoredSuperRewardFirstTryStreakByKey(
+    GROUPS_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+  )
+}
+
+export function setStoredGroupsSuperRewardFirstTryStreak(value: number): void {
+  setStoredSuperRewardFirstTryStreakByKey(
+    GROUPS_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
+    value,
+  )
+}
+
 export function getStoredLetterListeningSuperRewardFirstTryStreak(): number {
   return getStoredSuperRewardFirstTryStreakByKey(
     LETTER_LISTENING_SUPER_REWARD_FIRST_TRY_STREAK_STORAGE_KEY,
@@ -659,6 +865,14 @@ export function getStoredReverseCountingSuperRewardEnabled(): boolean {
 
 export function setStoredReverseCountingSuperRewardEnabled(enabled: boolean): void {
   setStoredBoolean(REVERSE_COUNTING_SUPER_REWARD_ENABLED_STORAGE_KEY, enabled)
+}
+
+export function getStoredGroupsSuperRewardEnabled(): boolean {
+  return getStoredBoolean(GROUPS_SUPER_REWARD_ENABLED_STORAGE_KEY, false)
+}
+
+export function setStoredGroupsSuperRewardEnabled(enabled: boolean): void {
+  setStoredBoolean(GROUPS_SUPER_REWARD_ENABLED_STORAGE_KEY, enabled)
 }
 
 export function getStoredLetterListeningSuperRewardEnabled(): boolean {

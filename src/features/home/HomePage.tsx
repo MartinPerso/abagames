@@ -7,6 +7,7 @@ import {
   letterListeningGameNameByLanguage,
   parseLanguageParam,
   setStoredLanguage,
+  groupsGameNameByLanguage,
 } from '../../shared/i18n/i18n'
 import './HomePage.css'
 
@@ -78,6 +79,30 @@ export function HomePage() {
               to={`/games/reverse-counting?lang=${language}`}
               className="primary-button"
               aria-label={inverseCountingGameNameByLanguage[language]}
+            >
+              <span aria-hidden="true">▶</span>
+            </Link>
+          </div>
+        </article>
+
+        <article className="game-card game-card-groups">
+          <div className="game-card-head">
+            <h2 className="game-title">{groupsGameNameByLanguage[language]}</h2>
+            <p className="game-pictogram" aria-hidden="true">
+              ●● ●●●
+            </p>
+          </div>
+          <div className="game-card-body">
+            <img
+              src={`${assetsBaseUrl}/boat.svg`}
+              alt=""
+              className="home-illustration"
+              aria-hidden="true"
+            />
+            <Link
+              to={`/games/groups?lang=${language}`}
+              className="primary-button"
+              aria-label={groupsGameNameByLanguage[language]}
             >
               <span aria-hidden="true">▶</span>
             </Link>
