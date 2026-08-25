@@ -33,7 +33,6 @@ const REWARD_VIEWBOX_SIZE = 100
 const REWARD_MASK_SIZE = 170
 const REWARD_BRUSH_RADIUS = 9.4
 const REWARD_FILL_THRESHOLD = 0.9
-const REWARD_COMPLETE_DELAY_MS = 500
 export const COLORING_REWARD_RESULT_VISIBLE_MS = 5000
 const REWARD_FONT_WEIGHT = 700
 const REWARD_GLYPH_FILL_COLOR = '#f8d67b'
@@ -225,17 +224,15 @@ export function GlyphColoringReward({ glyph, instructionLabel, onComplete }: Gly
   const maskDataRef = useRef<GlyphMaskData | null>(null)
   const visitedPixelsRef = useRef<Uint8Array>(new Uint8Array(0))
   const coveredPixelsRef = useRef(0)
-  const progressRef = useRef(0)
-  const completionScheduledRef = useRef(false)
-  const completionTimerRef = useRef<number | null>(null)
+  const hasReachedThresholdRef = useRef(false)
   const activeStrokeRef = useRef<ActiveStroke | null>(null)
+  const onCompleteRef = useRef(onComplete)
 
   useEffect(() => {
-    if (completionTimerRef.current !== null) {
-      window.clearTimeout(completionTimerRef.current)
-      completionTimerRef.current = null
-    }
+    onCompleteRef.current = onComplete
+  }, [onComplete])
 
+  useEffect(() => {
     const maskData = createGlyphMaskData(glyph)
     maskDataRef.current = maskData
     setGlyphRenderData(
@@ -248,18 +245,10 @@ export function GlyphColoringReward({ glyph, instructionLabel, onComplete }: Gly
     )
     visitedPixelsRef.current = new Uint8Array(maskData?.size ? maskData.size * maskData.size : 0)
     coveredPixelsRef.current = 0
-    progressRef.current = 0
-    completionScheduledRef.current = false
+    hasReachedThresholdRef.current = false
     activeStrokeRef.current = null
     setPaths([])
     setProgress(0)
-
-    return () => {
-      if (completionTimerRef.current !== null) {
-        window.clearTimeout(completionTimerRef.current)
-        completionTimerRef.current = null
-      }
-    }
   }, [glyph])
 
   const updateRewardProgress = useCallback(
@@ -275,18 +264,20 @@ export function GlyphColoringReward({ glyph, instructionLabel, onComplete }: Gly
 
       coveredPixelsRef.current += addedPixels
       const nextProgress = Math.min(1, coveredPixelsRef.current / maskData.totalPixels)
-      progressRef.current = nextProgress
       setProgress((current) => (nextProgress > current ? nextProgress : current))
+
+      // The celebration starts as soon as the glyph is filled enough, while the
+      // coloring stays fully usable so the child can finish at their own pace.
+      if (nextProgress >= REWARD_FILL_THRESHOLD && !hasReachedThresholdRef.current) {
+        hasReachedThresholdRef.current = true
+        onCompleteRef.current()
+      }
     },
     [],
   )
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (completionScheduledRef.current) {
-        return
-      }
-
       const localPoint = getLocalRewardPoint(event.currentTarget, event.clientX, event.clientY)
       if (!localPoint) {
         return
@@ -327,7 +318,7 @@ export function GlyphColoringReward({ glyph, instructionLabel, onComplete }: Gly
   const handlePointerMove = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const activeStroke = activeStrokeRef.current
-      if (!activeStroke || activeStroke.pointerId !== event.pointerId || completionScheduledRef.current) {
+      if (!activeStroke || activeStroke.pointerId !== event.pointerId) {
         return
       }
 
@@ -378,20 +369,8 @@ export function GlyphColoringReward({ glyph, instructionLabel, onComplete }: Gly
         event.currentTarget.releasePointerCapture(event.pointerId)
       }
       activeStrokeRef.current = null
-
-      if (
-        event.type === 'pointerup' &&
-        progressRef.current >= REWARD_FILL_THRESHOLD &&
-        !completionScheduledRef.current
-      ) {
-        completionScheduledRef.current = true
-        completionTimerRef.current = window.setTimeout(() => {
-          completionTimerRef.current = null
-          onComplete()
-        }, REWARD_COMPLETE_DELAY_MS)
-      }
     },
-    [onComplete],
+    [],
   )
 
   return (
